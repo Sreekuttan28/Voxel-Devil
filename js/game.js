@@ -1,255 +1,774 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, orientation=landscape" />
-  <title>Voxel Devil: Craft of Traps | Mokuttan Labs</title>
-  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css">
-  
-  <!-- PWA Manifest & Icons -->
-  <link rel="manifest" href="manifest.json">
-  <link rel="icon" type="image/jpeg" href="assets/hero_banner.jpg">
-  <link rel="apple-touch-icon" href="assets/hero_banner.jpg">
+// ============================================================================
+// VOXEL DEVIL: CRAFT OF TRAPS
+// Built by Mokuttan Labs (https://sreekuttan28.github.io/Mokuttan-Lab/)
+// Creator: Sreehari
+// ============================================================================
 
-  <style>
-    /* Modern Reveal & Movement Keyframes for App Opening */
-    @keyframes revealZoom {
-      0% { transform: scale(0.7); filter: blur(8px); opacity: 0; }
-      60% { transform: scale(1.05); filter: blur(0px); opacity: 1; }
-      100% { transform: scale(1); opacity: 1; }
+// --- 1. WEB AUDIO SYNTHESIZER (Retro Voxel Sound Effects & Ambient Menu Music) ---
+class VoxelAudio {
+  constructor() {
+    this.ctx = null;
+    this.muted = false;
+    this.ambientInterval = null;
+  }
+
+  init() {
+    if (!this.ctx) {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (AudioCtx) {
+        this.ctx = new AudioCtx();
+      }
     }
-    @keyframes slideUp {
-      0% { transform: translateY(20px); opacity: 0; }
-      100% { transform: translateY(0); opacity: 1; }
+    if (this.ctx && this.ctx.state === 'suspended') {
+      this.ctx.resume();
     }
-    @keyframes loadingBar {
-      0% { width: 0%; }
-      100% { width: 100%; }
+  }
+
+  toggleMute() {
+    this.muted = !this.muted;
+    if (this.muted) {
+      this.stopAmbientMenuMusic();
+    }
+    return this.muted;
+  }
+
+  playTone(freq, type, duration, vol = 0.12, slideFreq = null) {
+    if (this.muted) return;
+    try {
+      this.init();
+      if (!this.ctx) return;
+      const now = this.ctx.currentTime;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, now);
+      if (slideFreq) {
+        osc.frequency.exponentialRampToValueAtTime(Math.max(20, slideFreq), now + duration);
+      }
+      gain.gain.setValueAtTime(vol, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start(now);
+      osc.stop(now + duration);
+    } catch (e) {}
+  }
+
+  startAmbientMenuMusic() {
+    if (this.muted || this.ambientInterval) return;
+    this.init();
+    if (!this.ctx) return;
+
+    const spookyNotes = [164.81, 196.00, 220.00, 155.56]; // E4, G4, A4, Eb4
+    let noteIdx = 0;
+
+    this.ambientInterval = setInterval(() => {
+      if (this.muted || !this.ctx) return;
+      try {
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(spookyNotes[noteIdx], now);
+        
+        gain.gain.setValueAtTime(0.001, now);
+        gain.gain.linearRampToValueAtTime(0.03, now + 0.4);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 1.8);
+
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + 1.9);
+
+        noteIdx = (noteIdx + 1) % spookyNotes.length;
+      } catch (e) {}
+    }, 1500);
+  }
+
+  stopAmbientMenuMusic() {
+    if (this.ambientInterval) {
+      clearInterval(this.ambientInterval);
+      this.ambientInterval = null;
+    }
+  }
+
+  jump() { this.playTone(240, 'square', 0.14, 0.1, 520); }
+  trapTrigger() { this.playTone(580, 'sawtooth', 0.12, 0.12, 190); }
+  death() {
+    this.playTone(300, 'sawtooth', 0.28, 0.15, 65);
+    setTimeout(() => this.playTone(140, 'square', 0.22, 0.12, 45), 90);
+  }
+  win() {
+    [330, 440, 554, 659, 880].forEach((n, idx) => { setTimeout(() => this.playTone(n, 'triangle', 0.16, 0.13), idx * 65); });
+  }
+  bounce() { this.playTone(180, 'sine', 0.2, 0.14, 680); }
+  gravityFlip() { this.playTone(420, 'triangle', 0.22, 0.12, 840); }
+  buttonClick() { this.playTone(520, 'square', 0.06, 0.07, 660); }
+}
+
+const sfx = new VoxelAudio();
+
+// --- 2. 21 SUB-LEVELS ACROSS 3 DIFFICULTY WORLDS ---
+const WORLD_META = [
+  {
+    id: 1,
+    name: "Level 1: Overworld Meadows",
+    subtitle: "Deceptive Dirt & Sudden Sinkholes",
+    difficultyBadge: "NORMAL • TROLL TIER I",
+    themeColor: "#10b981",
+    skyTop: "#0f172a",
+    skyBottom: "#1e293b",
+    blockTop: "#4ade80",
+    blockFill: "#854d0e",
+    blockBorder: "#422006"
+  },
+  {
+    id: 2,
+    name: "Level 2: Redstone Caverns",
+    subtitle: "Circuitry Traps, Pistons & Gravity Tricks",
+    difficultyBadge: "HARD • TROLL TIER II",
+    themeColor: "#f59e0b",
+    skyTop: "#18111d",
+    skyBottom: "#271722",
+    blockTop: "#64748b",
+    blockFill: "#334155",
+    blockBorder: "#1e293b"
+  },
+  {
+    id: 3,
+    name: "Level 3: Obsidian Core",
+    subtitle: "Maximum Frustration & Relentless Chaos",
+    difficultyBadge: "NIGHTMARE • TROLL TIER III",
+    themeColor: "#ef4444",
+    skyTop: "#1a0808",
+    skyBottom: "#2d0c14",
+    blockTop: "#a855f7",
+    blockFill: "#3b0764",
+    blockBorder: "#581c87"
+  }
+];
+
+const SUBLEVELS = {
+  "1-1": {
+    title: "1-1: Trust the Grass",
+    falseHint: "Hold RIGHT all the way across! The meadow bridge is 100% sturdy oak & dirt.",
+    trueGuide: "The center bridge blocks collapse! Jump immediately.",
+    spawn: { x: 55, y: 310 },
+    portal: { x: 720, y: 292, behavior: "static" },
+    lavaY: 418,
+    platforms: [
+      { x: 20, y: 350, w: 210, h: 70, type: "solid" },
+      { x: 230, y: 350, w: 80, h: 35, type: "solid" },
+      { x: 310, y: 350, w: 80, h: 35, type: "crumble", delay: 6, triggerDist: 55 },
+      { x: 390, y: 350, w: 85, h: 35, type: "crumble", delay: 8, triggerDist: 55 },
+      { x: 475, y: 350, w: 295, h: 70, type: "solid" }
+    ],
+    spikes: [{ x: 615, y: 350, w: 32, h: 18, dir: "up", hidden: true, triggerDist: 95 }],
+    objects: [{ type: "sign", x: 150, y: 318, text: "100% SAFE BRIDGE ->" }]
+  },
+  "1-2": {
+    title: "1-2: The Helpful Signpost",
+    falseHint: "Take the lower bridge marked 'SAFE EXPRESS'.",
+    trueGuide: "Lower road is fake! Jump to upper ledges.",
+    spawn: { x: 45, y: 310 },
+    portal: { x: 720, y: 292, behavior: "static" },
+    lavaY: 418,
+    platforms: [
+      { x: 20, y: 350, w: 165, h: 70, type: "solid" },
+      { x: 185, y: 350, w: 390, h: 32, type: "fake" },
+      { x: 195, y: 275, w: 105, h: 24, type: "solid" },
+      { x: 340, y: 220, w: 115, h: 24, type: "solid" },
+      { x: 495, y: 265, w: 105, h: 24, type: "solid" },
+      { x: 575, y: 350, w: 195, h: 70, type: "solid" }
+    ],
+    spikes: [{ x: 390, y: 220, w: 28, h: 16, dir: "up", hidden: true, triggerDist: 80 }],
+    objects: [{ type: "sign", x: 120, y: 318, text: "LOW ROAD = SAFE!" }]
+  },
+  "1-3": {
+    title: "1-3: Shy Emerald Portal",
+    falseHint: "The portal is waiting right in the middle.",
+    trueGuide: "Portal slides away when approached.",
+    spawn: { x: 50, y: 310 },
+    portal: { x: 440, y: 292, behavior: "runaway", targetX: 715, triggerDist: 115 },
+    lavaY: 418,
+    platforms: [
+      { x: 20, y: 350, w: 180, h: 70, type: "solid" },
+      { x: 245, y: 325, w: 255, h: 45, type: "solid" },
+      { x: 500, y: 325, w: 95, h: 30, type: "crumble", delay: 5, triggerDist: 65 },
+      { x: 630, y: 350, w: 145, h: 70, type: "solid" }
+    ],
+    spikes: [],
+    objects: [{ type: "sign", x: 355, y: 293, text: "FREE WIN ->" }]
+  },
+  "1-4": {
+    title: "1-4: Piston Sky-Drop",
+    falseHint: "Sprint non-stop under the stone arches!",
+    trueGuide: "Two heavy ceiling crushers slam down.",
+    spawn: { x: 45, y: 310 },
+    portal: { x: 725, y: 292, behavior: "static" },
+    lavaY: 418,
+    platforms: [
+      { x: 20, y: 350, w: 340, h: 70, type: "solid" },
+      { x: 405, y: 350, w: 365, h: 70, type: "solid" },
+      { x: 220, y: 40, w: 85, h: 90, type: "crusher", triggerX: 195, maxDropY: 258, speed: 12 }
+    ],
+    spikes: [],
+    objects: [{ type: "sign", x: 145, y: 318, text: "NEVER STOP RUNNING!" }]
+  },
+  "1-5": {
+    title: "1-5: Fool's Diamond",
+    falseHint: "Collect the Golden Gem in the center!",
+    trueGuide: "The Golden Gem is 100% a trap!",
+    spawn: { x: 45, y: 310 },
+    portal: { x: 720, y: 262, behavior: "static" },
+    lavaY: 418,
+    platforms: [
+      { x: 20, y: 350, w: 170, h: 70, type: "solid" },
+      { x: 230, y: 320, w: 120, h: 30, type: "solid" },
+      { x: 390, y: 290, w: 135, h: 30, type: "solid", id: "gem_plat" },
+      { x: 565, y: 320, w: 205, h: 70, type: "solid" }
+    ],
+    spikes: [],
+    objects: [{ type: "gem", x: 455, y: 215, isTrap: true, label: "KEY?" }]
+  },
+  "1-6": {
+    title: "1-6: Slime Pad Betrayal",
+    falseHint: "Every green slime pad bounces safely.",
+    trueGuide: "3rd pad has ceiling spikes overhead.",
+    spawn: { x: 45, y: 310 },
+    portal: { x: 725, y: 232, behavior: "static" },
+    lavaY: 418,
+    platforms: [
+      { x: 20, y: 350, w: 160, h: 70, type: "solid" },
+      { x: 235, y: 310, w: 130, h: 40, type: "solid" },
+      { x: 425, y: 280, w: 145, h: 40, type: "solid" },
+      { x: 615, y: 290, w: 160, h: 80, type: "solid" }
+    ],
+    spikes: [{ x: 475, y: 70, w: 90, h: 20, dir: "down", hidden: false }],
+    objects: [{ type: "slime", x: 510, y: 268, w: 36, h: 12, vy: -18.5, betrayal: true }]
+  },
+  "1-7": {
+    title: "1-7: Overworld Boss Gauntlet",
+    falseHint: "Enter the bright green portal in the middle.",
+    trueGuide: "Middle portal is a decoy.",
+    spawn: { x: 40, y: 310 },
+    portal: { x: 725, y: 252, behavior: "runaway", targetX: 740, triggerDist: 80 },
+    lavaY: 418,
+    platforms: [
+      { x: 20, y: 350, w: 155, h: 70, type: "solid" },
+      { x: 345, y: 310, w: 165, h: 45, type: "solid" },
+      { x: 660, y: 310, w: 120, h: 75, type: "solid" }
+    ],
+    spikes: [],
+    objects: [{ type: "fakePortal", x: 445, y: 252, tpX: 80, tpY: 280 }]
+  },
+  "2-1": { title: "2-1: Phantom Cobblestone", falseHint: "Stick to center bridge.", trueGuide: "Invisible platforms above gap.", spawn: { x: 45, y: 310 }, portal: { x: 725, y: 292, behavior: "static" }, lavaY: 418, platforms: [{ x: 20, y: 350, w: 150, h: 70, type: "solid" }, { x: 170, y: 350, w: 420, h: 30, type: "fake" }, { x: 205, y: 265, w: 100, h: 24, type: "invisible", revealDist: 105 }, { x: 590, y: 350, w: 185, h: 70, type: "solid" }], spikes: [], objects: [{ type: "sign", x: 105, y: 318, text: "BRIDGE IS SOLID ->" }] },
+  "2-2": { title: "2-2: Gravity Inversion Orb", falseHint: "Avoid gravity orbs.", trueGuide: "Use ceiling.", spawn: { x: 45, y: 310 }, portal: { x: 720, y: 292, behavior: "static" }, lavaY: 418, platforms: [{ x: 20, y: 350, w: 755, h: 70, type: "solid" }], spikes: [], objects: [{ type: "orb", orbType: "gravity", x: 215, y: 295 }] },
+  "2-3": { title: "2-3: Redstone Saw Ambush", falseHint: "Walk slowly.", trueGuide: "Jump over sawblades.", spawn: { x: 45, y: 310 }, portal: { x: 725, y: 272, behavior: "static" }, lavaY: 418, platforms: [{ x: 20, y: 350, w: 500, h: 70, type: "solid" }], spikes: [], objects: [{ type: "sawSpawner", triggerX: 200, spawnX: 760, spawnY: 324, vx: -7.5 }] },
+  "2-4": { title: "2-4: Mirror Curse Chamber", falseHint: "Controls never change.", trueGuide: "Controls reverse.", spawn: { x: 45, y: 310 }, portal: { x: 720, y: 292, behavior: "static" }, lavaY: 418, platforms: [{ x: 20, y: 350, w: 260, h: 70, type: "solid" }], spikes: [], objects: [{ type: "orb", orbType: "reverse", x: 355, y: 295, radius: 55 }] },
+  "2-5": { title: "2-5: Pressure Plate Bluff", falseHint: "Step on Gold Switch.", trueGuide: "Gold switch is trap.", spawn: { x: 45, y: 310 }, portal: { x: 720, y: 292, behavior: "locked" }, lavaY: 418, platforms: [{ x: 20, y: 350, w: 370, h: 70, type: "solid" }], spikes: [], objects: [{ type: "switch", x: 255, y: 340, isFake: true, color: "#f59e0b" }] },
+  "2-6": { title: "2-6: Twin Portals Dilemma", falseHint: "Take lower portal.", trueGuide: "Lower portal is fake.", spawn: { x: 45, y: 310 }, portal: { x: 705, y: 127, behavior: "static" }, lavaY: 418, platforms: [{ x: 20, y: 350, w: 230, h: 70, type: "solid" }], spikes: [], objects: [] },
+  "2-7": { title: "2-7: Cavern Core Collapse", falseHint: "Bedrock floor is safe.", trueGuide: "Everything crumbles.", spawn: { x: 40, y: 310 }, portal: { x: 650, y: 272, behavior: "runaway", targetX: 730, triggerDist: 95 }, lavaY: 418, platforms: [{ x: 20, y: 350, w: 125, h: 70, type: "solid" }], spikes: [], objects: [] },
+  "3-1": { title: "3-1: Slippery Obsidian Ice", falseHint: "Build full speed on ice.", trueGuide: "Slide into spikes.", spawn: { x: 45, y: 310 }, portal: { x: 725, y: 272, behavior: "static" }, lavaY: 418, platforms: [{ x: 20, y: 350, w: 140, h: 70, type: "solid" }, { x: 190, y: 340, w: 185, h: 35, type: "ice" }], spikes: [], objects: [] },
+  "3-2": { title: "3-2: Double Gravity Flip", falseHint: "Ignore ceiling.", trueGuide: "Gravity orbs.", spawn: { x: 45, y: 310 }, portal: { x: 725, y: 292, behavior: "static" }, lavaY: 418, platforms: [{ x: 20, y: 350, w: 210, h: 70, type: "solid" }], spikes: [], objects: [] },
+  "3-3": { title: "3-3: The Betrayal Checkpoint", falseHint: "Touch checkpoint gem.", trueGuide: "Gem fires saw.", spawn: { x: 45, y: 310 }, portal: { x: 725, y: 292, behavior: "static" }, lavaY: 418, platforms: [{ x: 20, y: 350, w: 300, h: 70, type: "solid" }], spikes: [], objects: [] },
+  "3-4": { title: "3-4: Piston Alley", falseHint: "Wait under arches.", trueGuide: "Crushers fall.", spawn: { x: 45, y: 310 }, portal: { x: 725, y: 292, behavior: "static" }, lavaY: 418, platforms: [{ x: 20, y: 350, w: 460, h: 70, type: "solid" }], spikes: [], objects: [] },
+  "3-5": { title: "3-5: Switch & Bait", falseHint: "Portal unlocked.", trueGuide: "Use switch.", spawn: { x: 45, y: 310 }, portal: { x: 720, y: 272, behavior: "locked" }, lavaY: 418, platforms: [{ x: 20, y: 350, w: 240, h: 70, type: "solid" }], spikes: [], objects: [] },
+  "3-6": { title: "3-6: Teleporting Mirage", falseHint: "Both portals work.", trueGuide: "Lower portal fake.", spawn: { x: 45, y: 310 }, portal: { x: 645, y: 272, behavior: "runaway", targetX: 730, triggerDist: 105 }, lavaY: 418, platforms: [{ x: 20, y: 350, w: 155, h: 70, type: "solid" }], spikes: [], objects: [] },
+  "3-7": { title: "3-7: The Devil's Core", falseHint: "Grab golden crown.", trueGuide: "Ultimate gauntlet.", spawn: { x: 40, y: 310 }, portal: { x: 660, y: 262, behavior: "runaway", targetX: 730, triggerDist: 95, startsLocked: true }, lavaY: 418, platforms: [{ x: 20, y: 350, w: 235, h: 70, type: "solid" }], spikes: [], objects: [] }
+};
+
+const TROLL_TAUNTS = [
+  "Almost! (Not really, that block was never safe.)",
+  "Did you actually trust the wooden sign?!",
+  "Mokuttan Labs Trap Department sends its regards.",
+  "Gravity is just a suggestion down here."
+];
+
+const GameApp = {
+  playerName: "Explorer",
+  statemId: "MKL-1100-A1",
+  currentWorld: 1,
+  currentSub: 1,
+  selectedWorldForSelector: 1,
+  unlockedAll: false,
+  completedStages: {},
+  stageDeaths: {},
+  totalDeaths: 0,
+  chaosMutator: true,
+  chaosPool: [],
+  isPaused: false,
+  stateMode: "playing",
+  shakeTimer: 0,
+  particles: [],
+  floatingTexts: [],
+  stage: null,
+  player: null,
+  keys: { left: false, right: false, jump: false, jumpJustPressed: false },
+  animFrameId: null,
+
+  init() {
+    this.canvas = document.getElementById("gameCanvas");
+    this.ctx = this.canvas.getContext("2d");
+
+    this.loadLastSessionFromStorage();
+    this.bindEvents();
+    this.renderSelectorWorldCards();
+    this.renderSelectorSubLevelGrid();
+    this.loadStage(this.currentWorld, this.currentSub);
+    this.populateHelpSelects();
+
+    const loop = () => {
+      this.update();
+      this.draw();
+      this.animFrameId = requestAnimationFrame(loop);
+    };
+    this.animFrameId = requestAnimationFrame(loop);
+  },
+
+  getNextChaosJitter() {
+    if (!this.chaosMutator) return 0;
+    if (this.chaosPool.length === 0) {
+      this.chaosPool = [-14, -10, -6, -2, 2, 6, 10, 14];
+      for (let i = this.chaosPool.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [this.chaosPool[i], this.chaosPool[j]] = [this.chaosPool[j], this.chaosPool[i]];
+      }
+    }
+    return this.chaosPool.pop();
+  },
+
+  showHomeScreen() {
+    this.isPaused = true;
+    document.getElementById("homeLandingScreen").classList.remove("hidden");
+    document.getElementById("stageSelectorScreen").classList.add("hidden");
+    document.getElementById("gameplayWorkspace").classList.add("hidden");
+    document.getElementById("stageOverlay")?.classList.add("hidden");
+    document.getElementById("pauseOverlay")?.classList.add("hidden");
+    sfx.startAmbientMenuMusic();
+  },
+
+  showStageSelectorScreen() {
+    this.isPaused = true;
+    document.getElementById("homeLandingScreen").classList.add("hidden");
+    document.getElementById("stageSelectorScreen").classList.remove("hidden");
+    document.getElementById("gameplayWorkspace").classList.add("hidden");
+    this.renderSelectorWorldCards();
+    this.renderSelectorSubLevelGrid();
+    sfx.stopAmbientMenuMusic();
+  },
+
+  showGameplayScreen() {
+    this.isPaused = false;
+    document.getElementById("homeLandingScreen").classList.add("hidden");
+    document.getElementById("stageSelectorScreen").classList.add("hidden");
+    document.getElementById("gameplayWorkspace").classList.remove("hidden");
+    sfx.stopAmbientMenuMusic();
+  },
+
+  returnHome() {
+    sfx.buttonClick();
+    this.saveSessionToStorage(false);
+    this.showHomeScreen();
+  },
+
+  exitApplication() {
+    sfx.buttonClick();
+    this.saveSessionToStorage(true);
+    document.getElementById("homeLandingScreen").classList.add("hidden");
+    document.getElementById("stageSelectorScreen").classList.add("hidden");
+    document.getElementById("gameplayWorkspace").classList.add("hidden");
+    document.getElementById("closedSessionScreen").classList.remove("hidden");
+    sfx.stopAmbientMenuMusic();
+  },
+
+  saveSessionToStorage() {
+    const payload = { playerName: this.playerName, currentWorld: this.currentWorld, currentSub: this.currentSub, completedStages: this.completedStages, totalDeaths: this.totalDeaths };
+    try { localStorage.setItem("mokuttan_voxel_devil_last", JSON.stringify(payload)); } catch (e) {}
+  },
+
+  loadLastSessionFromStorage() {
+    try {
+      const raw = localStorage.getItem("mokuttan_voxel_devil_last");
+      if (raw) {
+        const data = JSON.parse(raw);
+        this.currentWorld = data.currentWorld || 1;
+        this.currentSub = data.currentSub || 1;
+        this.completedStages = data.completedStages || {};
+        this.totalDeaths = data.totalDeaths || 0;
+      }
+    } catch (e) {}
+  },
+
+  isSubLevelUnlocked(world, sub) {
+    if (this.unlockedAll || sub === 1) return true;
+    return !!this.completedStages[`${world}-${sub - 1}`];
+  },
+
+  loadStage(world, sub) {
+    this.currentWorld = world;
+    this.currentSub = sub;
+    const key = `${world}-${sub}`;
+    const raw = SUBLEVELS[key] || SUBLEVELS["1-1"];
+    const meta = WORLD_META[world - 1];
+    const jitter = this.getNextChaosJitter();
+
+    this.stage = {
+      key, world, sub, meta,
+      title: raw.title,
+      falseHint: raw.falseHint,
+      trueGuide: raw.trueGuide,
+      lavaY: raw.lavaY || 418,
+      portal: { x: raw.portal.x, y: raw.portal.y, w: 38, h: 56, locked: raw.portal.behavior === "locked" },
+      platforms: (raw.platforms || []).map(p => ({ ...p, state: "idle" })),
+      spikes: (raw.spikes || []).map(s => ({ ...s, active: !s.hidden })),
+      objects: (raw.objects || []).map(o => ({ ...o, collected: false, pressed: false }))
+    };
+
+    this.player = { x: raw.spawn.x, y: raw.spawn.y, w: 24, h: 30, vx: 0, vy: 0, gravityDir: 1, onGround: false, coyoteTimer: 7, facing: 1 };
+    this.stateMode = "playing";
+    this.updateHUD();
+  },
+
+  update() {
+    if (this.isPaused) return;
+    if (this.stateMode !== "playing" || !this.stage || !this.player) return;
+
+    const p = this.player;
+    const st = this.stage;
+
+    let moveDir = 0;
+    if (this.keys.left) moveDir -= 1;
+    if (this.keys.right) moveDir += 1;
+
+    if (moveDir !== 0) { p.vx += moveDir * 0.85; p.facing = moveDir; }
+    else { p.vx *= 0.76; if (Math.abs(p.vx) < 0.08) p.vx = 0; }
+    p.vx = Math.max(-4.5, Math.min(4.5, p.vx));
+
+    if (p.onGround) p.coyoteTimer = 7;
+    else if (p.coyoteTimer > 0) p.coyoteTimer--;
+
+    if ((this.keys.jumpJustPressed || this.keys.jump) && p.coyoteTimer > 0) {
+      p.vy = -10.4;
+      p.onGround = false;
+      p.coyoteTimer = 0;
+      this.keys.jumpJustPressed = false;
+      sfx.jump();
+    }
+    this.keys.jumpJustPressed = false;
+
+    p.vy += 0.52;
+    p.vy = Math.max(-15, Math.min(15, p.vy));
+
+    p.x += p.vx;
+    if (p.x < 8) { p.x = 8; p.vx = 0; }
+    if (p.x + p.w > 792) { p.x = 792 - p.w; p.vx = 0; }
+
+    p.y += p.vy;
+    p.onGround = false;
+
+    for (const plat of st.platforms) {
+      if (plat.y > 460) continue;
+      if (this.aabb(p, plat)) {
+        if (p.vy > 0) { p.y = plat.y - p.h; p.vy = 0; p.onGround = true; }
+      }
     }
 
-    .animate-reveal-zoom {
-      animation: revealZoom 1.1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    const port = st.portal;
+    if (!port.locked && this.aabb(p, port)) {
+      this.completeStage();
+      return;
     }
-    .animate-slide-up {
-      animation: slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+
+    if (p.y + p.h >= st.lavaY || p.y < -35) {
+      this.killPlayer("Burned in the molten magma pit!");
     }
-    .animate-loading-bar {
-      animation: loadingBar 1.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  },
+
+  aabb(a, b) {
+    return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+  },
+
+  killPlayer(reason) {
+    if (this.stateMode !== "playing") return;
+    this.stateMode = "dead";
+    this.totalDeaths++;
+    sfx.death();
+    document.getElementById("overlayBadge").textContent = "STAGE FAILED";
+    document.getElementById("overlayTitle").textContent = "YOU GOT TROLLED!";
+    document.getElementById("overlayReason").textContent = reason;
+    document.getElementById("btnOverlayNext").classList.add("hidden");
+    document.getElementById("stageOverlay").classList.remove("hidden");
+    this.updateHUD();
+  },
+
+  completeStage() {
+    if (this.stateMode !== "playing") return;
+    this.stateMode = "won";
+    this.completedStages[this.stage.key] = true;
+    sfx.win();
+    document.getElementById("overlayBadge").textContent = "STAGE CLEARED!";
+    document.getElementById("overlayTitle").textContent = `Stage ${this.currentWorld}-${this.currentSub} Complete!`;
+    document.getElementById("overlayReason").textContent = `You outsmarted the trap in ${this.stage.title}.`;
+    document.getElementById("btnOverlayNext").classList.remove("hidden");
+    document.getElementById("stageOverlay").classList.remove("hidden");
+    this.saveSessionToStorage();
+    this.renderSelectorWorldCards();
+    this.renderSelectorSubLevelGrid();
+    this.updateHUD();
+  },
+
+  nextStage() {
+    document.getElementById("stageOverlay").classList.add("hidden");
+    if (this.currentSub < 7) this.loadStage(this.currentWorld, this.currentSub + 1);
+    else if (this.currentWorld < 3) this.loadStage(this.currentWorld + 1, 1);
+    else this.loadStage(1, 1);
+  },
+
+  restartStage() {
+    document.getElementById("stageOverlay").classList.add("hidden");
+    this.loadStage(this.currentWorld, this.currentSub);
+  },
+
+  draw() {
+    const ctx = this.ctx;
+    if (!ctx || !this.stage) return;
+    const st = this.stage;
+    const meta = st.meta;
+
+    ctx.save();
+    const grad = ctx.createLinearGradient(0, 0, 0, 450);
+    grad.addColorStop(0, meta.skyTop);
+    grad.addColorStop(1, meta.skyBottom);
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, 800, 450);
+
+    ctx.strokeStyle = "rgba(255,255,255,0.03)";
+    ctx.lineWidth = 1;
+    for (let gx = 0; gx < 800; gx += 32) { ctx.beginPath(); ctx.moveTo(gx, 0); ctx.lineTo(gx, 450); ctx.stroke(); }
+    for (let gy = 0; gy < 450; gy += 32) { ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(800, gy); ctx.stroke(); }
+
+    const lavaY = st.lavaY;
+    const lavaGrad = ctx.createLinearGradient(0, lavaY, 0, 450);
+    lavaGrad.addColorStop(0, "#f97316");
+    lavaGrad.addColorStop(0.35, "#ef4444");
+    lavaGrad.addColorStop(1, "#7f1d1d");
+    ctx.fillStyle = lavaGrad;
+    ctx.fillRect(0, lavaY, 800, 450 - lavaY);
+
+    const time = performance.now() * 0.004;
+    ctx.fillStyle = "#fde047";
+    for (let lx = 15; lx < 790; lx += 45) {
+      const wave = Math.sin(time + lx * 0.1) * 3;
+      ctx.fillRect(lx, lavaY + 2 + wave, 18, 4);
     }
-  </style>
-</head>
-<body class="w-screen h-screen flex flex-col justify-between bg-[#0d1117] text-slate-100 overflow-hidden">
 
-  <!-- MODERN APP OPENING SPLASH SCREEN -->
-  <div id="appSplashLoader" class="fixed inset-0 bg-[#0d1117] z-50 flex flex-col items-center justify-center overflow-hidden transition-all duration-700">
-    <div class="absolute w-48 h-48 rounded-full bg-emerald-500/10 blur-3xl animate-pulse"></div>
-    
-    <div class="relative z-10 flex flex-col items-center animate-reveal-zoom text-center">
-      <img src="assets/hero_banner.jpg" alt="Voxel Devil" class="w-24 h-24 rounded-2xl border-2 border-emerald-500 shadow-2xl mb-4 object-cover ring-4 ring-emerald-500/20" />
-      
-      <h1 class="text-2xl font-extrabold text-white pixel-font tracking-widest animate-slide-up opacity-0" style="animation-delay: 0.3s;">
-        VOXEL DEVIL
-      </h1>
-      <p class="text-xs text-emerald-400 font-mono mt-1.5 tracking-wide animate-slide-up opacity-0" style="animation-delay: 0.6s;">
-        Craft of Traps • Mokuttan Labs
-      </p>
+    for (const plat of st.platforms) {
+      if (plat.y > 460) continue;
+      ctx.fillStyle = meta.blockFill;
+      ctx.fillRect(plat.x, plat.y, plat.w, plat.h);
+      ctx.fillStyle = meta.blockTop;
+      ctx.fillRect(plat.x, plat.y, plat.w, 9);
+      ctx.strokeStyle = meta.blockBorder;
+      ctx.lineWidth = 2;
+      ctx.strokeRect(plat.x, plat.y, plat.w, plat.h);
+    }
 
-      <div class="w-36 h-1 bg-slate-800 rounded-full mt-5 overflow-hidden animate-slide-up opacity-0 mx-auto" style="animation-delay: 0.9s;">
-        <div class="h-full bg-gradient-to-r from-emerald-500 to-teal-400 animate-loading-bar"></div>
-      </div>
-    </div>
-  </div>
+    for (const obj of st.objects) {
+      if (obj.type === "sign") {
+        ctx.fillStyle = "#b45309";
+        ctx.fillRect(obj.x - 20, obj.y - 6, 80, 20);
+        ctx.fillStyle = "#fef3c7";
+        ctx.font = "bold 8px monospace";
+        ctx.textAlign = "center";
+        ctx.fillText(obj.text, obj.x + 20, obj.y + 7);
+      }
+    }
 
-  <script>
-    window.addEventListener('load', () => {
-      setTimeout(() => {
-        const splash = document.getElementById('appSplashLoader');
-        if (splash) {
-          splash.style.transform = 'scale(1.08)';
-          splash.style.opacity = '0';
-          setTimeout(() => splash.remove(), 700);
-        }
-      }, 2600);
+    const port = st.portal;
+    ctx.fillStyle = port.locked ? "#64748b" : "#10b981";
+    ctx.fillRect(port.x, port.y, port.w, port.h);
+    ctx.strokeStyle = "#047857";
+    ctx.lineWidth = 3;
+    ctx.strokeRect(port.x, port.y, port.w, port.h);
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "bold 9px monospace";
+    ctx.textAlign = "center";
+    ctx.fillText("EXIT", port.x + port.w / 2, port.y - 5);
+
+    if (this.stateMode !== "dead" && this.player) {
+      const p = this.player;
+      ctx.save();
+      ctx.translate(p.x + p.w / 2, p.y + p.h / 2);
+      ctx.fillStyle = "#06b6d4";
+      ctx.fillRect(-10, -4, 20, 12);
+      ctx.fillStyle = "#fcd34d";
+      ctx.fillRect(-11, -15, 22, 13);
+      ctx.restore();
+    }
+    ctx.restore();
+  },
+
+  updateHUD() {
+    if (!this.stage) return;
+    document.getElementById("hudStageTitle").textContent = this.stage.title;
+    document.getElementById("hudWorldBadge").textContent = `World ${this.currentWorld} • Sub ${this.currentSub}/7`;
+    document.getElementById("hudDeaths").textContent = this.totalDeaths;
+    let clearedCount = 0;
+    for (let w = 1; w <= 3; w++) {
+      for (let s = 1; s <= 7; s++) { if (this.completedStages[`${w}-${s}`]) clearedCount++; }
+    }
+    document.getElementById("hudProgress").textContent = `${clearedCount} / 21`;
+  },
+
+  renderSelectorWorldCards() {
+    const container = document.getElementById("selectorWorldCards");
+    if (!container) return;
+    container.innerHTML = WORLD_META.map(w => {
+      const isSelected = w.id === this.selectedWorldForSelector;
+      return `
+        <button type="button" data-world="${w.id}" class="selector-world-btn voxel-btn text-left p-3 rounded-xl transition ${isSelected ? 'bg-slate-800 border-2 border-emerald-400' : 'bg-slate-900 border border-slate-700'}">
+          <div class="text-[10px] font-bold uppercase text-emerald-400 mb-1">${w.difficultyBadge}</div>
+          <div class="font-bold text-sm text-white">${w.name}</div>
+        </button>
+      `;
+    }).join("");
+    container.querySelectorAll(".selector-world-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        sfx.buttonClick();
+        this.selectedWorldForSelector = parseInt(btn.getAttribute("data-world"), 10);
+        this.renderSelectorWorldCards();
+        this.renderSelectorSubLevelGrid();
+      });
     });
-  </script>
+  },
 
-  <!-- 1. HOME LANDING SCREEN -->
-  <div id="homeLandingScreen" class="screen-view w-full h-full flex flex-col items-center justify-center p-4 bg-[#0d1117] text-center z-30">
-    <div class="w-full max-w-lg bg-[#161b22]/90 border border-slate-700/80 rounded-2xl p-5 shadow-2xl space-y-4 backdrop-blur-md">
-      <div class="flex flex-col items-center gap-1.5">
-        <img src="assets/hero_banner.jpg" alt="Voxel Devil Banner" class="w-14 h-14 rounded-xl object-cover border-2 border-emerald-500 shadow-md" />
-        <h1 class="text-2xl font-extrabold tracking-tight text-white pixel-font">VOXEL DEVIL</h1>
-        <p class="text-xs text-slate-400 font-semibold">Craft of Traps • 21 Stages Across 3 Worlds</p>
-      </div>
-
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
-        <button id="btnMenuStart" type="button" class="voxel-btn bg-emerald-600 hover:bg-emerald-500 text-white py-2.5 px-4 rounded-xl font-bold text-xs shadow-lg flex items-center justify-center gap-2 sm:col-span-2">
-          ▶ Start Game / Choose Stages
+  renderSelectorSubLevelGrid() {
+    const grid = document.getElementById("selectorSubLevelGrid");
+    const titleEl = document.getElementById("selectorActiveWorldTitle");
+    if (!grid) return;
+    const wMeta = WORLD_META[this.selectedWorldForSelector - 1];
+    if (titleEl) titleEl.textContent = `${wMeta.name} Stages`;
+    let html = "";
+    for (let s = 1; s <= 7; s++) {
+      const key = `${this.selectedWorldForSelector}-${s}`;
+      const unlocked = this.isSubLevelUnlocked(this.selectedWorldForSelector, s);
+      const completed = !!this.completedStages[key];
+      html += `
+        <button type="button" data-sub="${s}" ${!unlocked ? 'disabled' : ''} class="selector-sub-btn voxel-btn p-3 rounded-xl text-xs font-mono flex flex-col items-center justify-center transition ${completed ? 'bg-emerald-950 text-emerald-300 border border-emerald-600' : unlocked ? 'bg-slate-800 text-white border border-slate-600' : 'bg-slate-900/50 text-slate-600 cursor-not-allowed opacity-60'}">
+          <span class="font-bold text-sm">Stage ${this.selectedWorldForSelector}-${s}</span>
+          <span class="text-[10px] mt-1">${completed ? '★ DONE' : unlocked ? 'PLAY' : '🔒'}</span>
         </button>
-        <button id="btnInstallApp" type="button" class="voxel-btn bg-purple-600 hover:bg-purple-500 text-white py-2 px-3 rounded-xl font-bold text-xs shadow-lg hidden flex items-center justify-center gap-1.5 sm:col-span-2">
-          📲 Install App on Phone
-        </button>
-        <button id="btnMenuResume" type="button" class="voxel-btn bg-indigo-600 hover:bg-indigo-500 text-white py-2 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5">
-          🔑 Login / Resume ID
-        </button>
-        <button id="btnMenuHelp" type="button" class="voxel-btn bg-amber-600 hover:bg-amber-500 text-white py-2 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5">
-          ❓ Help Desk &amp; Guide
-        </button>
-        <button id="btnMenuCredits" type="button" class="voxel-btn bg-slate-800 hover:bg-slate-700 text-slate-200 py-2 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5">
-          🏛️ Mokuttan Labs
-        </button>
-        <button id="btnMenuExit" type="button" class="voxel-btn bg-rose-700 hover:bg-rose-600 text-white py-2 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5">
-          ✖ Exit App
-        </button>
-      </div>
+      `;
+    }
+    grid.innerHTML = html;
+    grid.querySelectorAll(".selector-sub-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const subId = parseInt(btn.getAttribute("data-sub"), 10);
+        if (this.isSubLevelUnlocked(this.selectedWorldForSelector, subId)) {
+          sfx.buttonClick();
+          this.loadStage(this.selectedWorldForSelector, subId);
+          this.showGameplayScreen();
+        }
+      });
+    });
+  },
 
-      <div class="text-[11px] text-slate-500 pt-1 border-t border-slate-800/80">
-        Crafted by <a href="https://sreekuttan28.github.io/Mokuttan-Lab/" target="_blank" rel="noopener noreferrer" class="text-emerald-400 hover:underline">Mokuttan Labs</a>
-      </div>
-    </div>
-  </div>
+  populateHelpSelects() {
+    const sel = document.getElementById("helpStageSelect");
+    if (!sel) return;
+    let opts = "";
+    for (let w = 1; w <= 3; w++) {
+      for (let s = 1; s <= 7; s++) {
+        const k = `${w}-${s}`;
+        opts += `<option value="${k}">${SUBLEVELS[k].title}</option>`;
+      }
+    }
+    sel.innerHTML = opts;
+  },
 
-  <!-- 2. STAGE SELECTOR SCREEN -->
-  <div id="stageSelectorScreen" class="screen-view hidden w-full h-full flex flex-col items-center justify-center p-3 bg-[#0d1117] z-30 overflow-y-auto">
-    <div class="w-full max-w-4xl bg-[#161b22] border border-slate-700 rounded-2xl p-5 shadow-2xl space-y-4 my-auto">
-      <div class="flex items-center justify-between border-b border-slate-800 pb-2.5">
-        <div>
-          <h2 class="text-lg font-extrabold text-white pixel-font">SELECT A WORLD &amp; STAGE</h2>
-          <p class="text-xs text-slate-400">Choose a world to view its 7 stages.</p>
-        </div>
-        <button id="btnBackToHomeFromSelector" type="button" class="voxel-btn bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-lg text-xs font-bold">
-          🏠 Main Menu
-        </button>
-      </div>
-      <div id="selectorWorldCards" class="grid grid-cols-1 md:grid-cols-3 gap-2.5"></div>
-      <div class="bg-slate-900 border border-slate-800 rounded-xl p-3 space-y-2">
-        <div class="flex items-center justify-between">
-          <span id="selectorActiveWorldTitle" class="text-xs font-bold uppercase tracking-wider text-emerald-400">Stages</span>
-        </div>
-        <div id="selectorSubLevelGrid" class="grid grid-cols-4 sm:grid-cols-7 gap-2"></div>
-      </div>
-    </div>
-  </div>
+  togglePause() {
+    sfx.buttonClick();
+    this.isPaused = !this.isPaused;
+    document.getElementById("pauseOverlay")?.classList.toggle("hidden", !this.isPaused);
+  },
 
-  <!-- 3. GAMEPLAY WORKSPACE -->
-  <main id="gameplayWorkspace" class="screen-view hidden w-full h-full flex-1 flex flex-col justify-between p-1.5 sm:p-2 overflow-hidden">
-    <header class="w-full bg-[#161b22]/80 backdrop-blur-md border border-slate-800/80 rounded-lg px-3 py-1 flex items-center justify-between gap-2 shadow-lg">
-      <div class="flex items-center gap-2.5">
-        <span id="hudWorldBadge" class="text-[11px] font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">World 1 • Sub 1/7</span>
-        <span id="hudStageTitle" class="text-xs sm:text-sm font-bold text-white truncate max-w-[220px] sm:max-w-none">1-1: Trust the Grass</span>
-      </div>
-      <div class="flex items-center gap-3 text-xs font-mono hidden sm:flex">
-        <span>Deaths: <strong id="hudDeaths" class="text-rose-400">0</strong></span>
-        <span>Cleared: <strong id="hudProgress" class="text-emerald-400">0 / 21</strong></span>
-      </div>
-      <button id="btnOpenInGameMenu" type="button" class="voxel-btn bg-indigo-600 hover:bg-indigo-500 text-white px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-1 shadow">
-        ⚙️ Menu
-      </button>
-    </header>
+  bindEvents() {
+    document.getElementById("btnMenuStart")?.addEventListener("click", () => { sfx.buttonClick(); this.showStageSelectorScreen(); });
+    document.getElementById("btnBackToHomeFromSelector")?.addEventListener("click", () => { sfx.buttonClick(); this.showHomeScreen(); });
+    document.getElementById("btnMenuResume")?.addEventListener("click", () => { sfx.buttonClick(); document.getElementById("sessionModal")?.classList.remove("hidden"); });
+    document.getElementById("btnMenuHelp")?.addEventListener("click", () => { sfx.buttonClick(); document.getElementById("helpModal")?.classList.remove("hidden"); });
+    document.getElementById("btnMenuCredits")?.addEventListener("click", () => { sfx.buttonClick(); document.getElementById("creditsModal")?.classList.remove("hidden"); });
+    document.getElementById("btnMenuExit")?.addEventListener("click", () => { this.exitApplication(); });
 
-    <section class="relative w-full flex-1 flex items-center justify-center my-1 overflow-hidden">
-      <div class="relative w-full h-full bg-slate-950 rounded-lg overflow-hidden border border-slate-800 shadow-2xl flex items-center justify-center">
-        <canvas id="gameCanvas" width="800" height="450" class="w-full h-full object-contain"></canvas>
+    document.getElementById("btnOpenInGameMenu")?.addEventListener("click", () => { this.togglePause(); });
+    document.getElementById("btnPause")?.addEventListener("click", () => this.togglePause());
+    document.getElementById("btnRestart")?.addEventListener("click", () => { sfx.buttonClick(); this.restartStage(); });
+    document.getElementById("btnOverlayRetry")?.addEventListener("click", () => { sfx.buttonClick(); this.restartStage(); });
+    document.getElementById("btnOverlayNext")?.addEventListener("click", () => { sfx.buttonClick(); this.nextStage(); });
 
-        <div id="pauseOverlay" class="hidden absolute inset-0 bg-slate-950/85 backdrop-blur-sm flex flex-col items-center justify-center p-4 text-center z-20">
-          <div class="max-w-md w-full bg-[#161b22] border-2 border-slate-700 rounded-xl p-5 shadow-2xl space-y-3">
-            <span class="px-2.5 py-1 rounded text-xs font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 uppercase">In-Game Options</span>
-            <h2 class="text-lg font-extrabold text-white">Game Paused</h2>
-            <div class="flex flex-col gap-2 pt-2">
-              <button type="button" onclick="GameApp.togglePause()" class="voxel-btn bg-emerald-600 hover:bg-emerald-500 text-white py-2 px-4 rounded-lg font-bold text-xs">▶ Resume Game</button>
-              <button type="button" onclick="GameApp.restartStage(); GameApp.togglePause();" class="voxel-btn bg-amber-600 hover:bg-amber-500 text-white py-2 px-4 rounded-lg font-bold text-xs">🔄 Restart Stage</button>
-              <button type="button" onclick="GameApp.saveSessionToStorage(true)" class="voxel-btn bg-indigo-600 hover:bg-indigo-500 text-white py-2 px-4 rounded-lg font-bold text-xs">💾 Save Session</button>
-              <button type="button" onclick="GameApp.returnHome()" class="voxel-btn bg-slate-700 hover:bg-slate-600 text-white py-2 px-4 rounded-lg font-bold text-xs">🏠 Return to Main Menu</button>
-            </div>
-          </div>
-        </div>
+    document.getElementById("btnToggleChaos")?.addEventListener("click", () => {
+      sfx.buttonClick();
+      this.chaosMutator = !this.chaosMutator;
+      const btn = document.getElementById("btnToggleChaos");
+      if (btn) btn.textContent = this.chaosMutator ? "🎲 Chaos: ON" : "🎲 Chaos: OFF";
+    });
 
-        <div id="stageOverlay" class="hidden absolute inset-0 bg-slate-950/80 backdrop-blur-sm flex flex-col items-center justify-center p-4 text-center z-20">
-          <div class="max-w-md w-full bg-[#161b22] border-2 border-slate-700 rounded-xl p-5 shadow-2xl">
-            <div id="overlayBadge">STAGE FAILED</div>
-            <h2 id="overlayTitle" class="text-xl sm:text-2xl font-extrabold text-white pixel-font">YOU GOT TROLLED!</h2>
-            <p id="overlayReason" class="text-xs sm:text-sm text-slate-300 mt-2 leading-relaxed"></p>
-            <div class="flex flex-wrap items-center justify-center gap-2.5 mt-4">
-              <button id="btnOverlayRetry" type="button" class="voxel-btn bg-amber-600 hover:bg-amber-500 text-white px-3 py-1.5 rounded-lg font-bold text-xs">🔄 Try Again (R)</button>
-              <button id="btnOverlayNext" type="button" class="hidden voxel-btn bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded-lg font-bold text-xs">Next Sub-Level ▶</button>
-              <button type="button" onclick="GameApp.returnHome()" class="voxel-btn bg-slate-700 hover:bg-slate-600 text-white px-3 py-1.5 rounded-lg font-bold text-xs">🏠 Main Menu</button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
+    document.getElementById("btnCloseSessionModal")?.addEventListener("click", () => document.getElementById("sessionModal")?.classList.add("hidden"));
+    document.getElementById("btnCloseHelpModal")?.addEventListener("click", () => document.getElementById("helpModal")?.classList.add("hidden"));
+    document.getElementById("btnCloseCreditsModal")?.addEventListener("click", () => document.getElementById("creditsModal")?.classList.add("hidden"));
+    document.getElementById("btnReopenGameFromClosed")?.addEventListener("click", () => { document.getElementById("closedSessionScreen")?.classList.add("hidden"); this.showHomeScreen(); });
 
-    <section aria-label="Game Console Controls" class="w-full bg-[#161b22]/90 border border-slate-800 rounded-xl p-1.5 shadow-lg flex items-center justify-between gap-2">
-      <div class="flex items-center gap-2">
-        <button id="btnConsoleLeft" type="button" aria-label="Move Left" class="console-dpad-btn bg-slate-800 hover:bg-slate-700 active:bg-emerald-700 text-white w-14 h-11 sm:w-16 sm:h-11 rounded-lg flex flex-col items-center justify-center">
-          <span class="text-sm font-extrabold leading-none">◀</span>
-          <span class="text-[8px] font-bold text-slate-300 mt-0.5">LEFT</span>
-        </button>
-        <button id="btnConsoleRight" type="button" aria-label="Move Right" class="console-dpad-btn bg-slate-800 hover:bg-slate-700 active:bg-emerald-700 text-white w-14 h-11 sm:w-16 sm:h-11 rounded-lg flex flex-col items-center justify-center">
-          <span class="text-sm font-extrabold leading-none">▶</span>
-          <span class="text-[8px] font-bold text-slate-300 mt-0.5">RIGHT</span>
-        </button>
-      </div>
-      <div class="flex items-center gap-1.5">
-        <button id="btnPause" type="button" class="voxel-btn bg-slate-800 text-slate-200 px-2.5 py-1 rounded-lg text-[10px] font-bold">⏸ Pause</button>
-        <button id="btnRestart" type="button" class="voxel-btn bg-slate-800 text-amber-300 px-2.5 py-1 rounded-lg text-[10px] font-bold">🔄 Restart</button>
-        <button id="btnToggleChaos" type="button" class="voxel-btn bg-purple-900/70 text-purple-200 px-2 py-1 rounded-lg text-[9px] font-semibold">🎲 Chaos: ON</button>
-      </div>
-      <div>
-        <button id="btnConsoleJump" type="button" aria-label="Jump" class="console-dpad-btn bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-400 text-white w-22 h-11 sm:w-28 sm:h-11 rounded-lg flex flex-col items-center justify-center">
-          <span class="text-xs font-extrabold leading-none">▲ JUMP</span>
-          <span class="text-[8px] font-semibold text-emerald-100 mt-0.5">SPACE / W</span>
-        </button>
-      </div>
-    </section>
-  </main>
+    window.addEventListener("keydown", (e) => {
+      if (e.code === "ArrowLeft" || e.code === "KeyA") this.keys.left = true;
+      if (e.code === "ArrowRight" || e.code === "KeyD") this.keys.right = true;
+      if (e.code === "ArrowUp" || e.code === "KeyW" || e.code === "Space") { e.preventDefault(); this.keys.jumpJustPressed = true; this.keys.jump = true; }
+      if (e.code === "KeyR") this.restartStage();
+      if (e.code === "KeyP") this.togglePause();
+    });
 
-  <!-- MODALS -->
-  <div id="closedSessionScreen" class="hidden fixed inset-0 bg-[#0d1117] z-50 flex flex-col items-center justify-center p-6 text-center">
-    <div class="max-w-md w-full bg-[#161b22] border-2 border-rose-500/50 rounded-xl p-6 shadow-2xl space-y-4">
-      <h2 class="text-xl font-extrabold text-white pixel-font">GAME EXITED SUCCESSFULLY</h2>
-      <button id="btnReopenGameFromClosed" type="button" class="voxel-btn bg-emerald-600 text-white px-4 py-2 rounded-lg text-xs font-bold w-full">▶ Return to Main Menu</button>
-    </div>
-  </div>
+    window.addEventListener("keyup", (e) => {
+      if (e.code === "ArrowLeft" || e.code === "KeyA") this.keys.left = false;
+      if (e.code === "ArrowRight" || e.code === "KeyD") this.keys.right = false;
+      if (e.code === "ArrowUp" || e.code === "KeyW" || e.code === "Space") this.keys.jump = false;
+    });
 
-  <div id="sessionModal" class="hidden fixed inset-0 bg-black/75 backdrop-blur-sm z-40 flex items-center justify-center p-4">
-    <div class="bg-[#161b22] border-2 border-slate-700 rounded-xl max-w-md w-full p-5 shadow-2xl space-y-4">
-      <div class="flex items-center justify-between border-b border-slate-800 pb-2.5">
-        <h3 class="text-base font-extrabold text-white">🔑 Login &amp; Statem ID Resume</h3>
-        <button id="btnCloseSessionModal" type="button" class="text-slate-400 font-bold px-2">✕</button>
-      </div>
-      <input id="inputLoginName" type="text" placeholder="e.g. Sreehari" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white" />
-      <input id="inputStatemId" type="text" placeholder="e.g. MKL-SREE-W2S4-00A" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm font-mono text-amber-300" />
-      <div class="flex justify-end gap-2">
-        <button id="btnResumeSessionModal" type="button" class="voxel-btn bg-indigo-600 text-white px-3 py-2 rounded-lg text-xs font-bold">Resume</button>
-      </div>
-    </div>
-  </div>
+    const bindHold = (id, keyName, isJump = false) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.addEventListener("pointerdown", (e) => { e.preventDefault(); if (isJump) this.keys.jumpJustPressed = true; this.keys[keyName] = true; });
+      el.addEventListener("pointerup", (e) => { e.preventDefault(); this.keys[keyName] = false; });
+      el.addEventListener("pointerleave", (e) => { e.preventDefault(); this.keys[keyName] = false; });
+    };
+    bindHold("btnConsoleLeft", "left");
+    bindHold("btnConsoleRight", "right");
+    bindHold("btnConsoleJump", "jump", true);
+  }
+};
 
-  <div id="helpModal" class="hidden fixed inset-0 bg-black/75 backdrop-blur-sm z-40 flex items-center justify-center p-4">
-    <div class="bg-[#161b22] border-2 border-slate-700 rounded-xl max-w-2xl w-full p-5 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
-      <div class="flex items-center justify-between border-b border-slate-800 pb-2.5">
-        <h3 class="text-base font-extrabold text-white">❓ Help Desk</h3>
-        <button id="btnCloseHelpModal" type="button" class="text-slate-400 font-bold px-2">✕</button>
-      </div>
-      <select id="helpStageSelect" class="bg-slate-950 border border-slate-700 rounded px-3 py-1.5 text-xs text-white w-full"></select>
-      <div id="helpGeneratedOutput"></div>
-    </div>
-  </div>
+// --- PWA INSTALL PROMPT HANDLER ---
+let deferredPwaPrompt = null;
 
-  <div id="creditsModal" class="hidden fixed inset-0 bg-black/75 backdrop-blur-sm z-40 flex items-center justify-center p-4">
-    <div class="bg-[#161b22] border-2 border-slate-700 rounded-xl max-w-lg w-full p-5 shadow-2xl space-y-4">
-      <div class="flex items-center justify-between border-b border-slate-800 pb-2.5">
-        <h3 class="text-base font-extrabold text-white">🏛️ Credits</h3>
-        <button id="btnCloseCreditsModal" type="button" class="text-slate-400 font-bold px-2">✕</button>
-      </div>
-      <p class="text-sm font-bold text-white">Sreehari N P (Mokuttan Labs)</p>
-    </div>
-  </div>
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPwaPrompt = e;
+  const installBtn = document.getElementById('btnInstallApp');
+  if (installBtn) installBtn.classList.remove('hidden');
+});
 
-  <div id="toastBanner" class="hidden"></div>
-  <script src="js/game.js"></script>
-</body>
-</html>
+document.getElementById('btnInstallApp')?.addEventListener('click', async () => {
+  if (!deferredPwaPrompt) return;
+  deferredPwaPrompt.prompt();
+  const { outcome } = await deferredPwaPrompt.userChoice;
+  if (outcome === 'accepted') {
+    document.getElementById('btnInstallApp')?.classList.add('hidden');
+  }
+  deferredPwaPrompt = null;
+});
+
+window.addEventListener('appinstalled', () => {
+  document.getElementById('btnInstallApp')?.classList.add('hidden');
+});
+
+window.addEventListener("load", () => { GameApp.init(); });
