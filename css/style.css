@@ -1,0 +1,92 @@
+/* Voxel Devil: Craft of Traps - Mokuttan Labs */
+:root {
+  --bg-deep: #0d1117;
+  --bg-panel: #161b22;
+  --bg-card: #1f2733;
+  --voxel-green: #3fb950;
+  --voxel-emerald: #10b981;
+  --voxel-gold: #f59e0b;
+  --voxel-redstone: #ef4444;
+  --voxel-obsidian: #8b5cf6;
+  --border-pixel: #30363d;
+}
+
+* {
+  box-sizing: border-box;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--bg-deep);
+  color: #f0f6fc;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  overflow-x: hidden;
+}
+
+.voxel-border {
+  border: 2px solid #30363d;
+  box-shadow: inset -2px -2px 0px rgba(0,0,0,0.45), inset 2px 2px 0px rgba(255,255,255,0.08), 0 4px 0 #090c10;
+}
+
+.voxel-btn {
+  position: relative;
+  border: 2px solid #1f2937;
+  box-shadow: inset -2px -2px 0px rgba(0,0,0,0.35), inset 2px 2px 0px rgba(255,255,255,0.2), 0 3px 0 #090d16;
+  transition: transform 0.06s ease, box-shadow 0.06s ease, filter 0.12s ease;
+  cursor: pointer;
+}
+
+.voxel-btn:hover {
+  filter: brightness(1.08);
+}
+
+.voxel-btn:active, .voxel-btn.active-press {
+  transform: translateY(3px);
+  box-shadow: inset -2px -2px 0px rgba(0,0,0,0.45), 0 0px 0 #090d16;
+}
+
+.console-dpad-btn {
+  touch-action: none;
+  border: 3px solid #374151;
+  box-shadow: inset -3px -3px 0px rgba(0,0,0,0.5), inset 3px 3px 0px rgba(255,255,255,0.18), 0 5px 0 #090d16;
+}
+
+.console-dpad-btn:active, .console-dpad-btn.pressed {
+  transform: translateY(4px);
+  box-shadow: inset 2px 2px 4px rgba(0,0,0,0.6), 0 1px 0 #090d16;
+  filter: brightness(1.15);
+}
+
+#gameCanvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+.pixel-font {
+  font-family: 'Courier New', Courier, monospace;
+  letter-spacing: 0.04em;
+   font-weight: 800;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #0d1117;
+}
+::-webkit-scrollbar-thumb {
+  background: #30363d;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #484f58;
+}

@@ -1,0 +1,6 @@
+{
+  "appId": "com.mokuttanlabs.voxeldevil",
+  "appName": "Voxel Devil",
+  "webDir": ".",
+  "bundledWebRuntime": false
+}

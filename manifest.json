@@ -1,0 +1,10 @@
+{
+  "short_name": "VoxelDevil",
+  "name": "Voxel Devil: Craft of Traps by Mokuttan Labs",
+  "description": "2D Voxel Trap Platformer with 3 Worlds and 21 Sub-Levels by Sreehari (Mokuttan Labs)",
+  "start_url": "./index.html",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#0d1117",
+  "theme_color": "#10b981"
+}

@@ -1,30 +1,29 @@
-# 😈 Voxel Devil: Craft of Traps
+# Voxel Devil: Craft of Traps — Full Project Setup
+**Builder Studio:** [Mokuttan Labs](https://sreekuttan28.github.io/Mokuttan-Lab/)  
+**Creator:** [Sreehari N P](https://sreekuttan28.github.io/sreehari-portfolio/) — Founder & AI Developer at [Mokuttan Labs](https://sreekuttan28.github.io/Mokuttan-Lab/) | [LinkedIn](https://www.linkedin.com/in/sreeharinp) | [GitHub](https://github.com/sreekuttan28)
 
-**Voxel Devil: Craft of Traps** is a real-time 2D voxel-styled trap platformer web application designed for desktop and mobile touchscreens. Built entirely with lightweight web technologies, it features deceptive level design, psychological "false hints," and custom checkpoint persistence.
+## 1. Running the Game Locally
+1. Extract `mokuttan_labs_voxel_devil_setup.zip` into any folder on your computer.
+2. Open `index.html` directly in any modern browser (Chrome, Edge, Firefox, Safari) **or** serve the directory with a local static server:
+   ```bash
+   python3 -m http.server 8080
+   # Then visit http://localhost:8080
+   ```
 
----
+## 2. Project Structure
+- `index.html` — Main entry point, responsive HUD, modals, and mobile/desktop console controls.
+- `css/style.css` — Custom voxel block borders, pixel typography, and tactile D-Pad button styles.
+- `js/game.js` — 60 FPS 2D physics engine, Web Audio API synthesizer, 3 Worlds × 7 Sub-Levels (21 stages), false hint engine, and Login Name + Statem ID temporary save/resume system.
+- `assets/hero_banner.jpg` — Custom voxel dungeon artwork.
+- `manifest.json` & `capacitor.config.json` — Ready-to-use configuration for PWA or Google Play Store wrapping via Capacitor.
 
-## 🎮 Key Features
-
-- **3 Worlds & 21 Escalating Sub-Levels:** Journey from the *Overworld Meadows* to the *Redstone Caverns* and the nightmare *Obsidian Core*.
-- **Diabolical Trap Mechanics:** Navigate crumbling bridges, pop-up redstone spikes, hologram false floors, anti-gravity orbs, mirror-curse reverse controls, and runaway portals.
-- **Console & Touch Controls:** Play seamlessly using keyboard shortcuts (`A`/`D`, `W`/`Space`, `P`, `R`) or the tactile on-screen bottom console dock.
-- **Statem ID Save System:** Generate unique portable session IDs (e.g., `MKL-SREE-W2S4-00A`) to save your progress, world stage, and death count directly in browser storage.
-- **Help Desk & Tactical Guides:** Inspect the voxel trap encyclopedia and generate stage-specific tactical solutions—or fall victim to the devil's false hints!
-- **Random Chaos Mutator:** Optional modifier that introduces subtle randomized trigger delays and timing jitter on every attempt.
-
----
-
-## 🚀 Getting Started & Local Execution
-
-No complex build steps or external dependencies are required! You can run the game directly in any modern web browser:
-
-1. Clone or download the repository to your local machine.
-2. Open `voxel_devil_mokuttan_labs.html` directly in your browser, or serve it via a local static server (e.g., Python HTTP server or VS Code Live Server).
-
----
-
-## 🏛️ Credits
-
-Developed with ❤️ by **Sreehari (@sreekuttan28)** under **Mokuttan Labs**.  
-*All rights reserved.*
+## 3. Converting to an Android Play Store App (Capacitor)
+When you are ready to publish to Google Play Store:
+```bash
+npm init -y
+npm install @capacitor/core @capacitor/cli @capacitor/android
+npx cap add android
+npx cap copy android
+npx cap open android
+```
+Then build your signed `.aab` / `.apk` directly inside Android Studio!
