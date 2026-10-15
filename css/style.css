@@ -30,7 +30,6 @@ html, body {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
 }
 
-/* Ensure hidden screens take up zero space and cannot block clicks */
 .hidden {
   display: none !important;
 }
@@ -74,7 +73,7 @@ html, body {
   display: block;
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  object-fit: fill; /* Stretches canvas edge-to-edge to eliminate black letterbox side bars */
   image-rendering: pixelated;
   image-rendering: crisp-edges;
 }
