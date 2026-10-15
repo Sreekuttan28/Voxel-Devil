@@ -12,76 +12,66 @@
   <link rel="manifest" href="manifest.json">
   <link rel="icon" type="image/jpeg" href="assets/hero_banner.jpg">
   <link rel="apple-touch-icon" href="assets/hero_banner.jpg">
-
-  <style>
-    @media screen and (max-width: 900px) and (orientation: portrait) {
-      body::before {
-        content: "Please rotate your device to Landscape mode for Voxel Devil! 📱🔄";
-        position: fixed;
-        inset: 0;
-        background: #0d1117;
-        color: #f3f4f6;
-        z-index: 9999;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 2rem;
-        text-align: center;
-        font-weight: bold;
-        font-size: 1.1rem;
-      }
-    }
-    html, body {
-      width: 100vw;
-      height: 100vh;
-      margin: 0;
-      padding: 0;
-      overflow: hidden;
-      background-color: #0d1117;
-    }
-  </style>
 </head>
 <body class="w-screen h-screen flex flex-col justify-between bg-[#0d1117] text-slate-100 overflow-hidden">
 
+  <!-- APP STARTUP SPLASH SCREEN (2-3 Second Opening Animation) -->
+  <div id="appSplashLoader" class="fixed inset-0 bg-[#0d1117] z-50 flex flex-col items-center justify-center transition-opacity duration-700">
+    <img src="assets/hero_banner.jpg" alt="Voxel Devil" class="w-24 h-24 rounded-2xl border-2 border-emerald-500 shadow-2xl animate-pulse mb-3 object-cover" />
+    <h1 class="text-xl font-extrabold text-white pixel-font tracking-wider">VOXEL DEVIL</h1>
+    <p class="text-xs text-emerald-400 font-mono mt-1">Craft of Traps • Mokuttan Labs</p>
+  </div>
+
+  <script>
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        const splash = document.getElementById('appSplashLoader');
+        if (splash) {
+          splash.style.opacity = '0';
+          setTimeout(() => splash.remove(), 700);
+        }
+      }, 2200);
+    });
+  </script>
+
   <!-- 1. HOME LANDING SCREEN -->
-  <div id="homeLandingScreen" class="w-full h-full flex flex-col items-center justify-center p-4 bg-[#0d1117] text-center z-30 absolute inset-0">
-    <div class="max-w-md w-full bg-[#161b22] border-2 border-slate-700 rounded-2xl p-6 shadow-2xl space-y-5">
+  <div id="homeLandingScreen" class="screen-view w-full h-full flex flex-col items-center justify-center p-4 bg-[#0d1117] text-center z-30">
+    <div class="max-w-md w-full bg-[#161b22] border-2 border-slate-700 rounded-2xl p-6 shadow-2xl space-y-4">
       <div class="flex flex-col items-center gap-2">
-        <img src="assets/hero_banner.jpg" alt="Voxel Devil Banner" class="w-20 h-20 rounded-xl object-cover border-2 border-emerald-500 shadow-md" />
+        <img src="assets/hero_banner.jpg" alt="Voxel Devil Banner" class="w-16 h-16 rounded-xl object-cover border-2 border-emerald-500 shadow-md" />
         <h1 class="text-2xl font-extrabold tracking-tight text-white pixel-font mt-1">VOXEL DEVIL</h1>
         <p class="text-xs text-slate-400 font-semibold">Craft of Traps • 21 Stages Across 3 Worlds</p>
       </div>
 
-      <div class="flex flex-col gap-2.5 pt-2">
-        <button id="btnMenuStart" type="button" class="voxel-btn bg-emerald-600 hover:bg-emerald-500 text-white py-3 px-4 rounded-xl font-bold text-sm shadow-lg flex items-center justify-center gap-2">
+      <div class="flex flex-col gap-2 pt-1">
+        <button id="btnMenuStart" type="button" class="voxel-btn bg-emerald-600 hover:bg-emerald-500 text-white py-2.5 px-4 rounded-xl font-bold text-sm shadow-lg flex items-center justify-center gap-2">
           ▶ Start Game / Choose Stages
         </button>
-        <!-- Home Menu Install App Button -->
-        <button id="btnInstallApp" type="button" class="voxel-btn bg-purple-600 hover:bg-purple-500 text-white py-2.5 px-4 rounded-xl font-bold text-xs shadow-lg hidden flex items-center justify-center gap-2">
+        <button id="btnInstallApp" type="button" class="voxel-btn bg-purple-600 hover:bg-purple-500 text-white py-2 px-4 rounded-xl font-bold text-xs shadow-lg hidden flex items-center justify-center gap-2">
           📲 Install App on Phone
         </button>
-        <button id="btnMenuResume" type="button" class="voxel-btn bg-indigo-600 hover:bg-indigo-500 text-white py-2.5 px-4 rounded-xl font-bold text-xs flex items-center justify-center gap-2">
+        <button id="btnMenuResume" type="button" class="voxel-btn bg-indigo-600 hover:bg-indigo-500 text-white py-2 px-4 rounded-xl font-bold text-xs flex items-center justify-center gap-2">
           🔑 Login / Resume ID
         </button>
-        <button id="btnMenuHelp" type="button" class="voxel-btn bg-amber-600 hover:bg-amber-500 text-white py-2.5 px-4 rounded-xl font-bold text-xs flex items-center justify-center gap-2">
+        <button id="btnMenuHelp" type="button" class="voxel-btn bg-amber-600 hover:bg-amber-500 text-white py-2 px-4 rounded-xl font-bold text-xs flex items-center justify-center gap-2">
           ❓ Help Desk &amp; Stage Guide
         </button>
-        <button id="btnMenuCredits" type="button" class="voxel-btn bg-slate-800 hover:bg-slate-700 text-slate-200 py-2.5 px-4 rounded-xl font-bold text-xs flex items-center justify-center gap-2">
+        <button id="btnMenuCredits" type="button" class="voxel-btn bg-slate-800 hover:bg-slate-700 text-slate-200 py-2 px-4 rounded-xl font-bold text-xs flex items-center justify-center gap-2">
           🏛️ Mokuttan Labs Credits
         </button>
-        <button id="btnMenuExit" type="button" class="voxel-btn bg-rose-700 hover:bg-rose-600 text-white py-2.5 px-4 rounded-xl font-bold text-xs flex items-center justify-center gap-2">
+        <button id="btnMenuExit" type="button" class="voxel-btn bg-rose-700 hover:bg-rose-600 text-white py-2 px-4 rounded-xl font-bold text-xs flex items-center justify-center gap-2">
           ✖ Leave Game &amp; Exit App
         </button>
       </div>
 
-      <div class="text-[11px] text-slate-500 pt-2 border-t border-slate-800/80">
+      <div class="text-[11px] text-slate-500 pt-1 border-t border-slate-800/80">
         Crafted by <a href="https://sreekuttan28.github.io/Mokuttan-Lab/" target="_blank" rel="noopener noreferrer" class="text-emerald-400 hover:underline">Mokuttan Labs</a>
       </div>
     </div>
   </div>
 
   <!-- 2. STAGE SELECTOR SCREEN -->
-  <div id="stageSelectorScreen" class="hidden w-full h-full flex flex-col items-center justify-center p-4 bg-[#0d1117] z-30 absolute inset-0 overflow-y-auto">
+  <div id="stageSelectorScreen" class="screen-view hidden w-full h-full flex flex-col items-center justify-center p-4 bg-[#0d1117] z-30 overflow-y-auto">
     <div class="max-w-3xl w-full bg-[#161b22] border-2 border-slate-700 rounded-2xl p-6 shadow-2xl space-y-5 my-auto">
       <div class="flex items-center justify-between border-b border-slate-800 pb-3">
         <div>
@@ -103,7 +93,7 @@
   </div>
 
   <!-- 3. GAMEPLAY WORKSPACE -->
-  <main id="gameplayWorkspace" class="hidden w-full h-full flex-1 flex flex-col justify-between p-2 sm:p-3 overflow-hidden">
+  <main id="gameplayWorkspace" class="screen-view hidden w-full h-full flex-1 flex flex-col justify-between p-2 sm:p-3 overflow-hidden">
     <header class="w-full max-w-6xl mx-auto bg-[#161b22] border border-slate-800 rounded-lg px-3 py-1.5 flex items-center justify-between gap-2 shadow-md">
       <div class="flex items-center gap-3">
         <span id="hudWorldBadge" class="text-xs font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">World 1 • Sub 1/7</span>
@@ -119,8 +109,8 @@
     </header>
 
     <section class="relative w-full max-w-5xl mx-auto flex-1 flex items-center justify-center my-1">
-      <div class="relative w-full aspect-[16/9] max-h-[70vh] bg-slate-950 rounded-xl overflow-hidden voxel-border shadow-2xl flex items-center justify-center">
-        <canvas id="gameCanvas" width="800" height="450" class="w-full h-full object-contain"></canvas>
+      <div class="relative w-full aspect-[16/9] max-h-[65vh] bg-slate-950 rounded-xl overflow-hidden voxel-border shadow-2xl flex items-center justify-center">
+        <canvas id="gameCanvas" width="800" height="450"></canvas>
 
         <div id="pauseOverlay" class="hidden absolute inset-0 bg-slate-950/85 backdrop-blur-sm flex flex-col items-center justify-center p-4 text-center z-20">
           <div class="max-w-md w-full bg-[#161b22] border-2 border-slate-700 rounded-xl p-5 shadow-2xl space-y-3">
