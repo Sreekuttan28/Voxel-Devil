@@ -129,26 +129,6 @@ const WORLD_META = [
   }
 ];
 
-// Helper to build standard level definitions cleanly
-// Platform types:
-// 'solid' - normal block
-// 'crumble' - falls shortly after player steps on or approaches it
-// 'fake' - hologram floor, player falls right through!
-// 'invisible' - invisible until player jumps near or touches it
-// 'moving' - moves horizontally/vertically, or darts away on trigger
-// 'crusher' - ceiling block that slams down when player enters x-range
-// 'ice' - low friction slippery surface
-//
-// Special objects:
-// 'spike' - static or popup ('popupRadius') or sliding ('slideTargetX')
-// 'slime' - bounce pad ('betrayalOnJump': launches into danger or flips)
-// 'gem' - decoy bait coin/diamond ('isTrap': true spawns spikes or drops floor!)
-// 'orb' - gravity flip orb or reverse-control zone
-// 'switch' - pressure plate ('isFake': triggers trap instead of opening door)
-// 'saw' - moving/triggered redstone sawblade projectile
-// 'sign' - in-world wooden signpost with deceptive message
-// 'fakePortal' - looks like the exit portal but teleports you into a trap or back to start!
-
 const SUBLEVELS = {
   // ==========================================================================
   // WORLD 1: OVERWORLD MEADOWS (Sub-Levels 1 to 7)
@@ -184,9 +164,7 @@ const SUBLEVELS = {
     lavaY: 418,
     platforms: [
       { x: 20, y: 350, w: 165, h: 70, type: "solid" },
-      // Fake lower bridge
       { x: 185, y: 350, w: 390, h: 32, type: "fake" },
-      // Real upper path
       { x: 195, y: 275, w: 105, h: 24, type: "solid" },
       { x: 340, y: 220, w: 115, h: 24, type: "solid" },
       { x: 495, y: 265, w: 105, h: 24, type: "solid" },
@@ -234,7 +212,6 @@ const SUBLEVELS = {
     platforms: [
       { x: 20, y: 350, w: 340, h: 70, type: "solid" },
       { x: 405, y: 350, w: 365, h: 70, type: "solid" },
-      // Crushers
       { x: 220, y: 40, w: 85, h: 90, type: "crusher", triggerX: 195, maxDropY: 258, speed: 12 },
       { x: 465, y: 40, w: 95, h: 90, type: "crusher", triggerX: 435, maxDropY: 258, speed: 13 }
     ],
@@ -281,7 +258,6 @@ const SUBLEVELS = {
       { x: 235, y: 310, w: 130, h: 40, type: "solid" },
       { x: 425, y: 280, w: 145, h: 40, type: "solid" },
       { x: 615, y: 290, w: 160, h: 80, type: "solid" },
-      // Ceiling above 3rd bounce pad
       { x: 460, y: 35, w: 120, h: 35, type: "solid" }
     ],
     spikes: [
@@ -445,7 +421,6 @@ const SUBLEVELS = {
       { x: 20, y: 350, w: 230, h: 70, type: "solid" },
       { x: 290, y: 350, w: 220, h: 70, type: "solid" },
       { x: 550, y: 350, w: 220, h: 70, type: "solid" },
-      // Upper real path
       { x: 535, y: 185, w: 235, h: 28, type: "solid" }
     ],
     spikes: [
@@ -519,7 +494,6 @@ const SUBLEVELS = {
       { x: 20, y: 350, w: 210, h: 70, type: "solid" },
       { x: 275, y: 350, w: 220, h: 30, type: "fake" },
       { x: 535, y: 350, w: 245, h: 70, type: "solid" },
-      // Ceiling path
       { x: 160, y: 42, w: 185, h: 32, type: "solid" },
       { x: 385, y: 42, w: 205, h: 32, type: "solid" }
     ],
@@ -669,29 +643,25 @@ const TROLL_TAUNTS = [
 
 // --- 4. GAME STATE & SESSION / STATEM ID MANAGER ---
 const GameApp = {
-  // User session
   playerName: "Explorer",
   statemId: "MKL-1100-A1",
   unsavedChanges: false,
 
-  // Progression state
   currentWorld: 1,
   currentSub: 1,
   unlockedAll: false,
-  completedStages: {}, // e.g. {"1-1": true}
-  stageDeaths: {},     // e.g. {"1-1": 4}
+  completedStages: {},
+  stageDeaths: {},
   totalDeaths: 0,
-  chaosMutator: true,  // Subtle random jitter for extra unpredictability
+  chaosMutator: true,
 
-  // Runtime state
   isRunning: false,
   isPaused: false,
-  stateMode: "playing", // 'playing', 'dead', 'won', 'paused'
+  stateMode: "playing",
   shakeTimer: 0,
   particles: [],
   floatingTexts: [],
 
-  // Active stage entities
   stage: null,
   player: null,
   keys: { left: false, right: false, jump: false, jumpJustPressed: false },
@@ -717,7 +687,37 @@ const GameApp = {
     this.animFrameId = requestAnimationFrame(loop);
   },
 
-  // Encode/Decode Statem ID so players can resume both via localStorage AND portable code!
+  showHomeScreen() {
+    this.isPaused = true;
+    document.getElementById("homeLandingScreen").classList.remove("hidden");
+    document.getElementById("gameplayWorkspace").classList.add("hidden");
+    document.getElementById("stageOverlay")?.classList.add("hidden");
+    document.getElementById("pauseOverlay")?.classList.add("hidden");
+  },
+
+  showGameplayScreen() {
+    this.isPaused = false;
+    document.getElementById("homeLandingScreen").classList.add("hidden");
+    document.getElementById("gameplayWorkspace").classList.remove("hidden");
+  },
+
+  returnHome() {
+    sfx.buttonClick();
+    this.saveSessionToStorage(false);
+    this.showHomeScreen();
+  },
+
+  exitApplication() {
+    sfx.buttonClick();
+    this.saveSessionToStorage(true);
+    document.getElementById("homeLandingScreen").classList.add("hidden");
+    document.getElementById("gameplayWorkspace").classList.add("hidden");
+    document.getElementById("closedSessionScreen").classList.remove("hidden");
+    document.getElementById("closedSummaryName").textContent = this.playerName;
+    document.getElementById("closedSummaryStatem").textContent = this.statemId;
+    document.getElementById("closedSummaryStage").textContent = `Stage ${this.currentWorld}-${this.currentSub}`;
+  },
+
   generateStatemId(name, world, sub, deaths) {
     const clean = (name || "PLAYER").replace(/[^a-zA-Z0-9]/g, "").toUpperCase().slice(0, 4).padEnd(3, "X");
     const dHex = Math.min(999, deaths || 0).toString(16).toUpperCase().padStart(3, "0");
@@ -800,7 +800,6 @@ const GameApp = {
       } else if (!cleanStatem && allSaves[nameKey]) {
         restored = allSaves[nameKey];
       } else {
-        // Search matching statemId
         for (const k of Object.keys(allSaves)) {
           if (cleanStatem && allSaves[k].statemId && allSaves[k].statemId.toUpperCase() === cleanStatem) {
             restored = allSaves[k];
@@ -826,7 +825,6 @@ const GameApp = {
       return true;
     }
 
-    // Fallback: decode portable Statem ID format MKL-XXXX-W2S4-00A
     const parsed = this.parseStatemId(cleanStatem);
     if (parsed) {
       this.playerName = cleanLogin;
@@ -847,7 +845,6 @@ const GameApp = {
       return true;
     }
 
-    // Otherwise start/update profile with that name
     this.playerName = cleanLogin;
     this.saveSessionToStorage(false);
     this.showToast(`Started active profile for ${this.playerName} (ID: ${this.statemId})`, "amber");
@@ -859,7 +856,6 @@ const GameApp = {
     return !!this.completedStages[`${world}-${sub - 1}`];
   },
 
-  // --- 5. LOAD & INITIALIZE A SUB-LEVEL ---
   loadStage(world, sub) {
     this.currentWorld = world;
     this.currentSub = sub;
@@ -867,7 +863,6 @@ const GameApp = {
     const raw = SUBLEVELS[key] || SUBLEVELS["1-1"];
     const meta = WORLD_META[world - 1];
 
-    // Deep clone stage config and apply Chaos Mutator micro-variations
     const jitter = this.chaosMutator ? (Math.random() * 14 - 7) : 0;
 
     this.stage = {
@@ -894,7 +889,7 @@ const GameApp = {
         ...p,
         origX: p.x,
         origY: p.y,
-        state: "idle", // 'idle', 'shaking', 'falling', 'crushing', 'returning'
+        state: "idle",
         timer: 0,
         vy: 0,
         alpha: p.type === "invisible" ? 0.04 : 1
@@ -923,7 +918,7 @@ const GameApp = {
       h: 30,
       vx: 0,
       vy: 0,
-      gravityDir: 1, // 1 = normal down, -1 = inverted up
+      gravityDir: 1,
       reverseControls: false,
       onGround: false,
       coyoteTimer: 0,
@@ -933,7 +928,6 @@ const GameApp = {
     };
 
     this.stateMode = "playing";
-    this.isPaused = false;
     this.particles = [];
     this.floatingTexts = [];
 
@@ -942,11 +936,9 @@ const GameApp = {
     this.renderSubLevelGrid();
   },
 
-  // --- 6. PHYSICS & TRAP ENGINE (60 FPS) ---
   update() {
     if (this.isPaused) return;
 
-    // Update particles & floating texts even on death/win
     for (let i = this.particles.length - 1; i >= 0; i--) {
       const pt = this.particles[i];
       pt.x += pt.vx;
@@ -974,7 +966,6 @@ const GameApp = {
     const st = this.stage;
     if (p.orbCooldown > 0) p.orbCooldown--;
 
-    // 1. Horizontal Movement (Respecting Mirror Curse & Ice Friction)
     let moveDir = 0;
     if (this.keys.left) moveDir -= 1;
     if (this.keys.right) moveDir += 1;
@@ -995,7 +986,6 @@ const GameApp = {
     }
     p.vx = Math.max(-maxSpeed, Math.min(maxSpeed, p.vx));
 
-    // 2. Jumping & Gravity
     if (p.onGround) {
       p.coyoteTimer = 7;
     } else if (p.coyoteTimer > 0) {
@@ -1015,7 +1005,6 @@ const GameApp = {
     p.vy += 0.52 * p.gravityDir;
     p.vy = Math.max(-15, Math.min(15, p.vy));
 
-    // 3. Update Dynamic Platforms (Crumble, Invisible, Crushers)
     const pCenterX = p.x + p.w / 2;
     const pCenterY = p.y + p.h / 2;
 
@@ -1074,7 +1063,6 @@ const GameApp = {
       }
     }
 
-    // 4. Move Player X & Resolve Horizontal Collisions
     p.x += p.vx;
     if (p.x < 8) { p.x = 8; p.vx = 0; }
     if (p.x + p.w > 792) { p.x = 792 - p.w; p.vx = 0; }
@@ -1096,13 +1084,11 @@ const GameApp = {
       }
     }
 
-    // 5. Move Player Y & Resolve Vertical Collisions
     p.y += p.vy;
     p.onGround = false;
 
     for (const plat of st.platforms) {
       if (plat.type === "fake") {
-        // If player touches fake platform, flash hologram warning
         if (this.aabb(p, plat) && !plat.warned) {
           plat.warned = true;
           sfx.trapTrigger();
@@ -1127,7 +1113,6 @@ const GameApp = {
             p.vy = 0;
           }
         } else {
-          // Upside-down gravity
           if (p.vy < 0) {
             p.y = plat.y + plat.h;
             p.vy = 0;
@@ -1140,7 +1125,6 @@ const GameApp = {
       }
     }
 
-    // 6. Check Hidden & Sliding Spikes
     for (const sp of st.spikes) {
       const spCenterX = sp.x + sp.w / 2;
       const spCenterY = sp.dir === "up" ? sp.y - sp.h / 2 : sp.y + sp.h / 2;
@@ -1169,7 +1153,6 @@ const GameApp = {
       }
     }
 
-    // 7. Check Special Objects (Slime, Gem, Orb, Switch, SawSpawner, FakePortal)
     for (const obj of st.objects) {
       if (obj.type === "slime") {
         const box = { x: obj.x, y: obj.y, w: obj.w, h: obj.h };
@@ -1189,7 +1172,6 @@ const GameApp = {
           if (obj.isTrap) {
             sfx.trapTrigger();
             this.addFloatingText(obj.x, obj.y - 12, "IT'S A TRAP!", "#ef4444");
-            // Drop any platform with id 'gem_plat' and spawn spikes around player
             for (const pl of st.platforms) {
               if (pl.id === "gem_plat") pl.state = "falling";
             }
@@ -1262,7 +1244,6 @@ const GameApp = {
       }
     }
 
-    // 8. Update Sawblade Projectiles
     for (let i = st.projectiles.length - 1; i >= 0; i--) {
       const proj = st.projectiles[i];
       proj.x += proj.vx;
@@ -1275,7 +1256,6 @@ const GameApp = {
       if (proj.x < -40 || proj.x > 840) st.projectiles.splice(i, 1);
     }
 
-    // 9. Update Portal Behavior & Check Victory
     const port = st.portal;
     const distToPortal = Math.hypot(pCenterX - (port.x + port.w / 2), pCenterY - (port.y + port.h / 2));
     if (port.behavior === "runaway" && !port.triggered && distToPortal < port.triggerDist) {
@@ -1292,7 +1272,6 @@ const GameApp = {
       return;
     }
 
-    // 10. Check Lava / Ceiling Void Death
     if (p.y + p.h >= st.lavaY || p.y < -35) {
       this.killPlayer(p.y < 0 ? "Lost in the upper ceiling void!" : "Burned in the molten magma pit!");
       return;
@@ -1411,7 +1390,6 @@ const GameApp = {
     this.floatingTexts.push({ x, y, text, color, life: 48 });
   },
 
-  // --- 7. VOXEL RENDERER ---
   draw() {
     const ctx = this.ctx;
     if (!ctx || !this.stage) return;
@@ -1425,14 +1403,12 @@ const GameApp = {
       ctx.translate(dx, dy);
     }
 
-    // 1. Background Sky Gradient + Voxel Grid
     const grad = ctx.createLinearGradient(0, 0, 0, 450);
     grad.addColorStop(0, meta.skyTop);
     grad.addColorStop(1, meta.skyBottom);
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, 800, 450);
 
-    // Subtle background voxel grid
     ctx.strokeStyle = "rgba(255,255,255,0.03)";
     ctx.lineWidth = 1;
     for (let gx = 0; gx < 800; gx += 32) {
@@ -1442,7 +1418,6 @@ const GameApp = {
       ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(800, gy); ctx.stroke();
     }
 
-    // 2. Molten Lava Pit at Bottom
     const lavaY = st.lavaY;
     const lavaGrad = ctx.createLinearGradient(0, lavaY, 0, 450);
     lavaGrad.addColorStop(0, "#f97316");
@@ -1451,7 +1426,6 @@ const GameApp = {
     ctx.fillStyle = lavaGrad;
     ctx.fillRect(0, lavaY, 800, 450 - lavaY);
 
-    // Lava bubbles
     const time = performance.now() * 0.004;
     ctx.fillStyle = "#fde047";
     for (let lx = 15; lx < 790; lx += 45) {
@@ -1459,7 +1433,6 @@ const GameApp = {
       ctx.fillRect(lx, lavaY + 2 + wave, 18, 4);
     }
 
-    // 3. Draw Platforms (Voxel Block Style)
     for (const plat of st.platforms) {
       if (plat.y > 460) continue;
       ctx.save();
@@ -1473,13 +1446,11 @@ const GameApp = {
       }
 
       if (plat.type === "crusher") {
-        // Piston Crusher Block
         ctx.fillStyle = "#475569";
         ctx.fillRect(drawX, drawY, plat.w, plat.h);
         ctx.strokeStyle = "#1e293b";
         ctx.lineWidth = 3;
         ctx.strokeRect(drawX, drawY, plat.w, plat.h);
-        // Redstone warning core & bottom teeth
         ctx.fillStyle = "#ef4444";
         ctx.fillRect(drawX + plat.w / 2 - 12, drawY + plat.h / 2 - 8, 24, 16);
         ctx.fillStyle = "#cbd5e1";
@@ -1495,18 +1466,15 @@ const GameApp = {
         ctx.lineWidth = 2;
         ctx.strokeRect(drawX, drawY, plat.w, plat.h);
       } else {
-        // Voxel Dirt/Stone/Obsidian block with top grass/cap
         ctx.fillStyle = meta.blockFill;
         ctx.fillRect(drawX, drawY, plat.w, plat.h);
 
-        // Pixel texture speckles
         ctx.fillStyle = "rgba(0,0,0,0.22)";
         for (let bx = drawX + 8; bx < drawX + plat.w - 8; bx += 24) {
           ctx.fillRect(bx, drawY + 14, 8, 8);
           if (plat.h > 32) ctx.fillRect(bx + 8, drawY + 28, 6, 6);
         }
 
-        // Top Voxel Layer
         ctx.fillStyle = plat.type === "crumble" && plat.state === "shaking" ? "#f59e0b" : meta.blockTop;
         ctx.fillRect(drawX, drawY, plat.w, 9);
 
@@ -1517,10 +1485,8 @@ const GameApp = {
       ctx.restore();
     }
 
-    // 4. Draw In-World Objects (Signs, Slime Pads, Switches, Orbs, Gems, Fake Portals)
     for (const obj of st.objects) {
       if (obj.type === "sign") {
-        // Wooden signpost
         ctx.fillStyle = "#78350f";
         ctx.fillRect(obj.x + 18, obj.y + 16, 6, 16);
         ctx.fillStyle = "#b45309";
@@ -1588,7 +1554,6 @@ const GameApp = {
       }
     }
 
-    // 5. Draw Spikes
     for (const sp of st.spikes) {
       if (!sp.active || sp.popProgress <= 0) continue;
       const h = sp.h * sp.popProgress;
@@ -1615,7 +1580,6 @@ const GameApp = {
       }
     }
 
-    // 6. Draw Sawblade Projectiles
     for (const proj of st.projectiles) {
       ctx.save();
       ctx.translate(proj.x, proj.y);
@@ -1632,35 +1596,28 @@ const GameApp = {
       ctx.restore();
     }
 
-    // 7. Draw Real Goal Portal
     const port = st.portal;
     this.drawPortalGraphic(ctx, port.x, port.y, port.w, port.h, port.locked ? "#64748b" : "#10b981", port.locked, time);
 
-    // 8. Draw Player (Blocky Voxel Character)
     if (this.stateMode !== "dead" && this.player) {
       const p = this.player;
       ctx.save();
       ctx.translate(p.x + p.w / 2, p.y + p.h / 2);
       if (p.gravityDir < 0) ctx.scale(1, -1);
 
-      // Legs
       const legSwing = Math.sin(p.animTick * 2) * 3 * (Math.abs(p.vx) > 0.2 ? 1 : 0);
       ctx.fillStyle = "#1d4ed8";
       ctx.fillRect(-9, 6, 7, 9 + legSwing);
       ctx.fillRect(2, 6, 7, 9 - legSwing);
 
-      // Torso (Cyan/Emerald tunic)
       ctx.fillStyle = p.reverseControls ? "#f59e0b" : "#06b6d4";
       ctx.fillRect(-10, -4, 20, 12);
 
-      // Voxel Head
       ctx.fillStyle = "#fcd34d";
       ctx.fillRect(-11, -15, 22, 13);
-      // Hair/Helmet top
       ctx.fillStyle = "#451a03";
       ctx.fillRect(-11, -15, 22, 4);
 
-      // Eyes & mischievous brow
       const eyeOffset = p.facing >= 0 ? 2 : -6;
       ctx.fillStyle = "#0f172a";
       ctx.fillRect(eyeOffset, -9, 3, 4);
@@ -1672,7 +1629,6 @@ const GameApp = {
       ctx.restore();
     }
 
-    // 9. Draw Particles & Floating Texts
     for (const pt of this.particles) {
       ctx.fillStyle = pt.color;
       ctx.fillRect(pt.x, pt.y, pt.size, pt.size);
@@ -1685,7 +1641,6 @@ const GameApp = {
       ctx.fillText(ft.text, ft.x, ft.y);
     }
 
-    // 10. Top Canvas Stage & False Hint Overlay Bar
     ctx.fillStyle = "rgba(13, 17, 23, 0.82)";
     ctx.fillRect(12, 10, 776, 28);
     ctx.strokeStyle = "rgba(255,255,255,0.12)";
@@ -1704,14 +1659,12 @@ const GameApp = {
   },
 
   drawPortalGraphic(ctx, x, y, w, h, color, locked, time) {
-    // Obsidian Portal Frame
     ctx.fillStyle = "#1e1b4b";
     ctx.fillRect(x, y, w, h);
     ctx.strokeStyle = "#7c3aed";
     ctx.lineWidth = 3;
     ctx.strokeRect(x, y, w, h);
 
-    // Swirling Inner Energy
     ctx.fillStyle = locked ? "#334155" : color;
     ctx.fillRect(x + 6, y + 6, w - 12, h - 12);
 
@@ -1732,7 +1685,6 @@ const GameApp = {
     }
   },
 
-  // --- 8. UI & DOM SYNCHRONIZATION ---
   updateSessionUI() {
     document.getElementById("hudPlayerName").textContent = this.playerName;
     document.getElementById("hudStatemId").textContent = this.statemId;
@@ -1891,9 +1843,48 @@ const GameApp = {
     this.toastTimeout = setTimeout(() => toast.classList.add("hidden"), 3600);
   },
 
-  // --- 9. EVENT LISTENERS (KEYBOARD + TOUCH CONSOLE + MODALS) ---
   bindEvents() {
-    // Keyboard controls
+    // Menu screen navigation
+    document.getElementById("btnMenuStart")?.addEventListener("click", () => {
+      sfx.buttonClick();
+      this.showGameplayScreen();
+    });
+
+    document.getElementById("btnMenuResume")?.addEventListener("click", () => {
+      sfx.buttonClick();
+      this.updateSessionUI();
+      document.getElementById("sessionModal")?.classList.remove("hidden");
+    });
+
+    document.getElementById("btnMenuHelp")?.addEventListener("click", () => {
+      sfx.buttonClick();
+      const sel = document.getElementById("helpStageSelect");
+      if (sel) {
+        sel.value = `${this.currentWorld}-${this.currentSub}`;
+        this.generateHelpInstructions(sel.value, "true");
+      }
+      document.getElementById("helpModal")?.classList.remove("hidden");
+    });
+
+    document.getElementById("btnMenuCredits")?.addEventListener("click", () => {
+      sfx.buttonClick();
+      document.getElementById("creditsModal")?.classList.remove("hidden");
+    });
+
+    document.getElementById("btnMenuExit")?.addEventListener("click", () => {
+      this.exitApplication();
+    });
+
+    document.getElementById("btnReturnHome")?.addEventListener("click", () => {
+      this.returnHome();
+    });
+
+    document.getElementById("btnReopenGameFromClosed")?.addEventListener("click", () => {
+      sfx.buttonClick();
+      document.getElementById("closedSessionScreen")?.classList.add("hidden");
+      this.showHomeScreen();
+    });
+
     window.addEventListener("keydown", (e) => {
       if (["INPUT", "SELECT", "TEXTAREA"].includes(document.activeElement?.tagName)) return;
       if (e.code === "ArrowLeft" || e.code === "KeyA") {
@@ -1933,7 +1924,6 @@ const GameApp = {
       }
     });
 
-    // Touch / Pointer Console Buttons
     const bindHoldButton = (id, keyName, isJump = false) => {
       const el = document.getElementById(id);
       if (!el) return;
@@ -1958,16 +1948,13 @@ const GameApp = {
     bindHoldButton("btnConsoleRight", "right", false);
     bindHoldButton("btnConsoleJump", "jump", true);
 
-    // Top & Console Action Buttons
     document.getElementById("btnPause")?.addEventListener("click", () => this.togglePause());
     document.getElementById("btnRestart")?.addEventListener("click", () => { sfx.buttonClick(); this.restartStage(); });
     document.getElementById("btnQuickSave")?.addEventListener("click", () => { sfx.buttonClick(); this.saveSessionToStorage(true); });
 
-    // Overlay Retry / Next
     document.getElementById("btnOverlayRetry")?.addEventListener("click", () => { sfx.buttonClick(); this.restartStage(); });
     document.getElementById("btnOverlayNext")?.addEventListener("click", () => { sfx.buttonClick(); this.nextStage(); });
 
-    // Unlock All Sub-Levels Toggle
     document.getElementById("btnToggleUnlockAll")?.addEventListener("click", () => {
       sfx.buttonClick();
       this.unlockedAll = !this.unlockedAll;
@@ -1978,7 +1965,6 @@ const GameApp = {
       this.renderSubLevelGrid();
     });
 
-    // Chaos Mutator Toggle
     document.getElementById("btnToggleChaos")?.addEventListener("click", () => {
       sfx.buttonClick();
       this.chaosMutator = !this.chaosMutator;
@@ -1988,14 +1974,12 @@ const GameApp = {
       }
     });
 
-    // Audio Mute Toggle
     document.getElementById("btnMute")?.addEventListener("click", () => {
       const muted = sfx.toggleMute();
       const btn = document.getElementById("btnMute");
       if (btn) btn.textContent = muted ? "🔇 Muted" : "🔊 SFX On";
     });
 
-    // Session / Login / Resume Modal
     document.getElementById("btnOpenSessionModal")?.addEventListener("click", () => {
       sfx.buttonClick();
       this.updateSessionUI();
@@ -2035,7 +2019,6 @@ const GameApp = {
       this.showToast(`Copied Statem ID: ${text}`, "emerald");
     });
 
-    // Help Desk Modal & Generator
     document.getElementById("btnOpenHelpModal")?.addEventListener("click", () => {
       sfx.buttonClick();
       const sel = document.getElementById("helpStageSelect");
@@ -2059,7 +2042,6 @@ const GameApp = {
       this.generateHelpInstructions(key, "false");
     });
 
-    // Credits / Mokuttan Labs Modal
     document.getElementById("btnOpenCreditsModal")?.addEventListener("click", () => {
       sfx.buttonClick();
       document.getElementById("creditsModal")?.classList.remove("hidden");
@@ -2068,36 +2050,6 @@ const GameApp = {
       document.getElementById("creditsModal")?.classList.add("hidden");
     });
 
-    // Close & Save Confirmation Modal
-    document.getElementById("btnCloseGamePrompt")?.addEventListener("click", () => {
-      sfx.buttonClick();
-      this.isPaused = true;
-      document.getElementById("closeConfirmStatemId").textContent = this.generateStatemId(
-        this.playerName, this.currentWorld, this.currentSub, this.totalDeaths
-      );
-      document.getElementById("closeConfirmModal")?.classList.remove("hidden");
-    });
-    document.getElementById("btnCancelCloseGame")?.addEventListener("click", () => {
-      sfx.buttonClick();
-      this.isPaused = false;
-      document.getElementById("closeConfirmModal")?.classList.add("hidden");
-    });
-    document.getElementById("btnSaveAndCloseGame")?.addEventListener("click", () => {
-      sfx.buttonClick();
-      this.saveSessionToStorage(true);
-      document.getElementById("closeConfirmModal")?.classList.add("hidden");
-      document.getElementById("closedSessionScreen")?.classList.remove("hidden");
-      document.getElementById("closedSummaryName").textContent = this.playerName;
-      document.getElementById("closedSummaryStatem").textContent = this.statemId;
-      document.getElementById("closedSummaryStage").textContent = `Stage ${this.currentWorld}-${this.currentSub}`;
-    });
-    document.getElementById("btnReopenGameFromClosed")?.addEventListener("click", () => {
-      sfx.buttonClick();
-      this.isPaused = false;
-      document.getElementById("closedSessionScreen")?.classList.add("hidden");
-    });
-
-    // Browser Tab Close Protection (Auto-save + Prompt if unsaved)
     window.addEventListener("beforeunload", (e) => {
       this.saveSessionToStorage(false);
       if (this.unsavedChanges) {
