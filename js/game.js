@@ -65,12 +65,11 @@ const SUBLEVELS = {
   "1-5": { title: "1-5: Fool's Diamond", falseHint: "Collect Golden Gem.", trueGuide: "Gem is a trap!", spawn: { x: 45, y: 310 }, portal: { x: 720, y: 262, behavior: "static" }, lavaY: 418, platforms: [{ x: 20, y: 350, w: 170, h: 70, type: "solid" }, { x: 230, y: 320, w: 120, h: 30, type: "solid" }, { x: 390, y: 290, w: 135, h: 30, type: "solid", id: "gem_plat" }, { x: 565, y: 320, w: 205, h: 70, type: "solid" }], spikes: [], objects: [{ type: "gem", x: 455, y: 215, isTrap: true, label: "KEY?" }] },
   "1-6": { title: "1-6: Slime Pad Betrayal", falseHint: "Bounce safely.", trueGuide: "Spikes above 3rd pad.", spawn: { x: 45, y: 310 }, portal: { x: 725, y: 232, behavior: "static" }, lavaY: 418, platforms: [{ x: 20, y: 350, w: 160, h: 70, type: "solid" }, { x: 235, y: 310, w: 130, h: 40, type: "solid" }, { x: 425, y: 280, w: 145, h: 40, type: "solid" }, { x: 615, y: 290, w: 160, h: 80, type: "solid" }], spikes: [{ x: 475, y: 70, w: 90, h: 20, dir: "down", hidden: false }], objects: [{ type: "slime", x: 510, y: 268, w: 36, h: 12, vy: -18.5, betrayal: true }] },
   "1-7": { title: "1-7: Overworld Boss Gauntlet", falseHint: "Enter green portal.", trueGuide: "Middle portal is decoy.", spawn: { x: 40, y: 310 }, portal: { x: 725, y: 252, behavior: "runaway", targetX: 740, triggerDist: 80 }, lavaY: 418, platforms: [{ x: 20, y: 350, w: 155, h: 70, type: "solid" }, { x: 345, y: 310, w: 165, h: 45, type: "solid" }, { x: 660, y: 310, w: 120, h: 75, type: "solid" }], spikes: [], objects: [{ type: "fakePortal", x: 445, y: 252, tpX: 80, tpY: 280 }] },
-  // Populate remaining stages 2-1 through 3-7 similarly
   "2-1": { title: "2-1: Phantom Cobblestone", falseHint: "Bridge is solid.", trueGuide: "Invisible platforms.", spawn: { x: 45, y: 310 }, portal: { x: 725, y: 292, behavior: "static" }, lavaY: 418, platforms: [{ x: 20, y: 350, w: 755, h: 70, type: "solid" }], spikes: [], objects: [] },
   "2-2": { title: "2-2: Gravity Inversion", falseHint: "Stay on bottom.", trueGuide: "Use gravity orb.", spawn: { x: 45, y: 310 }, portal: { x: 720, y: 292, behavior: "static" }, lavaY: 418, platforms: [{ x: 20, y: 350, w: 755, h: 70, type: "solid" }], spikes: [], objects: [{ type: "orb", orbType: "gravity", x: 215, y: 295 }] },
   "2-3": { title: "2-3: Redstone Saw Ambush", falseHint: "Walk slowly.", trueGuide: "Jump saws.", spawn: { x: 45, y: 310 }, portal: { x: 725, y: 272, behavior: "static" }, lavaY: 418, platforms: [{ x: 20, y: 350, w: 755, h: 70, type: "solid" }], spikes: [], objects: [] },
-  "2-4": { title: "2-4: Mirror Curse Chamber", falseHint: "Controls normal.", trueGuide: "Controls reverse.", spawn: { x: 45, y: 310 }, portal: { x: 720, y: 292, behavior: "static" }, lavaY: 418, platforms: [{ x: 20, y: 350, w: 755, h: 70, type: "solid" }], spikes: [], objects: [] },
-  "2-5": { title: "2-5: Pressure Plate Bluff", falseHint: "Step on Gold Switch.", trueGuide: "Gold switch is trap.", spawn: { x: 45, y: 310 }, portal: { x: 720, y: 292, behavior: "locked" }, lavaY: 418, platforms: [{ x: 20, y: 350, w: 755, h: 70, type: "solid" }], spikes: [], objects: [] },
+  "2-4": { title: "2-4: Mirror Curse Chamber", falseHint: "Controls normal.", trueGuide: "Controls reverse.", spawn: { x: 45, y: 310 }, portal: { x: 720, y: 292, behavior: "static" }, lavaY: 418, platforms: [{ x: 20, y: 350, w: 755, h: 70, type: "solid" }], spikes: [], objects: [{ type: "orb", orbType: "reverse", x: 355, y: 295, radius: 55 }] },
+  "2-5": { title: "2-5: Pressure Plate Bluff", falseHint: "Step on Gold Switch.", trueGuide: "Gold switch is trap.", spawn: { x: 45, y: 310 }, portal: { x: 720, y: 292, behavior: "locked" }, lavaY: 418, platforms: [{ x: 20, y: 350, w: 755, h: 70, type: "solid" }], spikes: [], objects: [{ type: "switch", x: 255, y: 340, isFake: true, color: "#f59e0b" }] },
   "2-6": { title: "2-6: Twin Portals Dilemma", falseHint: "Lower portal is easy.", trueGuide: "Use upper ledge.", spawn: { x: 45, y: 310 }, portal: { x: 705, y: 127, behavior: "static" }, lavaY: 418, platforms: [{ x: 20, y: 350, w: 755, h: 70, type: "solid" }], spikes: [], objects: [] },
   "2-7": { title: "2-7: Cavern Core Collapse", falseHint: "Bedrock floor safe.", trueGuide: "Everything crumbles.", spawn: { x: 40, y: 310 }, portal: { x: 650, y: 272, behavior: "runaway", targetX: 730, triggerDist: 95 }, lavaY: 418, platforms: [{ x: 20, y: 350, w: 755, h: 70, type: "solid" }], spikes: [], objects: [] },
   "3-1": { title: "3-1: Slippery Obsidian Ice", falseHint: "Full speed on ice.", trueGuide: "Slide into spikes.", spawn: { x: 45, y: 310 }, portal: { x: 725, y: 272, behavior: "static" }, lavaY: 418, platforms: [{ x: 20, y: 350, w: 755, h: 70, type: "solid" }], spikes: [], objects: [] },
@@ -188,7 +187,6 @@ const GameApp = {
     const key = `${world}-${sub}`;
     const raw = SUBLEVELS[key] || SUBLEVELS["1-1"];
     const meta = WORLD_META[world - 1];
-    const jitter = this.chaosMutator ? (Math.random() * 14 - 7) : 0;
 
     this.stage = {
       key, world, sub, meta,
@@ -320,14 +318,40 @@ const GameApp = {
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, 800, 450);
 
+    ctx.strokeStyle = "rgba(255,255,255,0.03)";
+    ctx.lineWidth = 1;
+    for (let gx = 0; gx < 800; gx += 32) {
+      ctx.beginPath(); ctx.moveTo(gx, 0); ctx.lineTo(gx, 450); ctx.stroke();
+    }
+    for (let gy = 0; gy < 450; gy += 32) {
+      ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(800, gy); ctx.stroke();
+    }
+
     const lavaY = st.lavaY;
-    ctx.fillStyle = "#ef4444";
+    const lavaGrad = ctx.createLinearGradient(0, lavaY, 0, 450);
+    lavaGrad.addColorStop(0, "#f97316");
+    lavaGrad.addColorStop(0.35, "#ef4444");
+    lavaGrad.addColorStop(1, "#7f1d1d");
+    ctx.fillStyle = lavaGrad;
     ctx.fillRect(0, lavaY, 800, 450 - lavaY);
+
+    const time = performance.now() * 0.004;
+    ctx.fillStyle = "#fde047";
+    for (let lx = 15; lx < 790; lx += 45) {
+      const wave = Math.sin(time + lx * 0.1) * 3;
+      ctx.fillRect(lx, lavaY + 2 + wave, 18, 4);
+    }
 
     for (const plat of st.platforms) {
       if (plat.y > 460) continue;
       ctx.fillStyle = meta.blockFill;
       ctx.fillRect(plat.x, plat.y, plat.w, plat.h);
+
+      ctx.fillStyle = "rgba(0,0,0,0.22)";
+      for (let bx = plat.x + 8; bx < plat.x + plat.w - 8; bx += 24) {
+        ctx.fillRect(bx, plat.y + 14, 8, 8);
+      }
+
       ctx.fillStyle = meta.blockTop;
       ctx.fillRect(plat.x, plat.y, plat.w, 9);
       ctx.strokeStyle = meta.blockBorder;
@@ -337,37 +361,86 @@ const GameApp = {
 
     for (const obj of st.objects) {
       if (obj.type === "sign") {
+        ctx.fillStyle = "#78350f";
+        ctx.fillRect(obj.x + 18, obj.y + 16, 6, 16);
         ctx.fillStyle = "#b45309";
-        ctx.fillRect(obj.x - 20, obj.y - 6, 80, 20);
+        ctx.fillRect(obj.x - 36, obj.y - 6, 114, 22);
+        ctx.strokeStyle = "#451a03";
+        ctx.lineWidth = 2;
+        ctx.strokeRect(obj.x - 36, obj.y - 6, 114, 22);
         ctx.fillStyle = "#fef3c7";
-        ctx.font = "bold 8px monospace";
+        ctx.font = "bold 9px monospace";
         ctx.textAlign = "center";
-        ctx.fillText(obj.text, obj.x + 20, obj.y + 7);
+        ctx.fillText(obj.text, obj.x + 21, obj.y + 8);
       }
     }
 
     const port = st.portal;
-    ctx.fillStyle = port.locked ? "#64748b" : "#10b981";
-    ctx.fillRect(port.x, port.y, port.w, port.h);
-    ctx.strokeStyle = "#047857";
-    ctx.lineWidth = 3;
-    ctx.strokeRect(port.x, port.y, port.w, port.h);
-    ctx.fillStyle = "#ffffff";
-    ctx.font = "bold 9px monospace";
-    ctx.textAlign = "center";
-    ctx.fillText("EXIT", port.x + port.w / 2, port.y - 5);
+    this.drawPortalGraphic(ctx, port.x, port.y, port.w, port.h, port.locked ? "#64748b" : "#10b981", port.locked, time);
 
     if (this.stateMode !== "dead" && this.player) {
       const p = this.player;
       ctx.save();
       ctx.translate(p.x + p.w / 2, p.y + p.h / 2);
+
+      ctx.fillStyle = "#1d4ed8";
+      ctx.fillRect(-9, 6, 7, 9);
+      ctx.fillRect(2, 6, 7, 9);
+
       ctx.fillStyle = "#06b6d4";
       ctx.fillRect(-10, -4, 20, 12);
+
       ctx.fillStyle = "#fcd34d";
       ctx.fillRect(-11, -15, 22, 13);
+      ctx.fillStyle = "#451a03";
+      ctx.fillRect(-11, -15, 22, 4);
+
+      const eyeOffset = p.facing >= 0 ? 2 : -6;
+      ctx.fillStyle = "#0f172a";
+      ctx.fillRect(eyeOffset, -9, 3, 4);
+      ctx.fillRect(eyeOffset + 6, -9, 3, 4);
+
+      ctx.strokeStyle = "#0f172a";
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(-11, -15, 22, 13);
       ctx.restore();
     }
+
+    ctx.fillStyle = "rgba(13, 17, 23, 0.82)";
+    ctx.fillRect(12, 10, 776, 28);
+    ctx.strokeStyle = "rgba(255,255,255,0.12)";
+    ctx.strokeRect(12, 10, 776, 28);
+
+    ctx.fillStyle = meta.themeColor;
+    ctx.font = "bold 12px monospace";
+    ctx.textAlign = "left";
+    ctx.fillText(`[${st.title}]`, 22, 28);
+
+    ctx.fillStyle = "#fde047";
+    ctx.font = "11px monospace";
+    ctx.fillText(`HINT: "${st.falseHint}"`, 235, 28);
+
     ctx.restore();
+  },
+
+  drawPortalGraphic(ctx, x, y, w, h, color, locked, time) {
+    ctx.fillStyle = "#1e1b4b";
+    ctx.fillRect(x, y, w, h);
+    ctx.strokeStyle = "#7c3aed";
+    ctx.lineWidth = 3;
+    ctx.strokeRect(x, y, w, h);
+
+    ctx.fillStyle = locked ? "#334155" : color;
+    ctx.fillRect(x + 6, y + 6, w - 12, h - 12);
+
+    const pulseOff = Math.sin(time * 4) * 3;
+    ctx.fillStyle = locked ? "#64748b" : "#a7f3d0";
+    ctx.fillRect(x + 11, y + 12 + pulseOff, w - 22, h - 24);
+
+    ctx.fillStyle = locked ? "#f87171" : "#6ee7b7";
+    ctx.font = "bold 9px monospace";
+    ctx.textAlign = "center";
+    ctx.fillText(locked ? "LOCKED" : "EXIT", x + w / 2, y - 5);
   },
 
   updateHUD() {
@@ -468,7 +541,6 @@ const GameApp = {
     document.getElementById("btnOverlayRetry")?.addEventListener("click", () => { sfx.buttonClick(); this.restartStage(); });
     document.getElementById("btnOverlayNext")?.addEventListener("click", () => { sfx.buttonClick(); this.nextStage(); });
 
-    // Chaos Mutator Button Toggle Fix
     document.getElementById("btnToggleChaos")?.addEventListener("click", () => {
       sfx.buttonClick();
       this.chaosMutator = !this.chaosMutator;
