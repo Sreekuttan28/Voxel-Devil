@@ -9,6 +9,7 @@ class VoxelAudio {
     this.ctx = null;
     this.muted = false;
   }
+
   init() {
     if (!this.ctx) {
       const AudioCtx = window.AudioContext || window.webkitAudioContext;
@@ -16,7 +17,12 @@ class VoxelAudio {
     }
     if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume();
   }
-  toggleMute() { this.muted = !this.muted; return this.muted; }
+
+  toggleMute() {
+    this.muted = !this.muted;
+    return this.muted;
+  }
+
   playTone(freq, type, duration, vol = 0.12, slideFreq = null) {
     if (this.muted) return;
     try {
@@ -27,7 +33,9 @@ class VoxelAudio {
       const gain = this.ctx.createGain();
       osc.type = type;
       osc.frequency.setValueAtTime(freq, now);
-      if (slideFreq) osc.frequency.exponentialRampToValueAtTime(Math.max(20, slideFreq), now + duration);
+      if (slideFreq) {
+        osc.frequency.exponentialRampToValueAtTime(Math.max(20, slideFreq), now + duration);
+      }
       gain.gain.setValueAtTime(vol, now);
       gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
       osc.connect(gain);
@@ -36,6 +44,7 @@ class VoxelAudio {
       osc.stop(now + duration);
     } catch (e) {}
   }
+
   jump() { this.playTone(240, 'square', 0.14, 0.1, 520); }
   trapTrigger() { this.playTone(580, 'sawtooth', 0.12, 0.12, 190); }
   death() {
@@ -46,39 +55,73 @@ class VoxelAudio {
     [330, 440, 554, 659, 880].forEach((n, idx) => { setTimeout(() => this.playTone(n, 'triangle', 0.16, 0.13), idx * 65); });
   }
   bounce() { this.playTone(180, 'sine', 0.2, 0.14, 680); }
+  gravityFlip() { this.playTone(420, 'triangle', 0.22, 0.12, 840); }
   buttonClick() { this.playTone(520, 'square', 0.06, 0.07, 660); }
 }
 
 const sfx = new VoxelAudio();
 
 const WORLD_META = [
-  { id: 1, name: "Level 1: Overworld Meadows", subtitle: "Deceptive Dirt & Sinkholes", difficultyBadge: "NORMAL • TIER I", themeColor: "#10b981", skyTop: "#0f172a", skyBottom: "#1e293b", blockTop: "#4ade80", blockFill: "#854d0e", blockBorder: "#422006" },
-  { id: 2, name: "Level 2: Redstone Caverns", subtitle: "Circuitry & Gravity", difficultyBadge: "HARD • TIER II", themeColor: "#f59e0b", skyTop: "#18111d", skyBottom: "#271722", blockTop: "#64748b", blockFill: "#334155", blockBorder: "#1e293b" },
-  { id: 3, name: "Level 3: Obsidian Core", subtitle: "Maximum Frustration", difficultyBadge: "NIGHTMARE • TIER III", themeColor: "#ef4444", skyTop: "#1a0808", skyBottom: "#2d0c14", blockTop: "#a855f7", blockFill: "#3b0764", blockBorder: "#581c87" }
+  {
+    id: 1,
+    name: "Level 1: Overworld Meadows",
+    subtitle: "Deceptive Dirt & Sudden Sinkholes",
+    difficultyBadge: "NORMAL • TROLL TIER I",
+    themeColor: "#10b981",
+    skyTop: "#0f172a",
+    skyBottom: "#1e293b",
+    blockTop: "#4ade80",
+    blockFill: "#854d0e",
+    blockBorder: "#422006"
+  },
+  {
+    id: 2,
+    name: "Level 2: Redstone Caverns",
+    subtitle: "Circuitry Traps, Pistons & Gravity Tricks",
+    difficultyBadge: "HARD • TROLL TIER II",
+    themeColor: "#f59e0b",
+    skyTop: "#18111d",
+    skyBottom: "#271722",
+    blockTop: "#64748b",
+    blockFill: "#334155",
+    blockBorder: "#1e293b"
+  },
+  {
+    id: 3,
+    name: "Level 3: Obsidian Core",
+    subtitle: "Maximum Frustration & Relentless Chaos",
+    difficultyBadge: "NIGHTMARE • TROLL TIER III",
+    themeColor: "#ef4444",
+    skyTop: "#1a0808",
+    skyBottom: "#2d0c14",
+    blockTop: "#a855f7",
+    blockFill: "#3b0764",
+    blockBorder: "#581c87"
+  }
 ];
 
 const SUBLEVELS = {
-  "1-1": { title: "1-1: Trust the Grass", falseHint: "Hold RIGHT all the way across!", trueGuide: "Center bridge collapses. Jump immediately.", spawn: { x: 55, y: 310 }, portal: { x: 720, y: 292, behavior: "static" }, lavaY: 418, platforms: [{ x: 20, y: 350, w: 210, h: 70, type: "solid" }, { x: 230, y: 350, w: 80, h: 35, type: "solid" }, { x: 310, y: 350, w: 80, h: 35, type: "crumble", delay: 6, triggerDist: 55 }, { x: 390, y: 350, w: 85, h: 35, type: "crumble", delay: 8, triggerDist: 55 }, { x: 475, y: 350, w: 295, h: 70, type: "solid" }], spikes: [{ x: 615, y: 350, w: 32, h: 18, dir: "up", hidden: true, triggerDist: 95 }], objects: [{ type: "sign", x: 150, y: 318, text: "100% SAFE BRIDGE ->" }] },
-  "1-2": { title: "1-2: The Helpful Signpost", falseHint: "Take lower bridge.", trueGuide: "Lower road is fake! Jump to upper stone ledges.", spawn: { x: 45, y: 310 }, portal: { x: 720, y: 292, behavior: "static" }, lavaY: 418, platforms: [{ x: 20, y: 350, w: 165, h: 70, type: "solid" }, { x: 185, y: 350, w: 390, h: 32, type: "fake" }, { x: 195, y: 275, w: 105, h: 24, type: "solid" }, { x: 340, y: 220, w: 115, h: 24, type: "solid" }, { x: 495, y: 265, w: 105, h: 24, type: "solid" }, { x: 575, y: 350, w: 195, h: 70, type: "solid" }], spikes: [{ x: 390, y: 220, w: 28, h: 16, dir: "up", hidden: true, triggerDist: 80 }], objects: [{ type: "sign", x: 120, y: 318, text: "LOW ROAD = SAFE!" }] },
-  "1-3": { title: "1-3: Shy Emerald Portal", falseHint: "Portal is in the middle.", trueGuide: "Portal slides away.", spawn: { x: 50, y: 310 }, portal: { x: 440, y: 292, behavior: "runaway", targetX: 715, triggerDist: 115 }, lavaY: 418, platforms: [{ x: 20, y: 350, w: 180, h: 70, type: "solid" }, { x: 245, y: 325, w: 255, h: 45, type: "solid" }, { x: 500, y: 325, w: 95, h: 30, type: "crumble", delay: 5, triggerDist: 65 }, { x: 630, y: 350, w: 145, h: 70, type: "solid" }], spikes: [], objects: [] },
-  "1-4": { title: "1-4: Piston Sky-Drop", falseHint: "Sprint non-stop.", trueGuide: "Watch ceiling crushers.", spawn: { x: 45, y: 310 }, portal: { x: 725, y: 292, behavior: "static" }, lavaY: 418, platforms: [{ x: 20, y: 350, w: 340, h: 70, type: "solid" }, { x: 405, y: 350, w: 365, h: 70, type: "solid" }, { x: 220, y: 40, w: 85, h: 90, type: "crusher", triggerX: 195, maxDropY: 258, speed: 12 }], spikes: [], objects: [] },
-  "1-5": { title: "1-5: Fool's Diamond", falseHint: "Collect Golden Gem.", trueGuide: "Gem is a trap!", spawn: { x: 45, y: 310 }, portal: { x: 720, y: 262, behavior: "static" }, lavaY: 418, platforms: [{ x: 20, y: 350, w: 170, h: 70, type: "solid" }, { x: 230, y: 320, w: 120, h: 30, type: "solid" }, { x: 390, y: 290, w: 135, h: 30, type: "solid", id: "gem_plat" }, { x: 565, y: 320, w: 205, h: 70, type: "solid" }], spikes: [], objects: [{ type: "gem", x: 455, y: 215, isTrap: true, label: "KEY?" }] },
-  "1-6": { title: "1-6: Slime Pad Betrayal", falseHint: "Bounce safely.", trueGuide: "Spikes above 3rd pad.", spawn: { x: 45, y: 310 }, portal: { x: 725, y: 232, behavior: "static" }, lavaY: 418, platforms: [{ x: 20, y: 350, w: 160, h: 70, type: "solid" }, { x: 235, y: 310, w: 130, h: 40, type: "solid" }, { x: 425, y: 280, w: 145, h: 40, type: "solid" }, { x: 615, y: 290, w: 160, h: 80, type: "solid" }], spikes: [{ x: 475, y: 70, w: 90, h: 20, dir: "down", hidden: false }], objects: [{ type: "slime", x: 510, y: 268, w: 36, h: 12, vy: -18.5, betrayal: true }] },
-  "1-7": { title: "1-7: Overworld Boss Gauntlet", falseHint: "Enter green portal.", trueGuide: "Middle portal is decoy.", spawn: { x: 40, y: 310 }, portal: { x: 725, y: 252, behavior: "runaway", targetX: 740, triggerDist: 80 }, lavaY: 418, platforms: [{ x: 20, y: 350, w: 155, h: 70, type: "solid" }, { x: 345, y: 310, w: 165, h: 45, type: "solid" }, { x: 660, y: 310, w: 120, h: 75, type: "solid" }], spikes: [], objects: [{ type: "fakePortal", x: 445, y: 252, tpX: 80, tpY: 280 }] },
-  "2-1": { title: "2-1: Phantom Cobblestone", falseHint: "Bridge is solid.", trueGuide: "Invisible platforms.", spawn: { x: 45, y: 310 }, portal: { x: 725, y: 292, behavior: "static" }, lavaY: 418, platforms: [{ x: 20, y: 350, w: 755, h: 70, type: "solid" }], spikes: [], objects: [] },
-  "2-2": { title: "2-2: Gravity Inversion", falseHint: "Stay on bottom.", trueGuide: "Use gravity orb.", spawn: { x: 45, y: 310 }, portal: { x: 720, y: 292, behavior: "static" }, lavaY: 418, platforms: [{ x: 20, y: 350, w: 755, h: 70, type: "solid" }], spikes: [], objects: [{ type: "orb", orbType: "gravity", x: 215, y: 295 }] },
-  "2-3": { title: "2-3: Redstone Saw Ambush", falseHint: "Walk slowly.", trueGuide: "Jump saws.", spawn: { x: 45, y: 310 }, portal: { x: 725, y: 272, behavior: "static" }, lavaY: 418, platforms: [{ x: 20, y: 350, w: 755, h: 70, type: "solid" }], spikes: [], objects: [] },
-  "2-4": { title: "2-4: Mirror Curse Chamber", falseHint: "Controls normal.", trueGuide: "Controls reverse.", spawn: { x: 45, y: 310 }, portal: { x: 720, y: 292, behavior: "static" }, lavaY: 418, platforms: [{ x: 20, y: 350, w: 755, h: 70, type: "solid" }], spikes: [], objects: [{ type: "orb", orbType: "reverse", x: 355, y: 295, radius: 55 }] },
-  "2-5": { title: "2-5: Pressure Plate Bluff", falseHint: "Step on Gold Switch.", trueGuide: "Gold switch is trap.", spawn: { x: 45, y: 310 }, portal: { x: 720, y: 292, behavior: "locked" }, lavaY: 418, platforms: [{ x: 20, y: 350, w: 755, h: 70, type: "solid" }], spikes: [], objects: [{ type: "switch", x: 255, y: 340, isFake: true, color: "#f59e0b" }] },
-  "2-6": { title: "2-6: Twin Portals Dilemma", falseHint: "Lower portal is easy.", trueGuide: "Use upper ledge.", spawn: { x: 45, y: 310 }, portal: { x: 705, y: 127, behavior: "static" }, lavaY: 418, platforms: [{ x: 20, y: 350, w: 755, h: 70, type: "solid" }], spikes: [], objects: [] },
-  "2-7": { title: "2-7: Cavern Core Collapse", falseHint: "Bedrock floor safe.", trueGuide: "Everything crumbles.", spawn: { x: 40, y: 310 }, portal: { x: 650, y: 272, behavior: "runaway", targetX: 730, triggerDist: 95 }, lavaY: 418, platforms: [{ x: 20, y: 350, w: 755, h: 70, type: "solid" }], spikes: [], objects: [] },
-  "3-1": { title: "3-1: Slippery Obsidian Ice", falseHint: "Full speed on ice.", trueGuide: "Slide into spikes.", spawn: { x: 45, y: 310 }, portal: { x: 725, y: 272, behavior: "static" }, lavaY: 418, platforms: [{ x: 20, y: 350, w: 755, h: 70, type: "solid" }], spikes: [], objects: [] },
-  "3-2": { title: "3-2: Double Gravity Flip", falseHint: "Ignore ceiling.", trueGuide: "Gravity orbs.", spawn: { x: 45, y: 310 }, portal: { x: 725, y: 292, behavior: "static" }, lavaY: 418, platforms: [{ x: 20, y: 350, w: 755, h: 70, type: "solid" }], spikes: [], objects: [] },
-  "3-3": { title: "3-3: The Betrayal Checkpoint", falseHint: "Touch checkpoint gem.", trueGuide: "Gem fires saw.", spawn: { x: 45, y: 310 }, portal: { x: 725, y: 292, behavior: "static" }, lavaY: 418, platforms: [{ x: 20, y: 350, w: 755, h: 70, type: "solid" }], spikes: [], objects: [] },
-  "3-4": { title: "3-4: Piston Alley", falseHint: "Wait under arches.", trueGuide: "Crushers fall.", spawn: { x: 45, y: 310 }, portal: { x: 725, y: 292, behavior: "static" }, lavaY: 418, platforms: [{ x: 20, y: 350, w: 755, h: 70, type: "solid" }], spikes: [], objects: [] },
-  "3-5": { title: "3-5: Switch & Bait", falseHint: "Portal unlocked.", trueGuide: "Use switch.", spawn: { x: 45, y: 310 }, portal: { x: 720, y: 272, behavior: "locked" }, lavaY: 418, platforms: [{ x: 20, y: 350, w: 755, h: 70, type: "solid" }], spikes: [], objects: [] },
-  "3-6": { title: "3-6: Teleporting Mirage", falseHint: "Both portals work.", trueGuide: "Lower portal fake.", spawn: { x: 45, y: 310 }, portal: { x: 645, y: 272, behavior: "runaway", targetX: 730, triggerDist: 105 }, lavaY: 418, platforms: [{ x: 20, y: 350, w: 755, h: 70, type: "solid" }], spikes: [], objects: [] },
-  "3-7": { title: "3-7: The Devil's Core", falseHint: "Grab golden crown.", trueGuide: "Ultimate gauntlet.", spawn: { x: 40, y: 310 }, portal: { x: 660, y: 262, behavior: "runaway", targetX: 730, triggerDist: 95, startsLocked: true }, lavaY: 418, platforms: [{ x: 20, y: 350, w: 755, h: 70, type: "solid" }], spikes: [], objects: [] }
+  "1-1": { title: "1-1: Trust the Grass", falseHint: "Hold RIGHT all the way across! The meadow bridge is 100% sturdy oak & dirt.", trueGuide: "The center bridge blocks collapse! Jump immediately.", spawn: { x: 55, y: 310 }, portal: { x: 720, y: 292, behavior: "static" }, lavaY: 418, platforms: [{ x: 20, y: 350, w: 210, h: 70, type: "solid" }, { x: 230, y: 350, w: 80, h: 35, type: "solid" }, { x: 310, y: 350, w: 80, h: 35, type: "crumble", delay: 6, triggerDist: 55 }, { x: 390, y: 350, w: 85, h: 35, type: "crumble", delay: 8, triggerDist: 55 }, { x: 475, y: 350, w: 295, h: 70, type: "solid" }], spikes: [{ x: 615, y: 350, w: 32, h: 18, dir: "up", hidden: true, triggerDist: 95 }], objects: [{ type: "sign", x: 150, y: 318, text: "100% SAFE BRIDGE ->" }] },
+  "1-2": { title: "1-2: The Helpful Signpost", falseHint: "Take the lower bridge marked 'SAFE EXPRESS'.", trueGuide: "Lower road is fake! Jump to upper stone ledges.", spawn: { x: 45, y: 310 }, portal: { x: 720, y: 292, behavior: "static" }, lavaY: 418, platforms: [{ x: 20, y: 350, w: 165, h: 70, type: "solid" }, { x: 185, y: 350, w: 390, h: 32, type: "fake" }, { x: 195, y: 275, w: 105, h: 24, type: "solid" }, { x: 340, y: 220, w: 115, h: 24, type: "solid" }, { x: 495, y: 265, w: 105, h: 24, type: "solid" }, { x: 575, y: 350, w: 195, h: 70, type: "solid" }], spikes: [{ x: 390, y: 220, w: 28, h: 16, dir: "up", hidden: true, triggerDist: 80 }], objects: [{ type: "sign", x: 120, y: 318, text: "LOW ROAD = SAFE!" }] },
+  "1-3": { title: "1-3: Shy Emerald Portal", falseHint: "The portal is waiting right in the middle.", trueGuide: "Portal slides away when approached.", spawn: { x: 50, y: 310 }, portal: { x: 440, y: 292, behavior: "runaway", targetX: 715, triggerDist: 115 }, lavaY: 418, platforms: [{ x: 20, y: 350, w: 180, h: 70, type: "solid" }, { x: 245, y: 325, w: 255, h: 45, type: "solid" }, { x: 500, y: 325, w: 95, h: 30, type: "crumble", delay: 5, triggerDist: 65 }, { x: 630, y: 350, w: 145, h: 70, type: "solid" }], spikes: [], objects: [] },
+  "1-4": { title: "1-4: Piston Sky-Drop", falseHint: "Sprint non-stop under arches!", trueGuide: "Watch ceiling crushers.", spawn: { x: 45, y: 310 }, portal: { x: 725, y: 292, behavior: "static" }, lavaY: 418, platforms: [{ x: 20, y: 350, w: 340, h: 70, type: "solid" }, { x: 405, y: 350, w: 365, h: 70, type: "solid" }, { x: 220, y: 40, w: 85, h: 90, type: "crusher", triggerX: 195, maxDropY: 258, speed: 12 }], spikes: [], objects: [] },
+  "1-5": { title: "1-5: Fool's Diamond", falseHint: "Collect the Golden Gem to unlock exit!", trueGuide: "Gem is a trap!", spawn: { x: 45, y: 310 }, portal: { x: 720, y: 262, behavior: "static" }, lavaY: 418, platforms: [{ x: 20, y: 350, w: 170, h: 70, type: "solid" }, { x: 230, y: 320, w: 120, h: 30, type: "solid" }, { x: 390, y: 290, w: 135, h: 30, type: "solid", id: "gem_plat" }, { x: 565, y: 320, w: 205, h: 70, type: "solid" }], spikes: [], objects: [{ type: "gem", x: 455, y: 215, isTrap: true, label: "KEY?" }] },
+  "1-6": { title: "1-6: Slime Pad Betrayal", falseHint: "Green slime pads bounce safely.", trueGuide: "3rd pad has ceiling spikes.", spawn: { x: 45, y: 310 }, portal: { x: 725, y: 232, behavior: "static" }, lavaY: 418, platforms: [{ x: 20, y: 350, w: 160, h: 70, type: "solid" }, { x: 235, y: 310, w: 130, h: 40, type: "solid" }, { x: 425, y: 280, w: 145, h: 40, type: "solid" }, { x: 615, y: 290, w: 160, h: 80, type: "solid" }], spikes: [{ x: 475, y: 70, w: 90, h: 20, dir: "down", hidden: false }], objects: [{ type: "slime", x: 510, y: 268, w: 36, h: 12, vy: -18.5, betrayal: true }] },
+  "1-7": { title: "1-7: Overworld Boss Gauntlet", falseHint: "Enter green portal in middle.", trueGuide: "Middle portal is decoy.", spawn: { x: 40, y: 310 }, portal: { x: 725, y: 252, behavior: "runaway", targetX: 740, triggerDist: 80 }, lavaY: 418, platforms: [{ x: 20, y: 350, w: 155, h: 70, type: "solid" }, { x: 345, y: 310, w: 165, h: 45, type: "solid" }, { x: 660, y: 310, w: 120, h: 75, type: "solid" }], spikes: [], objects: [{ type: "fakePortal", x: 445, y: 252, tpX: 80, tpY: 280 }] },
+  "2-1": { title: "2-1: Phantom Cobblestone", falseHint: "Stick to the glowing stone bridge in the center—there are no platforms above the gap!", trueGuide: "Invisible platforms above gap.", spawn: { x: 45, y: 310 }, portal: { x: 725, y: 292, behavior: "static" }, lavaY: 418, platforms: [{ x: 20, y: 350, w: 150, h: 70, type: "solid" }, { x: 170, y: 350, w: 420, h: 30, type: "fake" }, { x: 205, y: 265, w: 100, h: 24, type: "invisible", revealDist: 105 }, { x: 590, y: 350, w: 185, h: 70, type: "solid" }], spikes: [], objects: [{ type: "sign", x: 105, y: 318, text: "BRIDGE IS SOLID ->" }] },
+  "2-2": { title: "2-2: Gravity Inversion Orb", falseHint: "Stay on bottom floor.", trueGuide: "Use gravity orb.", spawn: { x: 45, y: 310 }, portal: { x: 720, y: 292, behavior: "static" }, lavaY: 418, platforms: [{ x: 20, y: 350, w: 755, h: 70, type: "solid" }], spikes: [], objects: [{ type: "orb", orbType: "gravity", x: 215, y: 295 }] },
+  "2-3": { title: "2-3: Redstone Saw Ambush", falseHint: "Walk slowly.", trueGuide: "Jump saws.", spawn: { x: 45, y: 310 }, portal: { x: 725, y: 272, behavior: "static" }, lavaY: 418, platforms: [{ x: 20, y: 350, w: 500, h: 70, type: "solid" }], spikes: [], objects: [{ type: "sawSpawner", triggerX: 200, spawnX: 760, spawnY: 324, vx: -7.5 }] },
+  "2-4": { title: "2-4: Mirror Curse Chamber", falseHint: "Controls normal.", trueGuide: "Controls reverse.", spawn: { x: 45, y: 310 }, portal: { x: 720, y: 292, behavior: "static" }, lavaY: 418, platforms: [{ x: 20, y: 350, w: 260, h: 70, type: "solid" }], spikes: [], objects: [{ type: "orb", orbType: "reverse", x: 355, y: 295, radius: 55 }] },
+  "2-5": { title: "2-5: Pressure Plate Bluff", falseHint: "Step on Gold Switch.", trueGuide: "Gold switch is trap.", spawn: { x: 45, y: 310 }, portal: { x: 720, y: 292, behavior: "locked" }, lavaY: 418, platforms: [{ x: 20, y: 350, w: 370, h: 70, type: "solid" }], spikes: [], objects: [{ type: "switch", x: 255, y: 340, isFake: true, color: "#f59e0b" }] },
+  "2-6": { title: "2-6: Twin Portals Dilemma", falseHint: "Lower portal is easy.", trueGuide: "Use upper ledge.", spawn: { x: 45, y: 310 }, portal: { x: 705, y: 127, behavior: "static" }, lavaY: 418, platforms: [{ x: 20, y: 350, w: 230, h: 70, type: "solid" }], spikes: [], objects: [] },
+  "2-7": { title: "2-7: Cavern Core Collapse", falseHint: "Bedrock floor safe.", trueGuide: "Everything crumbles.", spawn: { x: 40, y: 310 }, portal: { x: 650, y: 272, behavior: "runaway", targetX: 730, triggerDist: 95 }, lavaY: 418, platforms: [{ x: 20, y: 350, w: 125, h: 70, type: "solid" }], spikes: [], objects: [] },
+  "3-1": { title: "3-1: Slippery Obsidian Ice", falseHint: "Full speed on ice.", trueGuide: "Slide into spikes.", spawn: { x: 45, y: 310 }, portal: { x: 725, y: 272, behavior: "static" }, lavaY: 418, platforms: [{ x: 20, y: 350, w: 140, h: 70, type: "solid" }, { x: 190, y: 340, w: 185, h: 35, type: "ice" }], spikes: [], objects: [] },
+  "3-2": { title: "3-2: Double Gravity Flip", falseHint: "Ignore ceiling.", trueGuide: "Gravity orbs.", spawn: { x: 45, y: 310 }, portal: { x: 725, y: 292, behavior: "static" }, lavaY: 418, platforms: [{ x: 20, y: 350, w: 210, h: 70, type: "solid" }], spikes: [], objects: [] },
+  "3-3": { title: "3-3: The Betrayal Checkpoint", falseHint: "Touch checkpoint gem.", trueGuide: "Gem fires saw.", spawn: { x: 45, y: 310 }, portal: { x: 725, y: 292, behavior: "static" }, lavaY: 418, platforms: [{ x: 20, y: 350, w: 300, h: 70, type: "solid" }], spikes: [], objects: [] },
+  "3-4": { title: "3-4: Piston Alley", falseHint: "Wait under arches.", trueGuide: "Crushers fall.", spawn: { x: 45, y: 310 }, portal: { x: 725, y: 292, behavior: "static" }, lavaY: 418, platforms: [{ x: 20, y: 350, w: 460, h: 70, type: "solid" }], spikes: [], objects: [] },
+  "3-5": { title: "3-5: Switch & Bait", falseHint: "Portal unlocked.", trueGuide: "Use switch.", spawn: { x: 45, y: 310 }, portal: { x: 720, y: 272, behavior: "locked" }, lavaY: 418, platforms: [{ x: 20, y: 350, w: 240, h: 70, type: "solid" }], spikes: [], objects: [] },
+  "3-6": { title: "3-6: Teleporting Mirage", falseHint: "Both portals work.", trueGuide: "Lower portal fake.", spawn: { x: 45, y: 310 }, portal: { x: 645, y: 272, behavior: "runaway", targetX: 730, triggerDist: 105 }, lavaY: 418, platforms: [{ x: 20, y: 350, w: 155, h: 70, type: "solid" }], spikes: [], objects: [] },
+  "3-7": { title: "3-7: The Devil's Core", falseHint: "Grab golden crown.", trueGuide: "Ultimate gauntlet.", spawn: { x: 40, y: 310 }, portal: { x: 660, y: 262, behavior: "runaway", targetX: 730, triggerDist: 95, startsLocked: true }, lavaY: 418, platforms: [{ x: 20, y: 350, w: 235, h: 70, type: "solid" }], spikes: [], objects: [] }
 };
 
 const GameApp = {
