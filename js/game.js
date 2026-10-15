@@ -1139,7 +1139,44 @@ const GameApp = {
     this.isPaused = !this.isPaused;
     document.getElementById("pauseOverlay")?.classList.toggle("hidden", !this.isPaused);
   },
+// --- PWA INSTALL PROMPT HANDLER ---
+let deferredPwaPrompt = null;
 
+window.addEventListener('beforeinstallprompt', (e) => {
+  // Prevent Chrome from automatically showing the mini-infobar
+  e.preventDefault();
+  deferredPwaPrompt = e;
+  
+  // Reveal the custom install button in the UI
+  const installBtn = document.getElementById('btnInstallApp');
+  if (installBtn) {
+    installBtn.classList.remove('hidden');
+  }
+});
+
+// Bind click event to trigger the native installation dialog
+document.getElementById('btnInstallApp')?.addEventListener('click', async () => {
+  if (!deferredPwaPrompt) return;
+  
+  // Show the install prompt
+  deferredPwaPrompt.prompt();
+  
+  // Wait for the user to respond to the prompt
+  const { outcome } = await deferredPwaPrompt.userChoice;
+  if (outcome === 'accepted') {
+    console.log('User accepted the install prompt');
+    document.getElementById('btnInstallApp')?.classList.add('hidden');
+  } else {
+    console.log('User dismissed the install prompt');
+  }
+  
+  deferredPwaPrompt = null;
+});
+
+window.addEventListener('appinstalled', () => {
+  console.log('Voxel Devil was successfully installed as a PWA!');
+  document.getElementById('btnInstallApp')?.classList.add('hidden');
+});
   bindEvents() {
     document.getElementById("btnMenuStart")?.addEventListener("click", () => { sfx.buttonClick(); this.showStageSelectorScreen(); });
     document.getElementById("btnBackToHomeFromSelector")?.addEventListener("click", () => { sfx.buttonClick(); this.showHomeScreen(); });
