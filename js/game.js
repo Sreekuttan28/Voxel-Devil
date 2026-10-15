@@ -319,7 +319,7 @@ const SUBLEVELS = {
     spawn: { x: 45, y: 310 },
     portal: { x: 720, y: 292, behavior: "static" },
     lavaY: 418,
-    platforms: [{ x: 20, y: 350, w: 755, h: 70, type: "solid" }],
+    platforms: [{ x: 20, y: 350, w: 260, h: 70, type: "solid" }],
     spikes: [],
     objects: [{ type: "orb", orbType: "reverse", x: 355, y: 295, radius: 55 }]
   },
@@ -330,7 +330,7 @@ const SUBLEVELS = {
     spawn: { x: 45, y: 310 },
     portal: { x: 720, y: 292, behavior: "locked" },
     lavaY: 418,
-    platforms: [{ x: 20, y: 350, w: 755, h: 70, type: "solid" }],
+    platforms: [{ x: 20, y: 350, w: 370, h: 70, type: "solid" }],
     spikes: [],
     objects: [{ type: "switch", x: 255, y: 340, isFake: true, color: "#f59e0b" }, { type: "switch", x: 495, y: 340, isFake: false, color: "#10b981" }]
   },
@@ -341,7 +341,7 @@ const SUBLEVELS = {
     spawn: { x: 45, y: 310 },
     portal: { x: 705, y: 127, behavior: "static" },
     lavaY: 418,
-    platforms: [{ x: 20, y: 350, w: 755, h: 70, type: "solid" }, { x: 535, y: 185, w: 235, h: 28, type: "solid" }],
+    platforms: [{ x: 20, y: 350, w: 230, h: 70, type: "solid" }, { x: 535, y: 185, w: 235, h: 28, type: "solid" }],
     spikes: [],
     objects: [{ type: "slime", x: 445, y: 338, w: 38, h: 12, vy: -15.2 }, { type: "fakePortal", x: 710, y: 292, tpX: 270, tpY: 390 }]
   },
@@ -352,7 +352,7 @@ const SUBLEVELS = {
     spawn: { x: 40, y: 310 },
     portal: { x: 650, y: 272, behavior: "runaway", targetX: 730, triggerDist: 95 },
     lavaY: 418,
-    platforms: [{ x: 20, y: 350, w: 755, h: 70, type: "solid" }],
+    platforms: [{ x: 20, y: 350, w: 125, h: 70, type: "solid" }],
     spikes: [],
     objects: []
   },
@@ -385,7 +385,7 @@ const SUBLEVELS = {
     spawn: { x: 45, y: 310 },
     portal: { x: 725, y: 292, behavior: "static" },
     lavaY: 418,
-    platforms: [{ x: 20, y: 350, w: 755, h: 70, type: "solid" }],
+    platforms: [{ x: 20, y: 350, w: 300, h: 70, type: "solid" }],
     spikes: [],
     objects: [{ type: "gem", x: 385, y: 305, isTrap: true, label: "CHECKPOINT" }]
   },
@@ -396,7 +396,7 @@ const SUBLEVELS = {
     spawn: { x: 45, y: 310 },
     portal: { x: 725, y: 292, behavior: "static" },
     lavaY: 418,
-    platforms: [{ x: 20, y: 350, w: 755, h: 70, type: "solid" }],
+    platforms: [{ x: 20, y: 350, w: 460, h: 70, type: "solid" }],
     spikes: [],
     objects: [{ type: "orb", orbType: "reverse", x: 500, y: 290 }]
   },
@@ -407,7 +407,7 @@ const SUBLEVELS = {
     spawn: { x: 45, y: 310 },
     portal: { x: 720, y: 272, behavior: "locked" },
     lavaY: 418,
-    platforms: [{ x: 20, y: 350, w: 755, h: 70, type: "solid" }],
+    platforms: [{ x: 20, y: 350, w: 240, h: 70, type: "solid" }],
     spikes: [],
     objects: [{ type: "switch", x: 390, y: 325, isFake: false, color: "#10b981" }]
   },
@@ -418,7 +418,7 @@ const SUBLEVELS = {
     spawn: { x: 45, y: 310 },
     portal: { x: 645, y: 272, behavior: "runaway", targetX: 730, triggerDist: 105 },
     lavaY: 418,
-    platforms: [{ x: 20, y: 350, w: 755, h: 70, type: "solid" }],
+    platforms: [{ x: 20, y: 350, w: 155, h: 70, type: "solid" }],
     spikes: [],
     objects: [{ type: "fakePortal", x: 410, y: 272, tpX: 50, tpY: 290 }]
   },
@@ -429,7 +429,7 @@ const SUBLEVELS = {
     spawn: { x: 40, y: 310 },
     portal: { x: 660, y: 262, behavior: "runaway", targetX: 730, triggerDist: 95, startsLocked: true },
     lavaY: 418,
-    platforms: [{ x: 20, y: 350, w: 755, h: 70, type: "solid" }],
+    platforms: [{ x: 20, y: 350, w: 235, h: 70, type: "solid" }],
     spikes: [],
     objects: [{ type: "gem", x: 335, y: 280, isTrap: true, label: "INVINCIBILITY?" }, { type: "switch", x: 465, y: 310, isFake: false, color: "#10b981" }]
   }
@@ -459,6 +459,7 @@ const GameApp = {
   stageDeaths: {},
   totalDeaths: 0,
   chaosMutator: true,
+  chaosPool: [], // Shuffled chaos pool queue
   isPaused: false,
   stateMode: "playing",
   shakeTimer: 0,
@@ -487,6 +488,19 @@ const GameApp = {
       this.animFrameId = requestAnimationFrame(loop);
     };
     this.animFrameId = requestAnimationFrame(loop);
+  },
+
+  // Shuffled / Non-Repeating Chaos Jitter Generator
+  getNextChaosJitter() {
+    if (!this.chaosMutator) return 0;
+    if (this.chaosPool.length === 0) {
+      this.chaosPool = [-14, -10, -6, -2, 2, 6, 10, 14];
+      for (let i = this.chaosPool.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [this.chaosPool[i], this.chaosPool[j]] = [this.chaosPool[j], this.chaosPool[i]];
+      }
+    }
+    return this.chaosPool.pop();
   },
 
   showHomeScreen() {
@@ -611,7 +625,7 @@ const GameApp = {
     const key = `${world}-${sub}`;
     const raw = SUBLEVELS[key] || SUBLEVELS["1-1"];
     const meta = WORLD_META[world - 1];
-    const jitter = this.chaosMutator ? (Math.random() * 14 - 7) : 0;
+    const jitter = this.getNextChaosJitter();
 
     this.stage = {
       key, world, sub, meta,
@@ -703,7 +717,6 @@ const GameApp = {
     p.vy += 0.52 * p.gravityDir;
     p.vy = Math.max(-15, Math.min(15, p.vy));
 
-    // Platform logic
     const pCenterX = p.x + p.w / 2;
     const pCenterY = p.y + p.h / 2;
 
@@ -785,7 +798,6 @@ const GameApp = {
       }
     }
 
-    // Spikes check
     for (const sp of st.spikes) {
       const spCenterX = sp.x + sp.w / 2;
       const spCenterY = sp.dir === "up" ? sp.y - sp.h / 2 : sp.y + sp.h / 2;
@@ -802,7 +814,6 @@ const GameApp = {
       }
     }
 
-    // Objects check
     for (const obj of st.objects) {
       if (obj.type === "slime" && this.aabb(p, { x: obj.x, y: obj.y, w: obj.w, h: obj.h })) {
         p.vy = (obj.vy || -14) * p.gravityDir; p.onGround = false; sfx.bounce();
@@ -825,7 +836,6 @@ const GameApp = {
       }
     }
 
-    // Sawblade projectiles
     for (let i = st.projectiles.length - 1; i >= 0; i--) {
       const proj = st.projectiles[i];
       proj.x += proj.vx; proj.angle += 0.35;
@@ -974,17 +984,40 @@ const GameApp = {
       ctx.fillRect(sp.x, sp.y - sp.h, sp.w, sp.h);
     }
 
+    // Realistic Exit Door with Handle & Glowing Portal Frame
     const port = st.portal;
-    this.drawPortalGraphic(ctx, port.x, port.y, port.w, port.h, port.locked ? "#64748b" : "#10b981", port.locked, time);
+    this.drawRealisticDoor(ctx, port.x, port.y, port.w, port.h, port.locked ? "#64748b" : "#10b981", port.locked, time);
 
+    // Character with Detailed Eyes & Facial Expression
     if (this.stateMode !== "dead" && this.player) {
       const p = this.player;
       ctx.save();
       ctx.translate(p.x + p.w / 2, p.y + p.h / 2);
+
+      // Legs
+      ctx.fillStyle = "#1d4ed8";
+      ctx.fillRect(-9, 6, 7, 9);
+      ctx.fillRect(2, 6, 7, 9);
+
+      // Torso
       ctx.fillStyle = "#06b6d4";
       ctx.fillRect(-10, -4, 20, 12);
+
+      // Voxel Head
       ctx.fillStyle = "#fcd34d";
       ctx.fillRect(-11, -15, 22, 13);
+      ctx.fillStyle = "#451a03";
+      ctx.fillRect(-11, -15, 22, 4);
+
+      // Detailed Character Eyes & Pupils
+      const eyeOffset = p.facing >= 0 ? 2 : -6;
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(eyeOffset, -10, 4, 5);
+      ctx.fillRect(eyeOffset + 5, -10, 4, 5);
+      ctx.fillStyle = "#0f172a";
+      ctx.fillRect(p.facing >= 0 ? eyeOffset + 1 : eyeOffset + 2, -9, 2, 3);
+      ctx.fillRect(p.facing >= 0 ? eyeOffset + 5 : eyeOffset + 6, -9, 2, 3);
+
       ctx.strokeStyle = "#0f172a";
       ctx.lineWidth = 1.5;
       ctx.strokeRect(-11, -15, 22, 13);
@@ -994,12 +1027,29 @@ const GameApp = {
     ctx.restore();
   },
 
-  drawPortalGraphic(ctx, x, y, w, h, color, locked, time) {
+  drawRealisticDoor(ctx, x, y, w, h, color, locked, time) {
+    // Outer Door Frame
     ctx.fillStyle = "#1e1b4b"; ctx.fillRect(x, y, w, h);
     ctx.strokeStyle = "#7c3aed"; ctx.lineWidth = 3; ctx.strokeRect(x, y, w, h);
-    ctx.fillStyle = locked ? "#334155" : color; ctx.fillRect(x + 6, y + 6, w - 12, h - 12);
-    ctx.fillStyle = locked ? "#f87171" : "#6ee7b7"; ctx.font = "bold 9px monospace"; ctx.textAlign = "center";
-    ctx.fillText(locked ? "LOCKED" : "EXIT", x + w / 2, y - 5);
+    
+    // Inner Portal Energy
+    ctx.fillStyle = locked ? "#334155" : color; ctx.fillRect(x + 5, y + 5, w - 10, h - 10);
+    
+    // Pulse effect
+    const pulseOff = Math.sin(time * 4) * 2;
+    ctx.fillStyle = locked ? "#64748b" : "#a7f3d0"; 
+    ctx.fillRect(x + 9, y + 10 + pulseOff, w - 18, h - 20);
+
+    // Brass Door Handle
+    ctx.fillStyle = "#ca8a04";
+    ctx.fillRect(x + 6, y + h / 2 - 4, 5, 10);
+    ctx.fillStyle = "#fef08a";
+    ctx.fillRect(x + 7, y + h / 2 - 2, 3, 6);
+
+    // EXIT Sign Label
+    ctx.fillStyle = locked ? "#f87171" : "#6ee7b7"; 
+    ctx.font = "bold 9px monospace"; ctx.textAlign = "center";
+    ctx.fillText(locked ? "LOCKED" : "EXIT", x + w / 2, y - 6);
   },
 
   updateSessionUI() {
