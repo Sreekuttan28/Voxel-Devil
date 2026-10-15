@@ -30,11 +30,9 @@ html, body {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
 }
 
-#homeLandingScreen, #stageSelectorScreen, #gameplayWorkspace {
-  width: 100vw;
-  height: 100vh;
-  position: absolute;
-  inset: 0;
+/* Fix overlapping screen layers so hidden elements never block clicks */
+.hidden {
+  display: none !important;
 }
 
 .voxel-border {
