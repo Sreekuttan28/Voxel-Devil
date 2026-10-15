@@ -7,26 +7,64 @@
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
-  <!-- Favicon Settings -->
+  <!-- Favicon Links -->
   <link rel="icon" type="image/jpeg" href="assets/hero_banner.jpg">
   <link rel="apple-touch-icon" href="assets/hero_banner.jpg">
 </head>
 <body class="min-h-screen flex flex-col justify-between bg-[#0d1117] text-slate-100">
 
-  <!-- TOP NAVIGATION & SESSION BAR -->
-  <header class="w-full bg-[#161b22] border-b border-slate-800 px-3 py-2">
-    <div class="max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-2">
-      <!-- Brand Title & Mokuttan Labs Credit -->
+  <!-- ====================================================================== -->
+  <!-- 1. HOME LANDING SCREEN (MAIN WELCOME MENU)                             -->
+  <!-- ====================================================================== -->
+  <div id="homeLandingScreen" class="flex-1 flex flex-col items-center justify-center p-4 bg-[#0d1117] text-center z-30">
+    <div class="max-w-md w-full bg-[#161b22] border-2 border-slate-700 rounded-2xl p-6 shadow-2xl space-y-5">
+      <!-- Game Banner / Logo -->
+      <div class="flex flex-col items-center gap-2">
+        <img src="assets/hero_banner.jpg" alt="Voxel Devil Banner" class="w-20 h-20 rounded-xl object-cover border-2 border-emerald-500 shadow-md" />
+        <h1 class="text-2xl font-extrabold tracking-tight text-white pixel-font mt-1">VOXEL DEVIL</h1>
+        <p class="text-xs text-slate-400 font-semibold">Craft of Traps • 21 Stages Across 3 Worlds</p>
+      </div>
+
+      <!-- Main Menu Buttons -->
+      <div class="flex flex-col gap-2.5 pt-2">
+        <button id="btnMenuStart" type="button" class="voxel-btn bg-emerald-600 hover:bg-emerald-500 text-white py-3 px-4 rounded-xl font-bold text-sm shadow-lg flex items-center justify-center gap-2">
+          ▶ Start Game / Choose Stages
+        </button>
+        <button id="btnMenuResume" type="button" class="voxel-btn bg-indigo-600 hover:bg-indigo-500 text-white py-2.5 px-4 rounded-xl font-bold text-xs flex items-center justify-center gap-2">
+          🔑 Login / Resume ID
+        </button>
+        <button id="btnMenuHelp" type="button" class="voxel-btn bg-amber-600 hover:bg-amber-500 text-white py-2.5 px-4 rounded-xl font-bold text-xs flex items-center justify-center gap-2">
+          ❓ Help Desk &amp; Stage Guide
+        </button>
+        <button id="btnMenuCredits" type="button" class="voxel-btn bg-slate-800 hover:bg-slate-700 text-slate-200 py-2.5 px-4 rounded-xl font-bold text-xs flex items-center justify-center gap-2">
+          🏛️ Mokuttan Labs Credits
+        </button>
+        <button id="btnMenuExit" type="button" class="voxel-btn bg-rose-700 hover:bg-rose-600 text-white py-2.5 px-4 rounded-xl font-bold text-xs flex items-center justify-center gap-2">
+          ✖ Leave Game &amp; Exit App
+        </button>
+      </div>
+
+      <!-- Subtle Footer Credit -->
+      <div class="text-[11px] text-slate-500 pt-2 border-t border-slate-800/80">
+        Crafted by <a href="https://sreekuttan28.github.io/Mokuttan-Lab/" target="_blank" rel="noopener noreferrer" class="text-emerald-400 hover:underline">Mokuttan Labs</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====================================================================== -->
+  <!-- 2. ACTIVE GAMEPLAY WORKSPACE (Initially Hidden)                        -->
+  <!-- ====================================================================== -->
+  <main id="gameplayWorkspace" class="hidden max-w-6xl w-full mx-auto px-3 py-3 flex-1 flex flex-col gap-3">
+
+    <!-- TOP NAVIGATION & SESSION BAR -->
+    <header class="w-full bg-[#161b22] border border-slate-800 rounded-lg px-3 py-2 flex flex-wrap items-center justify-between gap-2">
       <div class="flex items-center gap-3">
-        <img src="assets/hero_banner.jpg" alt="Voxel Devil Banner" class="w-11 h-11 rounded-md object-cover border border-emerald-500/50" />
-        <div>
-          <div class="flex items-center gap-2">
-            <h1 class="text-base sm:text-lg font-extrabold tracking-tight text-white pixel-font">VOXEL DEVIL</h1>
-            <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">21 STAGES</span>
-          </div>
-          <p class="text-[11px] text-slate-400">
-            Crafted by <a href="https://sreekuttan28.github.io/Mokuttan-Lab/" target="_blank" rel="noopener noreferrer" class="text-emerald-400 hover:text-emerald-300 font-semibold underline underline-offset-2">Mokuttan Labs</a> • Creator: <a href="https://sreekuttan28.github.io/sreehari-portfolio/" target="_blank" rel="noopener noreferrer" class="text-slate-200 hover:text-emerald-300 font-semibold underline underline-offset-2">Sreehari N P</a>
-          </p>
+        <button id="btnReturnHome" type="button" class="voxel-btn bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded text-xs font-bold">
+          🏠 Home Menu
+        </button>
+        <div class="flex items-center gap-2">
+          <h1 class="text-base font-extrabold tracking-tight text-white pixel-font">VOXEL DEVIL</h1>
+          <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">21 STAGES</span>
         </div>
       </div>
 
@@ -49,15 +87,8 @@
         <button id="btnOpenCreditsModal" type="button" class="voxel-btn bg-slate-700 hover:bg-slate-600 text-slate-100 px-2.5 py-1 rounded text-xs font-semibold">
           🏛️ Mokuttan Labs
         </button>
-        <button id="btnCloseGamePrompt" type="button" class="voxel-btn bg-rose-700 hover:bg-rose-600 text-white px-2.5 py-1 rounded text-xs font-semibold">
-          ✖ Save &amp; Close
-        </button>
       </div>
-    </div>
-  </header>
-
-  <!-- MAIN WORKSPACE -->
-  <main class="max-w-6xl w-full mx-auto px-3 py-3 flex-1 flex flex-col gap-3">
+    </header>
 
     <!-- 3 WORLD DIFFICULTY SELECTOR -->
     <section aria-label="Select Difficulty Level">
@@ -107,17 +138,17 @@
           <span class="px-2.5 py-1 rounded text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40">GAME PAUSED</span>
           <h2 class="text-xl font-extrabold text-white mt-2">Take a Breath!</h2>
           <p class="text-xs text-slate-300 mt-1">
-            Your progress is tracked under <strong class="text-emerald-400" id="pausePlayerLabel">Explorer</strong>. You can save your Statem ID anytime to resume right where you stopped.
+            Your progress is tracked under <strong class="text-emerald-400" id="pausePlayerLabel">Explorer</strong>.
           </p>
           <div class="flex flex-wrap justify-center gap-2 mt-4">
-            <button type="button" onclick="GameApp.togglePause()" class="voxel-btn bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded font-bold text-xs">
+            <button type="button" onclick="GameApp.togglePause()" class="voxel-btn bg-emerald-600 hover:bg-emerald-500 text-white px-3.5 py-2 rounded font-bold text-xs">
               ▶ Resume Game
             </button>
-            <button type="button" onclick="GameApp.saveSessionToStorage(true)" class="voxel-btn bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded font-bold text-xs">
+            <button type="button" onclick="GameApp.saveSessionToStorage(true)" class="voxel-btn bg-indigo-600 hover:bg-indigo-500 text-white px-3.5 py-2 rounded font-bold text-xs">
               💾 Save Session
             </button>
-            <button type="button" onclick="GameApp.restartStage(); GameApp.togglePause();" class="voxel-btn bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded font-bold text-xs">
-              🔄 Restart Stage
+            <button type="button" onclick="GameApp.returnHome()" class="voxel-btn bg-slate-700 hover:bg-slate-600 text-white px-3.5 py-2 rounded font-bold text-xs">
+              🏠 Home Menu
             </button>
           </div>
         </div>
@@ -130,11 +161,14 @@
           <h2 id="overlayTitle" class="text-2xl font-extrabold text-white pixel-font">YOU GOT TROLLED!</h2>
           <p id="overlayReason" class="text-xs sm:text-sm text-slate-300 mt-2 leading-relaxed"></p>
           <div class="flex flex-wrap items-center justify-center gap-2.5 mt-4">
-            <button id="btnOverlayRetry" type="button" class="voxel-btn bg-amber-600 hover:bg-amber-500 text-white px-4 py-2 rounded-lg font-bold text-xs sm:text-sm">
+            <button id="btnOverlayRetry" type="button" class="voxel-btn bg-amber-600 hover:bg-amber-500 text-white px-3.5 py-2 rounded-lg font-bold text-xs">
               🔄 Try Again (R)
             </button>
-            <button id="btnOverlayNext" type="button" class="hidden voxel-btn bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-lg font-bold text-xs sm:text-sm">
+            <button id="btnOverlayNext" type="button" class="hidden voxel-btn bg-emerald-600 hover:bg-emerald-500 text-white px-3.5 py-2 rounded-lg font-bold text-xs">
               Next Sub-Level ▶
+            </button>
+            <button type="button" onclick="GameApp.returnHome()" class="voxel-btn bg-slate-700 hover:bg-slate-600 text-white px-3.5 py-2 rounded-lg font-bold text-xs">
+              🏠 Home Menu
             </button>
           </div>
         </div>
@@ -183,10 +217,33 @@
     </section>
   </main>
 
-  <!-- FOOTER WITH MOKUTTAN LABS HYPERLINK -->
-  <footer class="w-full bg-[#161b22] border-t border-slate-800 px-4 py-2.5 text-center text-xs text-slate-400">
-    Built by <a href="https://sreekuttan28.github.io/Mokuttan-Lab/" target="_blank" rel="noopener noreferrer" class="text-emerald-400 hover:text-emerald-300 font-semibold underline">Mokuttan Labs</a> • Created by <a href="https://sreekuttan28.github.io/sreehari-portfolio/" target="_blank" rel="noopener noreferrer" class="text-slate-200 hover:text-emerald-300 font-semibold underline">Sreehari N P</a> (<a href="https://www.linkedin.com/in/sreeharinp" target="_blank" rel="noopener noreferrer" class="text-sky-400 hover:text-sky-300 underline">LinkedIn</a>) • Web &amp; Play Store Ready Console Edition
-  </footer>
+  <!-- ====================================================================== -->
+  <!-- 3. CLOSED SESSION / EXIT APPLICATION SCREEN                            -->
+  <!-- ====================================================================== -->
+  <div id="closedSessionScreen" class="hidden fixed inset-0 bg-[#0d1117] z-50 flex flex-col items-center justify-center p-6 text-center">
+    <div class="max-w-md w-full bg-[#161b22] border-2 border-rose-500/50 rounded-xl p-6 shadow-2xl space-y-4">
+      <span class="px-3 py-1 rounded bg-rose-500/20 text-rose-300 border border-rose-500/40 text-xs font-bold uppercase">
+        Session Saved Safely
+      </span>
+      <h2 class="text-xl font-extrabold text-white pixel-font">GAME EXITED SUCCESSFULLY</h2>
+      <div class="bg-slate-900 border border-slate-800 rounded-lg p-3.5 text-xs space-y-1.5 text-left font-mono">
+        <div>Player: <strong id="closedSummaryName" class="text-emerald-400">Explorer</strong></div>
+        <div>Statem ID: <strong id="closedSummaryStatem" class="text-amber-300">MKL-EXP-W1S1-000</strong></div>
+        <div>Checkpoint: <strong id="closedSummaryStage" class="text-sky-300">Stage 1-1</strong></div>
+      </div>
+      <p class="text-xs text-slate-400">
+        You can now safely close this browser tab or window. Built by <a href="https://sreekuttan28.github.io/Mokuttan-Lab/" target="_blank" rel="noopener noreferrer" class="text-emerald-400 underline font-semibold">Mokuttan Labs</a>.
+      </p>
+      <div class="flex flex-col gap-2 pt-2">
+        <button id="btnReopenGameFromClosed" type="button" class="voxel-btn bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2.5 rounded-lg text-xs font-bold">
+          ▶ Return to Home Menu
+        </button>
+        <button type="button" onclick="window.close();" class="voxel-btn bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-lg text-xs font-semibold">
+          ✕ Close Window / Tab
+        </button>
+      </div>
+    </div>
+  </div>
 
   <!-- ====================================================================== -->
   <!-- MODAL 1: LOGIN NAME & STATEM ID SAVE / RESUME                          -->
@@ -351,52 +408,6 @@
           </div>
         </div>
       </div>
-    </div>
-  </div>
-
-  <!-- ====================================================================== -->
-  <!-- MODAL 4: SAVE & CLOSE CONFIRMATION                                     -->
-  <!-- ====================================================================== -->
-  <div id="closeConfirmModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-    <div class="bg-[#161b22] border-2 border-rose-500/50 rounded-xl max-w-md w-full p-5 shadow-2xl space-y-4 text-center">
-      <div class="inline-block px-3 py-1 rounded bg-rose-500/20 text-rose-300 border border-rose-500/40 text-xs font-bold uppercase">
-        Save Before Closing?
-      </div>
-      <h3 class="text-lg font-extrabold text-white">Want to Save Your Progress &amp; Close?</h3>
-      <p class="text-xs text-slate-300 leading-relaxed">
-        We'll save your current stage under your Login Name and Statem ID (<code id="closeConfirmStatemId" class="text-amber-300 font-mono">MKL-EXP-W1S1-000</code>) so you can resume right where you stopped next time.
-      </p>
-      <div class="flex flex-wrap items-center justify-center gap-2.5 pt-2">
-        <button id="btnSaveAndCloseGame" type="button" class="voxel-btn bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-lg text-xs font-bold">
-          💾 Save &amp; Close Game
-        </button>
-        <button id="btnCancelCloseGame" type="button" class="voxel-btn bg-slate-700 hover:bg-slate-600 text-slate-200 px-4 py-2 rounded-lg text-xs font-bold">
-          Keep Playing
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ====================================================================== -->
-  <!-- CLOSED SESSION STANDBY SCREEN                                          -->
-  <!-- ====================================================================== -->
-  <div id="closedSessionScreen" class="hidden fixed inset-0 bg-[#0d1117] z-50 flex flex-col items-center justify-center p-6 text-center">
-    <div class="max-w-md w-full bg-[#161b22] border-2 border-emerald-500/50 rounded-xl p-6 shadow-2xl space-y-4">
-      <span class="px-3 py-1 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-xs font-bold uppercase">
-        Session Saved &amp; Closed Safely
-      </span>
-      <h2 class="text-xl font-extrabold text-white pixel-font">PROGRESS LOCKED IN!</h2>
-      <div class="bg-slate-900 border border-slate-800 rounded-lg p-3.5 text-xs space-y-1.5 text-left font-mono">
-        <div>Player Login: <strong id="closedSummaryName" class="text-emerald-400">Explorer</strong></div>
-        <div>Statem ID: <strong id="closedSummaryStatem" class="text-amber-300">MKL-EXP-W1S1-000</strong></div>
-        <div>Saved Checkpoint: <strong id="closedSummaryStage" class="text-sky-300">Stage 1-1</strong></div>
-      </div>
-      <p class="text-xs text-slate-400">
-        Keep your Statem ID handy to resume anytime. Built by <a href="https://sreekuttan28.github.io/Mokuttan-Lab/" target="_blank" rel="noopener noreferrer" class="text-emerald-400 underline font-semibold">Mokuttan Labs</a> (Sreehari).
-      </p>
-      <button id="btnReopenGameFromClosed" type="button" class="voxel-btn bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2.5 rounded-lg text-xs font-bold w-full">
-        ▶ Resume Session Now
-      </button>
     </div>
   </div>
 
