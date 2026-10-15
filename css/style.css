@@ -16,15 +16,25 @@
   user-select: none;
   -webkit-user-select: none;
   -webkit-touch-callout: none;
+  touch-action: manipulation;
 }
 
-body {
+html, body {
+  width: 100vw;
+  height: 100vh;
   margin: 0;
   padding: 0;
+  overflow: hidden;
   background-color: var(--bg-deep);
   color: #f0f6fc;
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  overflow-x: hidden;
+}
+
+#homeLandingScreen, #stageSelectorScreen, #gameplayWorkspace {
+  width: 100vw;
+  height: 100vh;
+  position: absolute;
+  inset: 0;
 }
 
 .voxel-border {
@@ -38,6 +48,7 @@ body {
   box-shadow: inset -2px -2px 0px rgba(0,0,0,0.35), inset 2px 2px 0px rgba(255,255,255,0.2), 0 3px 0 #090d16;
   transition: transform 0.06s ease, box-shadow 0.06s ease, filter 0.12s ease;
   cursor: pointer;
+  touch-action: manipulation;
 }
 
 .voxel-btn:hover {
@@ -72,7 +83,7 @@ body {
 .pixel-font {
   font-family: 'Courier New', Courier, monospace;
   letter-spacing: 0.04em;
-   font-weight: 800;
+  font-weight: 800;
 }
 
 /* Custom Scrollbar */
