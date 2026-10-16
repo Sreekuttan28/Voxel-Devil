@@ -1,7 +1,7 @@
 // ============================================================================
-// VOXEL DEVIL: CRAFT OF TRAPS (v2.0 — 96 STAGES & UNPREDICTABLE CHAOS EDITION)
+// VOXEL DEVIL: CRAFT OF TRAPS (v3.0 — REAL-GAME MULTI-SCREEN & MOBILE CONSOLE)
 // Built by Mokuttan Labs (https://sreekuttan28.github.io/Mokuttan-Lab/)
-// Creator: Sreehari (@sreekuttan28)
+// Creator: Sreehari N P (@sreekuttan28)
 // ============================================================================
 
 // --- 1. MULTI-TRACK WEB AUDIO CHIPTUNE SEQUENCER & SFX ENGINE ---
@@ -10,17 +10,20 @@ class VoxelAudio {
     this.ctx = null;
     this.sfxMuted = false;
     this.musicMuted = false;
-    this.currentTrack = "menu"; // 'menu', 'world1', 'world2', 'world3'
+    this.musicVolume = 0.85;
+    this.sfxVolume = 0.90;
+    this.currentTrack = "menu";
     this.isMusicPlaying = false;
     this.stepIndex = 0;
     this.sequencerTimer = null;
     this.unlocked = false;
 
-    // Load saved audio preferences
     try {
       const savedAudio = JSON.parse(localStorage.getItem("mokuttan_voxel_audio") || "{}");
       if (typeof savedAudio.sfxMuted === "boolean") this.sfxMuted = savedAudio.sfxMuted;
       if (typeof savedAudio.musicMuted === "boolean") this.musicMuted = savedAudio.musicMuted;
+      if (typeof savedAudio.musicVolume === "number") this.musicVolume = savedAudio.musicVolume;
+      if (typeof savedAudio.sfxVolume === "number") this.sfxVolume = savedAudio.sfxVolume;
     } catch (e) {}
   }
 
@@ -28,7 +31,9 @@ class VoxelAudio {
     try {
       localStorage.setItem("mokuttan_voxel_audio", JSON.stringify({
         sfxMuted: this.sfxMuted,
-        musicMuted: this.musicMuted
+        musicMuted: this.musicMuted,
+        musicVolume: this.musicVolume,
+        sfxVolume: this.sfxVolume
       }));
     } catch (e) {}
   }
@@ -74,8 +79,29 @@ class VoxelAudio {
     }
   }
 
+  setMusicVolume(val) {
+    this.musicVolume = Math.max(0, Math.min(1, parseFloat(val) || 0));
+    if (this.musicVolume === 0) {
+      this.musicMuted = true;
+      this.stopMusic();
+    } else if (this.musicMuted) {
+      this.musicMuted = false;
+      this.unlockAndStart(this.currentTrack);
+    }
+    this.savePrefs();
+    this.syncAudioUI();
+  }
+
+  setSfxVolume(val) {
+    this.sfxVolume = Math.max(0, Math.min(1, parseFloat(val) || 0));
+    this.sfxMuted = (this.sfxVolume === 0);
+    this.savePrefs();
+    this.syncAudioUI();
+  }
+
   toggleSfxMute() {
     this.sfxMuted = !this.sfxMuted;
+    if (!this.sfxMuted && this.sfxVolume === 0) this.sfxVolume = 0.8;
     this.savePrefs();
     this.syncAudioUI();
     return this.sfxMuted;
@@ -83,6 +109,7 @@ class VoxelAudio {
 
   toggleMusicMute() {
     this.musicMuted = !this.musicMuted;
+    if (!this.musicMuted && this.musicVolume === 0) this.musicVolume = 0.8;
     this.savePrefs();
     if (this.musicMuted) {
       this.stopMusic();
@@ -108,7 +135,7 @@ class VoxelAudio {
 
   startMusic(trackName = "menu") {
     this.currentTrack = trackName;
-    if (this.musicMuted) {
+    if (this.musicMuted || this.musicVolume <= 0) {
       this.stopMusic();
       return;
     }
@@ -128,8 +155,8 @@ class VoxelAudio {
         bass: [110, 110, 165, 165, 147, 147, 110, 110, 98, 98, 147, 147, 110, 110, 165, 110,
                110, 110, 131, 131, 147, 147, 165, 165, 131, 131, 110, 110, 98, 123, 110, 110],
         leadType: "triangle",
-        leadVol: 0.045,
-        bassVol: 0.035
+        leadVol: 0.05,
+        bassVol: 0.04
       },
       world1: {
         tempoMs: 175,
@@ -138,8 +165,8 @@ class VoxelAudio {
         bass: [131, 196, 131, 196, 147, 220, 147, 220, 165, 247, 165, 247, 131, 196, 131, 196,
                131, 196, 165, 247, 175, 262, 131, 196, 147, 220, 98, 196, 131, 196, 131, 0],
         leadType: "square",
-        leadVol: 0.032,
-        bassVol: 0.03
+        leadVol: 0.036,
+        bassVol: 0.032
       },
       world2: {
         tempoMs: 160,
@@ -148,8 +175,8 @@ class VoxelAudio {
         bass: [73, 147, 73, 147, 78, 156, 73, 147, 82, 165, 82, 165, 87, 175, 82, 165,
                73, 147, 98, 196, 78, 156, 73, 147, 82, 165, 65, 131, 73, 147, 73, 0],
         leadType: "triangle",
-        leadVol: 0.042,
-        bassVol: 0.036
+        leadVol: 0.045,
+        bassVol: 0.038
       },
       world3: {
         tempoMs: 140,
@@ -158,8 +185,8 @@ class VoxelAudio {
         bass: [110, 110, 220, 110, 116, 116, 233, 116, 131, 131, 262, 131, 123, 123, 247, 123,
                110, 220, 110, 220, 131, 262, 131, 262, 98, 196, 110, 220, 110, 165, 110, 0],
         leadType: "sawtooth",
-        leadVol: 0.028,
-        bassVol: 0.036
+        leadVol: 0.03,
+        bassVol: 0.038
       }
     };
 
@@ -168,10 +195,8 @@ class VoxelAudio {
     this.syncAudioUI();
 
     const playStep = () => {
-      if (this.musicMuted || !this.ctx) return;
-      if (this.ctx.state === "suspended") {
-        return;
-      }
+      if (this.musicMuted || this.musicVolume <= 0 || !this.ctx) return;
+      if (this.ctx.state === "suspended") return;
       const idx = this.stepIndex % cfg.lead.length;
       this.stepIndex++;
       const now = this.ctx.currentTime;
@@ -184,7 +209,7 @@ class VoxelAudio {
           const gain = this.ctx.createGain();
           osc.type = cfg.leadType;
           osc.frequency.setValueAtTime(lFreq, now);
-          gain.gain.setValueAtTime(cfg.leadVol, now);
+          gain.gain.setValueAtTime(cfg.leadVol * this.musicVolume, now);
           gain.gain.exponentialRampToValueAtTime(0.0008, now + dur);
           osc.connect(gain);
           gain.connect(this.ctx.destination);
@@ -200,7 +225,7 @@ class VoxelAudio {
           const bGain = this.ctx.createGain();
           bOsc.type = "triangle";
           bOsc.frequency.setValueAtTime(bFreq, now);
-          bGain.gain.setValueAtTime(cfg.bassVol, now);
+          bGain.gain.setValueAtTime(cfg.bassVol * this.musicVolume, now);
           bGain.gain.exponentialRampToValueAtTime(0.0008, now + dur * 0.9);
           bOsc.connect(bGain);
           bGain.connect(this.ctx.destination);
@@ -224,27 +249,44 @@ class VoxelAudio {
   }
 
   syncAudioUI() {
-    const sfxBtn = document.getElementById("btnMute");
-    if (sfxBtn) {
-      sfxBtn.textContent = this.sfxMuted ? "🔇 SFX: OFF" : "🔊 SFX On";
-    }
-    const musicBtn = document.getElementById("btnToggleMusic");
-    if (musicBtn) {
-      musicBtn.textContent = this.musicMuted ? "🎵 Music: OFF" : "🎵 Music: ON";
-    }
+    const sfxText = this.sfxMuted ? "🔇 SFX: OFF" : "🔊 SFX On";
+    const musicText = this.musicMuted ? "🎵 Music: OFF" : "🎵 Music: ON";
+    const menuMusicText = this.musicMuted ? "🎵 Menu Music: OFF" : "🎵 Menu Music: ON";
+
+    ["btnMute", "btnPauseSfxToggle", "btnSettingsSfxToggle"].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = sfxText;
+    });
+
+    ["btnToggleMusic", "btnPauseMusicToggle", "btnSettingsMusicToggle"].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = musicText;
+    });
+
     const menuMusicBtn = document.getElementById("btnMenuToggleMusic");
-    if (menuMusicBtn) {
-      menuMusicBtn.textContent = this.musicMuted ? "🎵 Menu Music: OFF" : "🎵 Menu Music: ON";
-    }
+    if (menuMusicBtn) menuMusicBtn.textContent = menuMusicText;
+
     const eqIndicator = document.getElementById("musicEqIndicator");
     if (eqIndicator) {
       const running = !this.musicMuted && this.isMusicPlaying && this.ctx && this.ctx.state === "running";
       eqIndicator.classList.toggle("eq-paused", !running);
     }
+
+    const mVolSlider = document.getElementById("sliderMusicVolume");
+    const mVolLabel = document.getElementById("labelMusicVolume");
+    const mPct = this.musicMuted ? 0 : Math.round(this.musicVolume * 100);
+    if (mVolSlider && document.activeElement !== mVolSlider) mVolSlider.value = mPct;
+    if (mVolLabel) mVolLabel.textContent = `${mPct}%`;
+
+    const sVolSlider = document.getElementById("sliderSfxVolume");
+    const sVolLabel = document.getElementById("labelSfxVolume");
+    const sPct = this.sfxMuted ? 0 : Math.round(this.sfxVolume * 100);
+    if (sVolSlider && document.activeElement !== sVolSlider) sVolSlider.value = sPct;
+    if (sVolLabel) sVolLabel.textContent = `${sPct}%`;
   }
 
   playTone(freq, type, duration, vol = 0.12, slideFreq = null) {
-    if (this.sfxMuted) return;
+    if (this.sfxMuted || this.sfxVolume <= 0) return;
     try {
       this.init();
       if (!this.ctx || this.ctx.state !== "running") return;
@@ -256,7 +298,7 @@ class VoxelAudio {
       if (slideFreq) {
         osc.frequency.exponentialRampToValueAtTime(Math.max(20, slideFreq), now + duration);
       }
-      gain.gain.setValueAtTime(vol, now);
+      gain.gain.setValueAtTime(vol * this.sfxVolume, now);
       gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
       osc.connect(gain);
       gain.connect(this.ctx.destination);
@@ -300,7 +342,6 @@ class VoxelAudio {
 
 const sfx = new VoxelAudio();
 
-// Global First-Gesture Audio Unlock (Fixes Main Menu & First-Open Music across all browsers/PWAs!)
 const unlockAudioOnFirstGesture = () => {
   sfx.unlockAndStart(sfx.currentTrack);
 };
@@ -1117,10 +1158,26 @@ const CHAOS_MUTATIONS = [
 ];
 
 // --- 4. GAME STATE & SESSION / STATEM ID / SCREEN FIT MANAGER ---
+
+// --- 4. GAME STATE, MULTI-SCREEN ROUTER & MOBILE/TABLET CONSOLE CUSTOMIZER ---
+const DEFAULT_CONSOLE_CONFIG = {
+  deviceView: "mobile",     // 'mobile', 'tablet', 'auto'
+  layoutPreset: "split",    // 'split', 'floating', 'lefty', 'compact'
+  buttonScale: 105,         // 75 to 145 (%)
+  bottomOffset: 16,         // 0 to 85 (px)
+  sidePadding: 14,          // 4 to 68 (px)
+  dpadGap: 10,              // 4 to 30 (px)
+  opacity: 95               // 45 to 100 (%)
+};
+
 const GameApp = {
   playerName: "Explorer",
   statemId: "MKL-EXP-W1S1-000",
   unsavedChanges: false,
+
+  currentScreen: "intro",   // 'intro', 'home', 'levels', 'gameplay', 'help', 'settings', 'closed'
+  previousScreen: "home",
+  appExited: false,
 
   currentWorld: 1,
   currentSub: 1,
@@ -1135,8 +1192,10 @@ const GameApp = {
   lastChaosId: null,
   showTrueHintInline: false,
   subGridPage: 0,
+  helpWorldFilter: 1,
 
   screenFitMode: "contain",
+  consoleConfig: { ...DEFAULT_CONSOLE_CONFIG },
 
   isRunning: false,
   isPaused: false,
@@ -1149,12 +1208,14 @@ const GameApp = {
   player: null,
   keys: { left: false, right: false, jump: false, jumpJustPressed: false },
   animFrameId: null,
+  introTimerId: null,
 
   init() {
     this.canvas = document.getElementById("gameCanvas");
     this.ctx = this.canvas.getContext("2d");
 
     this.loadLastSessionFromStorage();
+    this.loadConsoleConfig();
     this.initScreenMode();
     this.bindEvents();
     this.updateSessionUI();
@@ -1162,44 +1223,129 @@ const GameApp = {
     this.renderSubLevelGrid();
     this.loadStage(this.currentWorld, this.currentSub, false);
     this.populateHelpSelects();
+    this.renderHelpDirectory(1);
+    this.applyConsoleConfigToDOM();
+
+    // Start on the 3-second Cinematic Intro screen
     this.runIntroSplashSequence();
 
     const loop = () => {
-      this.update();
-      this.draw();
+      if (!this.appExited) {
+        this.update();
+        this.draw();
+      }
       this.animFrameId = requestAnimationFrame(loop);
     };
+    if (this.animFrameId) cancelAnimationFrame(this.animFrameId);
     this.animFrameId = requestAnimationFrame(loop);
   },
 
+  // --- MULTI-SCREEN NAVIGATION ROUTER ---
+  showScreen(screenName) {
+    if (this.currentScreen && this.currentScreen !== screenName && this.currentScreen !== "intro") {
+      this.previousScreen = this.currentScreen;
+    }
+    this.currentScreen = screenName;
+
+    const screens = {
+      intro: document.getElementById("introSplashModal"),
+      home: document.getElementById("mainMenuModal"),
+      levels: document.getElementById("screenLevelSelect"),
+      gameplay: document.getElementById("screenGameplay"),
+      help: document.getElementById("helpModal"),
+      settings: document.getElementById("screenSettings"),
+      closed: document.getElementById("closedSessionScreen")
+    };
+
+    Object.entries(screens).forEach(([key, el]) => {
+      if (!el) return;
+      if (key === screenName) {
+        el.classList.remove("hidden");
+      } else {
+        el.classList.add("hidden");
+      }
+    });
+
+    // Lock viewport height only during active Gameplay or Intro
+    document.body.classList.toggle("gameplay-locked", screenName === "gameplay" || screenName === "intro");
+
+    if (screenName === "gameplay") {
+      this.isPaused = false;
+      document.getElementById("pauseOverlay")?.classList.add("hidden");
+      const worldTrack = WORLD_META[this.currentWorld - 1]?.musicTrack || "world1";
+      sfx.setMusicTrack(worldTrack);
+      this.applyConsoleConfigToDOM();
+    } else {
+      this.isPaused = true;
+      if (screenName === "home" || screenName === "levels" || screenName === "help" || screenName === "settings") {
+        sfx.setMusicTrack("menu");
+      }
+    }
+
+    this.renderMainMenuStats();
+    this.updateSessionUI();
+    this.updateHUD();
+  },
+
+  // --- 3-SECOND CINEMATIC INTRO SEQUENCE ---
   runIntroSplashSequence() {
+    this.appExited = false;
+    this.showScreen("intro");
     sfx.setMusicTrack("menu");
+
     const bar = document.getElementById("introProgressBar");
     const status = document.getElementById("introStatusText");
-    const enterBtn = document.getElementById("btnEnterGameIntro");
-    let pct = 0;
-    const timer = setInterval(() => {
-      pct = Math.min(100, pct + 25);
+    const timerBadge = document.getElementById("introCountdownBadge");
+    const popPopup = document.getElementById("introCinematicPopupToast");
+
+    if (this.introTimerId) clearInterval(this.introTimerId);
+    const totalMs = 3000;
+    const stepMs = 100;
+    let elapsed = 0;
+
+    if (bar) bar.style.width = "0%";
+    if (timerBadge) timerBadge.textContent = "3.0s";
+    if (status) status.textContent = "Booting Mokuttan Labs Voxel Engine...";
+
+    this.introTimerId = setInterval(() => {
+      elapsed += stepMs;
+      const pct = Math.min(100, Math.round((elapsed / totalMs) * 100));
+      const remSec = Math.max(0, ((totalMs - elapsed) / 1000)).toFixed(1);
+
       if (bar) bar.style.width = `${pct}%`;
-      if (status) {
-        if (pct === 25) status.textContent = "Forging 96 Voxel Trap Stages...";
-        else if (pct === 50) status.textContent = "Arming Unpredictable Chaos Director...";
-        else if (pct === 75) status.textContent = "Tuning 4-Track Chiptune Synthesizer...";
-        else if (pct >= 100) status.textContent = "Ready! Tap below or press any key to enter with music.";
+      if (timerBadge) timerBadge.textContent = `${remSec}s`;
+
+      if (elapsed === 600 && popPopup) {
+        popPopup.textContent = "⚡ 96 Dynamic Trap Stages Loaded";
+        popPopup.classList.remove("opacity-0", "translate-y-2");
+      } else if (elapsed === 1500 && popPopup) {
+        popPopup.textContent = "📱 Mobile & Tablet Comfort Console Ready";
+      } else if (elapsed === 2300 && popPopup) {
+        popPopup.textContent = "😈 Welcome to Voxel Devil: Craft of Traps!";
       }
-      if (pct >= 100) {
-        clearInterval(timer);
-        if (enterBtn) {
-          enterBtn.classList.remove("opacity-70");
-          enterBtn.classList.add("ring-2", "ring-emerald-400");
+
+      if (status) {
+        if (pct < 35) status.textContent = "Forging 96 Voxel Trap Stages...";
+        else if (pct < 70) status.textContent = "Arming Unpredictable Chaos Director...";
+        else if (pct < 98) status.textContent = "Calibrating Mobile & Tablet Console Controls...";
+        else status.textContent = "Ready! Entering Main Home Screen...";
+      }
+
+      if (elapsed >= totalMs) {
+        clearInterval(this.introTimerId);
+        this.introTimerId = null;
+        if (this.currentScreen === "intro") {
+          this.showScreen("home");
         }
       }
-    }, 180);
+    }, stepMs);
   },
 
   dismissIntroAndStart(withMusic = true) {
-    const intro = document.getElementById("introSplashModal");
-    if (intro) intro.classList.add("hidden");
+    if (this.introTimerId) {
+      clearInterval(this.introTimerId);
+      this.introTimerId = null;
+    }
     if (!withMusic) {
       sfx.musicMuted = true;
       sfx.savePrefs();
@@ -1207,26 +1353,26 @@ const GameApp = {
     } else {
       sfx.musicMuted = false;
       sfx.savePrefs();
-      const worldTrack = WORLD_META[this.currentWorld - 1]?.musicTrack || "world1";
-      sfx.unlockAndStart(worldTrack);
+      sfx.unlockAndStart("menu");
     }
     sfx.syncAudioUI();
+    this.showScreen("home");
   },
 
   openMainMenuModal() {
     sfx.buttonClick();
-    this.isPaused = true;
-    sfx.unlockAndStart("menu");
-    this.renderMainMenuStats();
-    document.getElementById("mainMenuModal")?.classList.remove("hidden");
+    this.showScreen("home");
   },
 
   closeMainMenuModal() {
     sfx.buttonClick();
-    document.getElementById("mainMenuModal")?.classList.add("hidden");
-    this.isPaused = false;
-    const worldTrack = WORLD_META[this.currentWorld - 1]?.musicTrack || "world1";
-    sfx.setMusicTrack(worldTrack);
+    this.showScreen("levels");
+  },
+
+  enterGameplay(world = this.currentWorld, sub = this.currentSub) {
+    sfx.buttonClick();
+    this.loadStage(world, sub, false);
+    this.showScreen("gameplay");
   },
 
   renderMainMenuStats() {
@@ -1236,12 +1382,200 @@ const GameApp = {
         if (this.completedStages[`${w}-${s}`]) clearedCount++;
       }
     }
+    const stKey = `${this.currentWorld}-${this.currentSub}`;
+    const stObj = SUBLEVELS[stKey] || SUBLEVELS["1-1"];
+    const wMeta = WORLD_META[this.currentWorld - 1] || WORLD_META[0];
+
     const elStage = document.getElementById("menuCurrentStageLabel");
     if (elStage) elStage.textContent = `Stage ${this.currentWorld}-${this.currentSub}`;
+
     const elCleared = document.getElementById("menuClearedCountLabel");
     if (elCleared) elCleared.textContent = `${clearedCount} / ${TOTAL_STAGES}`;
+
     const elDeaths = document.getElementById("menuTotalDeathsLabel");
     if (elDeaths) elDeaths.textContent = `${this.totalDeaths}`;
+
+    const elHomeResumeBadge = document.getElementById("homeResumeStatusText");
+    if (elHomeResumeBadge) {
+      elHomeResumeBadge.textContent = `Resume Point: ${stObj.title} (${wMeta.name}) • ${clearedCount}/${TOTAL_STAGES} Cleared`;
+    }
+
+    const elLevelResumeTitle = document.getElementById("levelResumeStageName");
+    if (elLevelResumeTitle) {
+      elLevelResumeTitle.textContent = `${stObj.title} (${wMeta.name})`;
+    }
+
+    const elSelectedPreview = document.getElementById("selectedStageInfoTitle");
+    if (elSelectedPreview) {
+      elSelectedPreview.textContent = `${stObj.title}`;
+    }
+    const elSelectedMeta = document.getElementById("selectedStageInfoMeta");
+    if (elSelectedMeta) {
+      const sDeaths = this.stageDeaths[stKey] || 0;
+      const sBest = this.stageBestPct[stKey] || 0;
+      const isDone = !!this.completedStages[stKey];
+      elSelectedMeta.textContent = `${wMeta.name} • Status: ${isDone ? "★ CLEARED" : "In Progress (" + sBest + "% Best)"} • Stage Deaths: ${sDeaths}`;
+    }
+  },
+
+  // --- MOBILE & TABLET CONSOLE COMFORT CUSTOMIZATION ---
+  loadConsoleConfig() {
+    try {
+      const raw = localStorage.getItem("mokuttan_voxel_console_cfg");
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        this.consoleConfig = { ...DEFAULT_CONSOLE_CONFIG, ...parsed };
+      }
+    } catch (e) {
+      this.consoleConfig = { ...DEFAULT_CONSOLE_CONFIG };
+    }
+  },
+
+  saveConsoleConfig() {
+    try {
+      localStorage.setItem("mokuttan_voxel_console_cfg", JSON.stringify(this.consoleConfig));
+    } catch (e) {}
+  },
+
+  resetConsoleConfig() {
+    sfx.buttonClick();
+    this.consoleConfig = { ...DEFAULT_CONSOLE_CONFIG };
+    this.saveConsoleConfig();
+    this.applyConsoleConfigToDOM();
+    this.showToast("Console layout reset to default Mobile/Tablet comfort settings!", "emerald");
+  },
+
+  applyConsoleConfigToDOM() {
+    const cfg = this.consoleConfig;
+    const dock = document.getElementById("gameplayConsoleDock");
+    const innerRow = document.getElementById("gameplayConsoleInnerRow");
+    const dpadGroup = document.getElementById("consoleDpadGroup");
+    const actionGroup = document.getElementById("consoleActionGroup");
+    const btnL = document.getElementById("btnConsoleLeft");
+    const btnR = document.getElementById("btnConsoleRight");
+    const btnJ = document.getElementById("btnConsoleJump");
+
+    const isTabletView = cfg.deviceView === "tablet" || (cfg.deviceView === "auto" && window.innerWidth >= 768);
+    const scale = (cfg.buttonScale || 105) / 100;
+    const baseDpadW = isTabletView ? 82 : 68;
+    const baseDpadH = isTabletView ? 62 : 54;
+    const baseJumpW = isTabletView ? 136 : 114;
+    const baseJumpH = isTabletView ? 62 : 54;
+
+    if (btnL && btnR) {
+      const w = Math.round(baseDpadW * scale);
+      const h = Math.round(baseDpadH * scale);
+      btnL.style.width = `${w}px`;
+      btnL.style.height = `${h}px`;
+      btnR.style.width = `${w}px`;
+      btnR.style.height = `${h}px`;
+    }
+    if (btnJ) {
+      btnJ.style.width = `${Math.round(baseJumpW * scale)}px`;
+      btnJ.style.height = `${Math.round(baseJumpH * scale)}px`;
+    }
+
+    if (dpadGroup) {
+      dpadGroup.style.gap = `${cfg.dpadGap}px`;
+    }
+
+    if (dock && innerRow && dpadGroup && actionGroup) {
+      dock.style.opacity = `${(cfg.opacity || 95) / 100}`;
+      dock.style.paddingBottom = `${Math.max(6, cfg.bottomOffset)}px`;
+      dock.style.paddingLeft = `${cfg.sidePadding}px`;
+      dock.style.paddingRight = `${cfg.sidePadding}px`;
+
+      if (cfg.layoutPreset === "floating") {
+        dock.className = "fixed bottom-0 left-0 right-0 z-30 pointer-events-none transition-all";
+        innerRow.className = "w-full max-w-5xl mx-auto flex items-center justify-between gap-2";
+        dpadGroup.classList.add("pointer-events-auto");
+        actionGroup.classList.add("pointer-events-auto");
+      } else {
+        dock.className = "w-full bg-[#121722]/95 border-t-2 border-slate-800 z-20 shrink-0 transition-all";
+        dpadGroup.classList.remove("pointer-events-auto");
+        actionGroup.classList.remove("pointer-events-auto");
+
+        if (cfg.layoutPreset === "compact") {
+          innerRow.className = "w-full max-w-md mx-auto flex items-center justify-center gap-6 py-1.5";
+        } else {
+          innerRow.className = "w-full max-w-5xl mx-auto flex items-center justify-between gap-3 py-1.5";
+        }
+      }
+
+      if (cfg.layoutPreset === "lefty") {
+        innerRow.style.flexDirection = "row-reverse";
+      } else {
+        innerRow.style.flexDirection = "row";
+      }
+    }
+
+    this.syncConsoleSettingsUI();
+  },
+
+  syncConsoleSettingsUI() {
+    const cfg = this.consoleConfig;
+
+    ["mobile", "tablet", "auto"].forEach(mode => {
+      const btn = document.getElementById(`btnViewMode_${mode}`);
+      if (btn) {
+        btn.className = cfg.deviceView === mode
+          ? "voxel-btn bg-emerald-600 text-white px-3 py-2 rounded-lg text-xs font-extrabold flex-1"
+          : "voxel-btn bg-slate-800 text-slate-300 hover:bg-slate-700 px-3 py-2 rounded-lg text-xs font-semibold flex-1";
+      }
+    });
+
+    ["split", "floating", "lefty", "compact"].forEach(preset => {
+      const btn = document.getElementById(`btnPreset_${preset}`);
+      if (btn) {
+        btn.className = cfg.layoutPreset === preset
+          ? "voxel-btn bg-indigo-600 text-white border-indigo-400 px-3 py-2 rounded-lg text-xs font-extrabold text-left"
+          : "voxel-btn bg-slate-800 text-slate-300 hover:bg-slate-700 px-3 py-2 rounded-lg text-xs font-semibold text-left";
+      }
+    });
+
+    const syncSlider = (sliderId, labelId, val, suffix) => {
+      const sl = document.getElementById(sliderId);
+      const lb = document.getElementById(labelId);
+      if (sl && document.activeElement !== sl) sl.value = val;
+      if (lb) lb.textContent = `${val}${suffix}`;
+    };
+
+    syncSlider("sliderBtnScale", "labelBtnScale", cfg.buttonScale, "%");
+    syncSlider("sliderBottomOffset", "labelBottomOffset", cfg.bottomOffset, "px");
+    syncSlider("sliderSidePadding", "labelSidePadding", cfg.sidePadding, "px");
+    syncSlider("sliderDpadGap", "labelDpadGap", cfg.dpadGap, "px");
+    syncSlider("sliderConsoleOpacity", "labelConsoleOpacity", cfg.opacity, "%");
+
+    const prevFrame = document.getElementById("consoleLivePreviewFrame");
+    const prevDock = document.getElementById("previewConsoleDock");
+    const prevRow = document.getElementById("previewConsoleRow");
+    const prevDpad = document.getElementById("previewDpadGroup");
+    const prevLeft = document.getElementById("previewBtnLeft");
+    const prevRight = document.getElementById("previewBtnRight");
+    const prevJump = document.getElementById("previewBtnJump");
+    const prevModeLabel = document.getElementById("previewDeviceBadge");
+
+    if (prevFrame && prevDock && prevRow && prevLeft && prevRight && prevJump) {
+      const isTab = cfg.deviceView === "tablet";
+      prevFrame.style.maxWidth = isTab ? "460px" : "310px";
+      if (prevModeLabel) {
+        prevModeLabel.textContent = `${cfg.deviceView.toUpperCase()} VIEW • ${cfg.layoutPreset.toUpperCase()} LAYOUT`;
+      }
+      const pScale = (cfg.buttonScale || 105) / 100;
+      prevLeft.style.transform = `scale(${pScale.toFixed(2)})`;
+      prevRight.style.transform = `scale(${pScale.toFixed(2)})`;
+      prevJump.style.transform = `scale(${pScale.toFixed(2)})`;
+      if (prevDpad) prevDpad.style.gap = `${Math.max(4, Math.round(cfg.dpadGap * 0.65))}px`;
+
+      prevDock.style.opacity = `${(cfg.opacity || 95) / 100}`;
+      prevDock.style.paddingBottom = `${Math.max(4, Math.round(cfg.bottomOffset * 0.45))}px`;
+      prevDock.style.paddingLeft = `${Math.max(6, Math.round(cfg.sidePadding * 0.5))}px`;
+      prevDock.style.paddingRight = `${Math.max(6, Math.round(cfg.sidePadding * 0.5))}px`;
+
+      prevRow.style.flexDirection = cfg.layoutPreset === "lefty" ? "row-reverse" : "row";
+      prevRow.style.justifyContent = cfg.layoutPreset === "compact" ? "center" : "space-between";
+      prevRow.style.gap = cfg.layoutPreset === "compact" ? "16px" : "8px";
+    }
   },
 
   initScreenMode() {
@@ -1276,8 +1610,6 @@ const GameApp = {
       }
     }
 
-    document.body.classList.toggle("screen-mode-cinema", mode === "cinema");
-
     const labelMap = {
       contain: "📺 Screen: Fit 16:9",
       fill: "📺 Screen: Stretch Fill",
@@ -1287,7 +1619,7 @@ const GameApp = {
     if (btn) btn.textContent = labelMap[mode] || "📺 Screen: Fit 16:9";
 
     if (notify) {
-      this.showToast(`Screen Display set to: ${labelMap[mode]} (Saved for Installed App)`, "emerald");
+      this.showToast(`Screen Display set to: ${labelMap[mode]}`, "emerald");
     }
   },
 
@@ -1309,7 +1641,7 @@ const GameApp = {
           await screen.orientation.lock("landscape").catch(() => {});
         }
         this.applyScreenFitMode("cinema", false);
-        this.showToast("Fullscreen Landscape Mode Activated!", "emerald");
+        this.showToast("Fullscreen Mode Activated!", "emerald");
       } else {
         if (document.exitFullscreen) {
           await document.exitFullscreen();
@@ -1369,6 +1701,7 @@ const GameApp = {
 
     this.unsavedChanges = false;
     this.updateSessionUI();
+    this.renderMainMenuStats();
     if (showNotification) {
       this.showToast(`Saved! Login: ${this.playerName} | Statem ID: ${this.statemId}`, "emerald");
     }
@@ -1431,6 +1764,7 @@ const GameApp = {
       this.renderWorldCards();
       this.renderSubLevelGrid();
       this.loadStage(this.currentWorld, this.currentSub, false);
+      this.renderMainMenuStats();
       this.showToast(`Resumed session for ${this.playerName} at Stage ${this.currentWorld}-${this.currentSub}!`, "emerald");
       return true;
     }
@@ -1451,13 +1785,14 @@ const GameApp = {
       this.renderWorldCards();
       this.renderSubLevelGrid();
       this.loadStage(this.currentWorld, this.currentSub, false);
+      this.renderMainMenuStats();
       this.showToast(`Restored Stage ${this.currentWorld}-${this.currentSub} from Statem ID ${this.statemId}!`, "emerald");
       return true;
     }
 
     this.playerName = cleanLogin;
     this.saveSessionToStorage(false);
-    this.showToast(`Started active profile for ${this.playerName} (ID: ${this.statemId})`, "amber");
+    this.showToast(`Updated profile name to ${this.playerName} (ID: ${this.statemId})`, "amber");
     return true;
   },
 
@@ -1490,8 +1825,7 @@ const GameApp = {
     const raw = SUBLEVELS[key] || SUBLEVELS["1-1"];
     const meta = WORLD_META[world - 1];
 
-    if (document.getElementById("mainMenuModal")?.classList.contains("hidden") &&
-        document.getElementById("introSplashModal")?.classList.contains("hidden")) {
+    if (this.currentScreen === "gameplay") {
       sfx.setMusicTrack(meta.musicTrack);
     }
 
@@ -1663,7 +1997,7 @@ const GameApp = {
   },
 
   update() {
-    if (this.isPaused) return;
+    if (this.isPaused || this.appExited || this.currentScreen !== "gameplay") return;
 
     for (let i = this.particles.length - 1; i >= 0; i--) {
       const pt = this.particles[i];
@@ -2465,6 +2799,7 @@ const GameApp = {
     ctx.restore();
   },
 
+
   updateSessionUI() {
     document.getElementById("hudPlayerName").textContent = this.playerName;
     document.getElementById("hudStatemId").textContent = this.statemId;
@@ -2472,6 +2807,8 @@ const GameApp = {
     const statemField = document.getElementById("inputStatemId");
     if (loginField && document.activeElement !== loginField) loginField.value = this.playerName;
     if (statemField && document.activeElement !== statemField) statemField.value = this.statemId;
+    const pausePlayer = document.getElementById("pausePlayerLabel");
+    if (pausePlayer) pausePlayer.textContent = this.playerName;
   },
 
   updateHUD() {
@@ -2480,6 +2817,11 @@ const GameApp = {
     document.getElementById("hudWorldBadge").textContent = `World ${this.currentWorld} • Stage ${this.currentSub}/${STAGES_PER_WORLD}`;
     document.getElementById("hudDeaths").textContent = this.totalDeaths;
     document.getElementById("hudStageDeaths").textContent = this.stageDeaths[this.stage.key] || 0;
+
+    const gpTitle = document.getElementById("gameplayStageBadge");
+    if (gpTitle) gpTitle.textContent = `${this.stage.title}`;
+    const gpDeaths = document.getElementById("gameplayDeathsBadge");
+    if (gpDeaths) gpDeaths.textContent = `💀 ${this.stageDeaths[this.stage.key] || 0} (Total: ${this.totalDeaths})`;
 
     let clearedCount = 0;
     for (let w = 1; w <= 3; w++) {
@@ -2497,15 +2839,15 @@ const GameApp = {
     if (hintLabel && hintText) {
       if (this.showTrueHintInline) {
         hintLabel.textContent = "🛡️ TRUE GUIDE";
-        hintLabel.className = "px-2 py-0.5 rounded text-[11px] font-extrabold uppercase bg-emerald-500/25 text-emerald-300 border border-emerald-400/50 shrink-0";
+        hintLabel.className = "px-2 py-0.5 rounded text-[10px] font-extrabold uppercase bg-emerald-500/25 text-emerald-300 border border-emerald-400/50 shrink-0";
         hintText.textContent = this.stage.trueGuide;
-        hintText.className = "text-xs sm:text-sm font-bold text-emerald-200 leading-snug";
+        hintText.className = "text-xs font-bold text-emerald-200 leading-snug line-clamp-1";
         if (peekBtn) peekBtn.textContent = "😈 Show Devil's Lie";
       } else {
         hintLabel.textContent = "😈 DEVIL'S HINT";
-        hintLabel.className = "px-2 py-0.5 rounded text-[11px] font-extrabold uppercase bg-amber-500/25 text-amber-300 border border-amber-400/50 shrink-0";
+        hintLabel.className = "px-2 py-0.5 rounded text-[10px] font-extrabold uppercase bg-amber-500/25 text-amber-300 border border-amber-400/50 shrink-0";
         hintText.textContent = `"${this.stage.falseHint}"`;
-        hintText.className = "text-xs sm:text-sm font-extrabold text-amber-100 leading-snug";
+        hintText.className = "text-xs font-extrabold text-amber-100 leading-snug line-clamp-1";
         if (peekBtn) peekBtn.textContent = "💡 Peek True Solution";
       }
     }
@@ -2514,6 +2856,8 @@ const GameApp = {
       chaosBadge.textContent = `🎲 Try #${this.stage.attempt}: ${this.stage.mutation.name}`;
       chaosBadge.title = this.stage.mutation.desc;
     }
+
+    this.renderMainMenuStats();
   },
 
   renderWorldCards() {
@@ -2527,7 +2871,7 @@ const GameApp = {
       }
       return `
         <button type="button" data-world="${w.id}"
-          class="world-card-btn voxel-btn text-left p-2.5 sm:p-3 rounded-lg transition-all ${
+          class="world-card-btn voxel-btn text-left p-3 rounded-xl transition-all ${
             isSelected
               ? 'bg-slate-800 border-2 border-emerald-400 ring-2 ring-emerald-500/30'
               : 'bg-slate-900/90 border border-slate-700 hover:bg-slate-800/70'
@@ -2540,7 +2884,7 @@ const GameApp = {
             <span class="text-xs font-mono text-slate-300">${doneInWorld}/${STAGES_PER_WORLD} Cleared</span>
           </div>
           <div class="font-bold text-xs sm:text-sm text-white">${w.name}</div>
-          <div class="text-[11px] text-slate-400 mt-0.5 line-clamp-1">${w.subtitle}</div>
+          <div class="text-[11px] text-slate-400 mt-0.5 line-clamp-2">${w.description}</div>
         </button>
       `;
     }).join("");
@@ -2570,8 +2914,8 @@ const GameApp = {
       const tabBtn = document.getElementById(`btnSubPage${pIdx}`);
       if (tabBtn) {
         tabBtn.className = pIdx === this.subGridPage
-          ? "px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-600 text-white"
-          : "px-2 py-0.5 rounded text-[11px] font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700";
+          ? "px-2.5 py-1 rounded text-[11px] font-bold bg-emerald-600 text-white"
+          : "px-2.5 py-1 rounded text-[11px] font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700";
       }
     });
 
@@ -2582,20 +2926,24 @@ const GameApp = {
       const completed = !!this.completedStages[key];
       const active = s === this.currentSub;
       const stageObj = SUBLEVELS[key];
+      const shortName = stageObj ? stageObj.title.replace(/^[0-9]+-[0-9]+:\s*/, "") : `Stage ${s}`;
       html += `
         <button type="button" data-sub="${s}" ${!unlocked ? 'disabled' : ''}
-          class="sub-stage-btn voxel-btn px-2 py-1.5 rounded text-[11px] font-mono flex flex-col items-center justify-center transition ${
+          class="sub-stage-btn voxel-btn p-2 rounded-lg text-xs font-mono flex flex-col items-start justify-between transition text-left ${
             active
-              ? 'bg-emerald-600 text-white border-emerald-300 font-bold'
+              ? 'bg-emerald-700 text-white border-emerald-300 ring-2 ring-emerald-400/40 font-bold'
               : completed
-              ? 'bg-emerald-950/80 text-emerald-300 border-emerald-700'
+              ? 'bg-emerald-950/80 text-emerald-300 border-emerald-700 hover:bg-emerald-900/70'
               : unlocked
               ? 'bg-slate-800 text-slate-200 border-slate-600 hover:bg-slate-700'
-              : 'bg-slate-900/50 text-slate-600 border-slate-800 cursor-not-allowed opacity-60'
+              : 'bg-slate-900/50 text-slate-600 border-slate-800 cursor-not-allowed opacity-55'
           }"
           title="${stageObj ? stageObj.title : ''}">
-          <span>${this.currentWorld}-${s}</span>
-          <span class="text-[9px] mt-0.5">${completed ? '★ DONE' : unlocked ? 'PLAY' : '🔒'}</span>
+          <div class="flex items-center justify-between w-full">
+            <span class="font-extrabold text-xs">${this.currentWorld}-${s}</span>
+            <span class="text-[9px] px-1.5 py-0.5 rounded bg-black/30">${completed ? '★ DONE' : unlocked ? '▶ PLAY' : '🔒'}</span>
+          </div>
+          <div class="text-[10px] font-sans truncate w-full mt-1 opacity-90">${shortName}</div>
         </button>
       `;
     }
@@ -2605,9 +2953,8 @@ const GameApp = {
       btn.addEventListener("click", () => {
         const subId = parseInt(btn.getAttribute("data-sub"), 10);
         if (this.isSubLevelUnlocked(this.currentWorld, subId)) {
-          sfx.buttonClick();
-          document.getElementById("stageOverlay").classList.add("hidden");
-          this.loadStage(this.currentWorld, subId, false);
+          document.getElementById("stageOverlay")?.classList.add("hidden");
+          this.enterGameplay(this.currentWorld, subId);
         }
       });
     });
@@ -2636,7 +2983,7 @@ const GameApp = {
     if (!box) return;
     if (mode === "false") {
       box.innerHTML = `
-        <div class="p-3 rounded bg-amber-500/10 border border-amber-500/40 text-amber-200 text-xs space-y-1.5">
+        <div class="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/40 text-amber-200 text-xs space-y-1.5">
           <div class="font-bold uppercase tracking-wider text-amber-400">😈 Official Devil Hint for ${st.title}</div>
           <p class="font-mono text-sm">"${st.falseHint}"</p>
           <p class="text-[11px] text-amber-300/80 italic">(Warning: Following this official hint has a 99.9% chance of immediate voxel demise.)</p>
@@ -2644,15 +2991,109 @@ const GameApp = {
       `;
     } else {
       box.innerHTML = `
-        <div class="p-3 rounded bg-emerald-500/10 border border-emerald-500/40 text-emerald-100 text-xs space-y-2">
+        <div class="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/40 text-emerald-100 text-xs space-y-2">
           <div class="font-bold uppercase tracking-wider text-emerald-400">🛡️ True Tactical Walkthrough: ${st.title}</div>
           <p class="leading-relaxed text-sm">${st.trueGuide}</p>
-          <div class="pt-1 border-t border-emerald-500/20 text-[11px] text-slate-300">
+          <div class="pt-1.5 border-t border-emerald-500/20 text-[11px] text-slate-300">
             <strong>Deceptive Banner Lies:</strong> "${st.falseHint}"
           </div>
         </div>
       `;
     }
+  },
+
+  getStageIndications(st) {
+    const tags = [];
+    if ((st.platforms || []).some(p => p.type === "crumble")) tags.push({ label: "Crumbling Bridge", color: "amber" });
+    if ((st.platforms || []).some(p => p.type === "fake")) tags.push({ label: "Hologram Fake Floor", color: "rose" });
+    if ((st.platforms || []).some(p => p.type === "invisible")) tags.push({ label: "Invisible Stepping Blocks", color: "sky" });
+    if ((st.platforms || []).some(p => p.type === "crusher")) tags.push({ label: "Ceiling Piston Crusher", color: "slate" });
+    if ((st.platforms || []).some(p => p.type === "ice")) tags.push({ label: "Slippery Ice", color: "cyan" });
+    if ((st.spikes || []).some(s => s.hidden)) tags.push({ label: "Hidden Pop-Up Spikes", color: "red" });
+    if ((st.objects || []).some(o => o.type === "orb" && o.orbType === "gravity")) tags.push({ label: "Purple Gravity Flip Orb", color: "purple" });
+    if ((st.objects || []).some(o => o.type === "orb" && o.orbType === "reverse")) tags.push({ label: "Amber Mirror Controls", color: "amber" });
+    if ((st.objects || []).some(o => o.type === "slime")) tags.push({ label: "Slime Bounce Pad", color: "emerald" });
+    if ((st.objects || []).some(o => o.type === "gem" && o.isTrap)) tags.push({ label: "Bait Gem Trap", color: "yellow" });
+    if ((st.objects || []).some(o => o.type === "switch")) tags.push({ label: "Gate Pressure Switch", color: "emerald" });
+    if ((st.objects || []).some(o => o.type === "sawSpawner")) tags.push({ label: "Redstone Sawblade", color: "rose" });
+    if ((st.objects || []).some(o => o.type === "fakePortal")) tags.push({ label: "Decoy Teleport Portal", color: "pink" });
+    if (st.portal && st.portal.behavior === "runaway") tags.push({ label: "Runaway Exit Portal", color: "teal" });
+    return tags;
+  },
+
+  renderHelpDirectory(worldId = 1) {
+    this.helpWorldFilter = worldId;
+    [1, 2, 3].forEach(w => {
+      const btn = document.getElementById(`btnHelpWorldTab_${w}`);
+      if (btn) {
+        btn.className = w === worldId
+          ? "voxel-btn bg-emerald-600 text-white px-3 py-1.5 rounded-lg text-xs font-extrabold"
+          : "voxel-btn bg-slate-800 text-slate-300 hover:bg-slate-700 px-3 py-1.5 rounded-lg text-xs font-semibold";
+      }
+    });
+
+    const container = document.getElementById("helpAllLevelsList");
+    if (!container) return;
+
+    let html = "";
+    for (let s = 1; s <= STAGES_PER_WORLD; s++) {
+      const key = `${worldId}-${s}`;
+      const st = SUBLEVELS[key];
+      if (!st) continue;
+      const tags = this.getStageIndications(st);
+      const tagsHtml = tags.map(t => `<span class="px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-[10px] font-semibold text-emerald-300">${t.label}</span>`).join(" ");
+      html += `
+        <div class="bg-slate-900/95 border border-slate-800 rounded-xl p-3 space-y-2">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <span class="font-extrabold text-xs sm:text-sm text-white">${st.title}</span>
+            <button type="button" data-play-stage="${key}" class="help-play-stage-btn voxel-btn bg-emerald-700 hover:bg-emerald-600 text-white px-2.5 py-1 rounded text-[10px] font-bold">
+              ▶ Play Stage ${key}
+            </button>
+          </div>
+          <div class="flex flex-wrap gap-1">${tagsHtml}</div>
+          <div class="text-xs text-amber-200/90 bg-amber-950/30 border border-amber-500/20 rounded px-2.5 py-1.5">
+            <strong>😈 False Hint:</strong> "${st.falseHint}"
+          </div>
+          <div class="text-xs text-emerald-200 bg-emerald-950/30 border border-emerald-500/20 rounded px-2.5 py-1.5 leading-relaxed">
+            <strong>🛡️ True Walkthrough &amp; Indication:</strong> ${st.trueGuide}
+          </div>
+        </div>
+      `;
+    }
+    container.innerHTML = html;
+
+    container.querySelectorAll(".help-play-stage-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const [wStr, sStr] = (btn.getAttribute("data-play-stage") || "1-1").split("-");
+        const w = parseInt(wStr, 10) || 1;
+        const s = parseInt(sStr, 10) || 1;
+        this.enterGameplay(w, s);
+      });
+    });
+  },
+
+  killAndExitApp() {
+    sfx.buttonClick();
+    this.saveSessionToStorage(false);
+    this.isPaused = true;
+    this.appExited = true;
+    sfx.stopMusic();
+
+    document.getElementById("closeConfirmModal")?.classList.add("hidden");
+    document.getElementById("closedSummaryName").textContent = this.playerName;
+    document.getElementById("closedSummaryStatem").textContent = this.statemId;
+    document.getElementById("closedSummaryStage").textContent = `Stage ${this.currentWorld}-${this.currentSub}`;
+    this.showScreen("closed");
+
+    try {
+      if (window.navigator && window.navigator.app && typeof window.navigator.app.exitApp === "function") {
+        window.navigator.app.exitApp();
+      }
+      if (window.ReactNativeWebView && typeof window.ReactNativeWebView.postMessage === "function") {
+        window.ReactNativeWebView.postMessage(JSON.stringify({ type: "EXIT_APP", statemId: this.statemId }));
+      }
+      window.close();
+    } catch (e) {}
   },
 
   showToast(msg, tone = "emerald") {
@@ -2670,14 +3111,21 @@ const GameApp = {
   },
 
   bindEvents() {
+    window.addEventListener("resize", () => {
+      if (this.consoleConfig.deviceView === "auto") {
+        this.applyConsoleConfigToDOM();
+      }
+    });
+
     window.addEventListener("keydown", (e) => {
       if (["INPUT", "SELECT", "TEXTAREA"].includes(document.activeElement?.tagName)) return;
 
-      const introModal = document.getElementById("introSplashModal");
-      if (introModal && !introModal.classList.contains("hidden")) {
+      if (this.currentScreen === "intro") {
         this.dismissIntroAndStart(true);
         return;
       }
+
+      if (this.currentScreen !== "gameplay") return;
 
       if (e.code === "ArrowLeft" || e.code === "KeyA") {
         this.keys.left = true;
@@ -2696,7 +3144,7 @@ const GameApp = {
       if (e.code === "KeyR") {
         this.restartStage();
       }
-      if (e.code === "KeyP") {
+      if (e.code === "KeyP" || e.code === "Escape") {
         this.togglePause();
       }
     });
@@ -2747,12 +3195,43 @@ const GameApp = {
       this.dismissIntroAndStart(false);
     });
 
-    document.getElementById("btnOpenMainMenu")?.addEventListener("click", () => this.openMainMenuModal());
-    document.getElementById("btnCloseMainMenu")?.addEventListener("click", () => this.closeMainMenuModal());
-    document.getElementById("btnMenuResumePlay")?.addEventListener("click", () => this.closeMainMenuModal());
-    document.getElementById("btnMenuToggleMusic")?.addEventListener("click", () => {
-      sfx.toggleMusicMute();
+    document.getElementById("btnCloseMainMenu")?.addEventListener("click", () => {
       sfx.buttonClick();
+      this.showScreen("levels");
+    });
+    document.getElementById("btnOpenHelpModal")?.addEventListener("click", () => {
+      sfx.buttonClick();
+      const sel = document.getElementById("helpStageSelect");
+      if (sel) {
+        sel.value = `${this.currentWorld}-${this.currentSub}`;
+        this.generateHelpInstructions(sel.value, "true");
+      }
+      this.renderHelpDirectory(this.currentWorld);
+      this.showScreen("help");
+    });
+    document.getElementById("btnHomeSettings")?.addEventListener("click", () => {
+      sfx.buttonClick();
+      this.syncConsoleSettingsUI();
+      this.showScreen("settings");
+    });
+    document.getElementById("btnCloseGamePrompt")?.addEventListener("click", () => {
+      sfx.buttonClick();
+      this.isPaused = true;
+      document.getElementById("closeConfirmStatemId").textContent = this.generateStatemId(
+        this.playerName, this.currentWorld, this.currentSub, this.totalDeaths
+      );
+      document.getElementById("closeConfirmModal")?.classList.remove("hidden");
+    });
+
+    document.getElementById("btnBackToHomeFromLevels")?.addEventListener("click", () => {
+      sfx.buttonClick();
+      this.showScreen("home");
+    });
+    document.getElementById("btnMenuResumePlay")?.addEventListener("click", () => {
+      this.enterGameplay(this.currentWorld, this.currentSub);
+    });
+    document.getElementById("btnLaunchSelectedStage")?.addEventListener("click", () => {
+      this.enterGameplay(this.currentWorld, this.currentSub);
     });
 
     document.getElementById("btnPrevStage")?.addEventListener("click", () => { sfx.buttonClick(); this.prevStage(); });
@@ -2765,6 +3244,38 @@ const GameApp = {
       });
     });
 
+    document.getElementById("btnInGameMenuTop")?.addEventListener("click", () => this.togglePause());
+    document.getElementById("btnPause")?.addEventListener("click", () => this.togglePause());
+    document.getElementById("btnRestart")?.addEventListener("click", () => {
+      sfx.buttonClick();
+      this.restartStage();
+    });
+    document.getElementById("btnQuickSave")?.addEventListener("click", () => {
+      sfx.buttonClick();
+      this.saveSessionToStorage(true);
+    });
+    document.getElementById("btnOpenMainMenu")?.addEventListener("click", () => {
+      sfx.buttonClick();
+      document.getElementById("pauseOverlay")?.classList.add("hidden");
+      this.showScreen("home");
+    });
+    document.getElementById("btnPauseToLevels")?.addEventListener("click", () => {
+      sfx.buttonClick();
+      document.getElementById("pauseOverlay")?.classList.add("hidden");
+      this.showScreen("levels");
+    });
+    document.getElementById("btnPauseToSettings")?.addEventListener("click", () => {
+      sfx.buttonClick();
+      document.getElementById("pauseOverlay")?.classList.add("hidden");
+      this.syncConsoleSettingsUI();
+      this.showScreen("settings");
+    });
+    document.getElementById("btnOverlayToLevels")?.addEventListener("click", () => {
+      sfx.buttonClick();
+      document.getElementById("stageOverlay")?.classList.add("hidden");
+      this.showScreen("levels");
+    });
+
     document.getElementById("btnPeekTrueHint")?.addEventListener("click", () => {
       sfx.buttonClick();
       this.showTrueHintInline = !this.showTrueHintInline;
@@ -2773,10 +3284,6 @@ const GameApp = {
 
     document.getElementById("btnScreenFitMode")?.addEventListener("click", () => this.cycleScreenFitMode());
     document.getElementById("btnFullscreenLandscape")?.addEventListener("click", () => this.toggleFullscreenAndLandscape());
-
-    document.getElementById("btnPause")?.addEventListener("click", () => this.togglePause());
-    document.getElementById("btnRestart")?.addEventListener("click", () => { sfx.buttonClick(); this.restartStage(); });
-    document.getElementById("btnQuickSave")?.addEventListener("click", () => { sfx.buttonClick(); this.saveSessionToStorage(true); });
 
     document.getElementById("btnOverlayRetry")?.addEventListener("click", () => { sfx.buttonClick(); this.restartStage(); });
     document.getElementById("btnOverlayNext")?.addEventListener("click", () => { sfx.buttonClick(); this.nextStage(); });
@@ -2800,12 +3307,74 @@ const GameApp = {
       }
     });
 
-    document.getElementById("btnMute")?.addEventListener("click", () => {
-      sfx.toggleSfxMute();
+    ["btnMute", "btnPauseSfxToggle", "btnSettingsSfxToggle"].forEach(id => {
+      document.getElementById(id)?.addEventListener("click", () => {
+        sfx.toggleSfxMute();
+        sfx.buttonClick();
+      });
     });
-    document.getElementById("btnToggleMusic")?.addEventListener("click", () => {
-      sfx.toggleMusicMute();
+    ["btnToggleMusic", "btnMenuToggleMusic", "btnPauseMusicToggle", "btnSettingsMusicToggle"].forEach(id => {
+      document.getElementById(id)?.addEventListener("click", () => {
+        sfx.toggleMusicMute();
+        sfx.buttonClick();
+      });
     });
+
+    document.getElementById("sliderMusicVolume")?.addEventListener("input", (e) => {
+      sfx.setMusicVolume(( parseInt(e.target.value, 10) || 0 ) / 100);
+    });
+    document.getElementById("sliderSfxVolume")?.addEventListener("input", (e) => {
+      sfx.setSfxVolume(( parseInt(e.target.value, 10) || 0 ) / 100);
+    });
+
+    document.getElementById("btnBackFromSettings")?.addEventListener("click", () => {
+      sfx.buttonClick();
+      this.showScreen(this.previousScreen === "gameplay" ? "gameplay" : "home");
+    });
+    document.getElementById("btnTestConsoleInGame")?.addEventListener("click", () => {
+      this.enterGameplay(this.currentWorld, this.currentSub);
+    });
+    document.getElementById("btnResetConsoleConfig")?.addEventListener("click", () => {
+      this.resetConsoleConfig();
+    });
+    document.getElementById("btnSettingsExitApp")?.addEventListener("click", () => {
+      sfx.buttonClick();
+      document.getElementById("closeConfirmStatemId").textContent = this.generateStatemId(
+        this.playerName, this.currentWorld, this.currentSub, this.totalDeaths
+      );
+      document.getElementById("closeConfirmModal")?.classList.remove("hidden");
+    });
+
+    ["mobile", "tablet", "auto"].forEach(mode => {
+      document.getElementById(`btnViewMode_${mode}`)?.addEventListener("click", () => {
+        sfx.buttonClick();
+        this.consoleConfig.deviceView = mode;
+        this.saveConsoleConfig();
+        this.applyConsoleConfigToDOM();
+      });
+    });
+
+    ["split", "floating", "lefty", "compact"].forEach(preset => {
+      document.getElementById(`btnPreset_${preset}`)?.addEventListener("click", () => {
+        sfx.buttonClick();
+        this.consoleConfig.layoutPreset = preset;
+        this.saveConsoleConfig();
+        this.applyConsoleConfigToDOM();
+      });
+    });
+
+    const bindConfigSlider = (sliderId, propName) => {
+      document.getElementById(sliderId)?.addEventListener("input", (e) => {
+        this.consoleConfig[propName] = parseInt(e.target.value, 10) || 0;
+        this.saveConsoleConfig();
+        this.applyConsoleConfigToDOM();
+      });
+    };
+    bindConfigSlider("sliderBtnScale", "buttonScale");
+    bindConfigSlider("sliderBottomOffset", "bottomOffset");
+    bindConfigSlider("sliderSidePadding", "sidePadding");
+    bindConfigSlider("sliderDpadGap", "dpadGap");
+    bindConfigSlider("sliderConsoleOpacity", "opacity");
 
     document.getElementById("btnOpenSessionModal")?.addEventListener("click", () => {
       sfx.buttonClick();
@@ -2846,17 +3415,9 @@ const GameApp = {
       this.showToast(`Copied Statem ID: ${text}`, "emerald");
     });
 
-    document.getElementById("btnOpenHelpModal")?.addEventListener("click", () => {
-      sfx.buttonClick();
-      const sel = document.getElementById("helpStageSelect");
-      if (sel) {
-        sel.value = `${this.currentWorld}-${this.currentSub}`;
-        this.generateHelpInstructions(sel.value, "true");
-      }
-      document.getElementById("helpModal")?.classList.remove("hidden");
-    });
     document.getElementById("btnCloseHelpModal")?.addEventListener("click", () => {
-      document.getElementById("helpModal")?.classList.add("hidden");
+      sfx.buttonClick();
+      this.showScreen(this.previousScreen === "gameplay" ? "gameplay" : "home");
     });
     document.getElementById("btnGenTrueGuide")?.addEventListener("click", () => {
       sfx.buttonClick();
@@ -2868,6 +3429,15 @@ const GameApp = {
       const key = document.getElementById("helpStageSelect")?.value || "1-1";
       this.generateHelpInstructions(key, "false");
     });
+    document.getElementById("helpStageSelect")?.addEventListener("change", (e) => {
+      this.generateHelpInstructions(e.target.value, "true");
+    });
+    [1, 2, 3].forEach(w => {
+      document.getElementById(`btnHelpWorldTab_${w}`)?.addEventListener("click", () => {
+        sfx.buttonClick();
+        this.renderHelpDirectory(w);
+      });
+    });
 
     document.getElementById("btnOpenCreditsModal")?.addEventListener("click", () => {
       sfx.buttonClick();
@@ -2877,32 +3447,17 @@ const GameApp = {
       document.getElementById("creditsModal")?.classList.add("hidden");
     });
 
-    document.getElementById("btnCloseGamePrompt")?.addEventListener("click", () => {
-      sfx.buttonClick();
-      this.isPaused = true;
-      document.getElementById("closeConfirmStatemId").textContent = this.generateStatemId(
-        this.playerName, this.currentWorld, this.currentSub, this.totalDeaths
-      );
-      document.getElementById("closeConfirmModal")?.classList.remove("hidden");
-    });
     document.getElementById("btnCancelCloseGame")?.addEventListener("click", () => {
       sfx.buttonClick();
-      this.isPaused = false;
+      if (this.currentScreen === "gameplay") this.isPaused = false;
       document.getElementById("closeConfirmModal")?.classList.add("hidden");
     });
     document.getElementById("btnSaveAndCloseGame")?.addEventListener("click", () => {
-      sfx.buttonClick();
-      this.saveSessionToStorage(true);
-      document.getElementById("closeConfirmModal")?.classList.add("hidden");
-      document.getElementById("closedSessionScreen")?.classList.remove("hidden");
-      document.getElementById("closedSummaryName").textContent = this.playerName;
-      document.getElementById("closedSummaryStatem").textContent = this.statemId;
-      document.getElementById("closedSummaryStage").textContent = `Stage ${this.currentWorld}-${this.currentSub}`;
+      this.killAndExitApp();
     });
     document.getElementById("btnReopenGameFromClosed")?.addEventListener("click", () => {
       sfx.buttonClick();
-      this.isPaused = false;
-      document.getElementById("closedSessionScreen")?.classList.add("hidden");
+      this.runIntroSplashSequence();
     });
 
     let deferredPwaPrompt = null;
@@ -2938,7 +3493,7 @@ const GameApp = {
     sfx.buttonClick();
     this.isPaused = !this.isPaused;
     const btn = document.getElementById("btnPause");
-    if (btn) btn.textContent = this.isPaused ? "▶ Resume" : "⏸ Pause";
+    if (btn) btn.textContent = this.isPaused ? "▶ Resume" : "⏸ Pause (P)";
     const pauseBanner = document.getElementById("pauseOverlay");
     if (pauseBanner) {
       pauseBanner.classList.toggle("hidden", !this.isPaused);

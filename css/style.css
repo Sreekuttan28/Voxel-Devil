@@ -1,6 +1,6 @@
-/* Voxel Devil: Craft of Traps (v2.0 - 96 Stages Chaos Edition) - Mokuttan Labs */
+/* Voxel Devil: Craft of Traps (v3.0 - Real-Game Multi-Screen & Mobile Console Edition) - Mokuttan Labs */
 :root {
-  --bg-deep: #0d1117;
+  --bg-deep: #090d16;
   --bg-panel: #161b22;
   --bg-card: #1f2733;
   --voxel-green: #3fb950;
@@ -29,46 +29,35 @@ html, body {
   min-height: 100dvh;
 }
 
-/* Installed PWA / Standalone / Cinema Fullscreen Mode */
-body.screen-mode-cinema,
-body.pwa-standalone-active {
+body.gameplay-locked {
   height: 100dvh;
   max-height: 100dvh;
   overflow: hidden;
+}
+
+.safe-area-pad {
   padding-top: env(safe-area-inset-top, 0px);
   padding-bottom: env(safe-area-inset-bottom, 0px);
   padding-left: env(safe-area-inset-left, 0px);
   padding-right: env(safe-area-inset-right, 0px);
 }
 
-body.screen-mode-cinema .hide-in-cinema {
-  display: none !important;
-}
-
-body.screen-mode-cinema #canvasViewportSection {
-  max-width: 100% !important;
-  flex: 1 1 auto;
-  height: auto !important;
-  aspect-ratio: auto !important;
-  min-height: 0;
-}
-
 .voxel-border {
   border: 2px solid #30363d;
-  box-shadow: inset -2px -2px 0px rgba(0,0,0,0.45), inset 2px 2px 0px rgba(255,255,255,0.08), 0 4px 0 #090c10;
+  box-shadow: inset -2px -2px 0px rgba(0,0,0,0.45), inset 2px 2px 0px rgba(255,255,255,0.08), 0 4px 0 #05070b;
 }
 
 .voxel-card {
-  background: linear-gradient(180deg, #1f2733 0%, #161b22 100%);
+  background: linear-gradient(180deg, #1f2733 0%, #131822 100%);
   border: 2px solid #30363d;
-  box-shadow: 0 12px 28px -6px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255,255,255,0.1);
+  box-shadow: 0 14px 32px -6px rgba(0, 0, 0, 0.75), inset 0 1px 0 rgba(255,255,255,0.1);
 }
 
 .voxel-btn {
   position: relative;
   border: 2px solid #1f2937;
-  box-shadow: inset -2px -2px 0px rgba(0,0,0,0.35), inset 2px 2px 0px rgba(255,255,255,0.2), 0 3px 0 #090d16;
-  transition: transform 0.06s ease, box-shadow 0.06s ease, filter 0.12s ease;
+  box-shadow: inset -2px -2px 0px rgba(0,0,0,0.35), inset 2px 2px 0px rgba(255,255,255,0.2), 0 4px 0 #06090f;
+  transition: transform 0.08s ease, box-shadow 0.08s ease, filter 0.12s ease;
   cursor: pointer;
 }
 
@@ -77,20 +66,21 @@ body.screen-mode-cinema #canvasViewportSection {
 }
 
 .voxel-btn:active, .voxel-btn.active-press {
-  transform: translateY(2px);
-  box-shadow: inset -2px -2px 0px rgba(0,0,0,0.45), 0 0px 0 #090d16;
+  transform: translateY(3px);
+  box-shadow: inset -2px -2px 0px rgba(0,0,0,0.45), 0 1px 0 #06090f;
 }
 
 .console-dpad-btn {
   touch-action: none;
   border: 3px solid #374151;
-  box-shadow: inset -3px -3px 0px rgba(0,0,0,0.5), inset 3px 3px 0px rgba(255,255,255,0.18), 0 4px 0 #090d16;
+  box-shadow: inset -3px -3px 0px rgba(0,0,0,0.5), inset 3px 3px 0px rgba(255,255,255,0.22), 0 5px 0 #06090f;
+  transition: transform 0.05s ease, filter 0.08s ease;
 }
 
 .console-dpad-btn:active, .console-dpad-btn.pressed {
-  transform: translateY(3px);
-  box-shadow: inset 2px 2px 4px rgba(0,0,0,0.6), 0 1px 0 #090d16;
-  filter: brightness(1.15);
+  transform: translateY(4px);
+  box-shadow: inset 2px 2px 5px rgba(0,0,0,0.65), 0 1px 0 #06090f;
+  filter: brightness(1.2);
 }
 
 #gameCanvas {
@@ -102,7 +92,6 @@ body.screen-mode-cinema #canvasViewportSection {
   background-color: #0b0f17;
 }
 
-/* Persistent Screen Fit Modes for Installed PWA & Browser */
 #gameCanvas.fit-mode-contain {
   object-fit: contain;
 }
@@ -119,20 +108,38 @@ body.screen-mode-cinema #canvasViewportSection {
   font-weight: 800;
 }
 
-/* High-Clarity Hint Banner Glow */
 .hint-banner-glow {
-  background: linear-gradient(90deg, rgba(24, 24, 37, 0.96) 0%, rgba(30, 27, 46, 0.96) 50%, rgba(24, 24, 37, 0.96) 100%);
-  border: 2px solid rgba(250, 204, 21, 0.55);
-  box-shadow: 0 0 16px rgba(250, 204, 21, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  background: linear-gradient(90deg, rgba(18, 22, 34, 0.96) 0%, rgba(28, 25, 44, 0.96) 50%, rgba(18, 22, 34, 0.96) 100%);
+  border: 1.5px solid rgba(250, 204, 21, 0.5);
+  box-shadow: 0 0 14px rgba(250, 204, 21, 0.12);
 }
 
 @keyframes voxelPulse {
-  0%, 100% { text-shadow: 0 0 10px rgba(16, 185, 129, 0.5), 0 0 20px rgba(16, 185, 129, 0.2); }
-  50% { text-shadow: 0 0 20px rgba(16, 185, 129, 0.9), 0 0 36px rgba(16, 185, 129, 0.45); }
+  0%, 100% { text-shadow: 0 0 12px rgba(16, 185, 129, 0.55), 0 0 24px rgba(16, 185, 129, 0.25); }
+  50% { text-shadow: 0 0 22px rgba(16, 185, 129, 0.95), 0 0 42px rgba(16, 185, 129, 0.5); }
 }
 
 .glow-title {
-  animation: voxelPulse 2.8s infinite ease-in-out;
+  animation: voxelPulse 2.5s infinite ease-in-out;
+}
+
+@keyframes cinematicPop {
+  0% { opacity: 0; transform: scale(0.72) translateY(24px); }
+  60% { opacity: 1; transform: scale(1.04) translateY(-4px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.cinematic-pop-card {
+  animation: cinematicPop 0.75s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes logoFloat {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-6px) rotate(-1.5deg); }
+}
+
+.floating-logo {
+  animation: logoFloat 3.2s infinite ease-in-out;
 }
 
 @keyframes eqBounce {
@@ -160,7 +167,7 @@ body.screen-mode-cinema #canvasViewportSection {
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #0d1117;
+  background: #090d16;
 }
 ::-webkit-scrollbar-thumb {
   background: #30363d;
