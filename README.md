@@ -1,29 +1,14 @@
-# Voxel Devil: Craft of Traps — Full Project Setup
+# Voxel Devil: Craft of Traps (v2.0 — 96 Stages Chaos Edition)
 **Builder Studio:** [Mokuttan Labs](https://sreekuttan28.github.io/Mokuttan-Lab/)  
-**Creator:** [Sreehari N P](https://sreekuttan28.github.io/sreehari-portfolio/) — Founder & AI Developer at [Mokuttan Labs](https://sreekuttan28.github.io/Mokuttan-Lab/) | [LinkedIn](https://www.linkedin.com/in/sreeharinp) | [GitHub](https://github.com/sreekuttan28)
+**Creator:** [Sreehari N P](https://sreekuttan28.github.io/sreehari-portfolio/) (`@sreekuttan28`)  
+**Repository:** [github.com/Sreekuttan28/Voxel-Devil](https://github.com/Sreekuttan28/Voxel-Devil)
 
-## 1. Running the Game Locally
-1. Extract `mokuttan_labs_voxel_devil_setup.zip` into any folder on your computer.
-2. Open `index.html` directly in any modern browser (Chrome, Edge, Firefox, Safari) **or** serve the directory with a local static server:
-   ```bash
-   python3 -m http.server 8080
-   # Then visit http://localhost:8080
-   ```
-
-## 2. Project Structure
-- `index.html` — Main entry point, responsive HUD, modals, and mobile/desktop console controls.
-- `css/style.css` — Custom voxel block borders, pixel typography, and tactile D-Pad button styles.
-- `js/game.js` — 60 FPS 2D physics engine, Web Audio API synthesizer, 3 Worlds × 7 Sub-Levels (21 stages), false hint engine, and Login Name + Statem ID temporary save/resume system.
-- `assets/hero_banner.jpg` — Custom voxel dungeon artwork.
-- `manifest.json` & `capacitor.config.json` — Ready-to-use configuration for PWA or Google Play Store wrapping via Capacitor.
-
-## 3. Converting to an Android Play Store App (Capacitor)
-When you are ready to publish to Google Play Store:
-```bash
-npm init -y
-npm install @capacitor/core @capacitor/cli @capacitor/android
-npx cap add android
-npx cap copy android
-npx cap open android
-```
-Then build your signed `.aab` / `.apk` directly inside Android Studio!
+## What's New in v2.0
+1. **96 Stages Across 3 Worlds** (3 Worlds × 32 Sub-Levels = 96 Levels):
+   - **World 1: Overworld Meadows** (`1-1` to `1-32`)
+   - **World 2: Redstone Caverns** (`2-1` to `2-32`)
+   - **World 3: Obsidian Core** (`3-1` to `3-32`)
+2. **Dynamic Chaos Remixer on Every Retry/Fail**: Failing or restarting a stage never repeats the exact same trap pattern! Spikes shift & lunge, portals panic and dodge, bridges alter crumble speed, ice patches form, and ambush sawblades arm themselves dynamically.
+3. **Interactive Intro & 4-Track Chiptune Music Engine**: Unlocks Web Audio immediately on the first tap/keypress so Main Menu music and World soundtracks play reliably on first open.
+4. **Installed PWA & Persistent Screen Fit Mode**: Includes a persistent `📺 Screen: Fit 16:9 / Stretch Fill / Full Cinema` switcher saved in `localStorage` plus one-tap Fullscreen Landscape lock and complete `manifest.json` icon definitions so the installed app never reverts its display mode.
+5. **High-Clarity In-Game Hints & Signposts**: Dedicated glowing HUD Hint Banner with one-tap `💡 Peek True Solution` plus high-contrast floating callout signposts inside the canvas.

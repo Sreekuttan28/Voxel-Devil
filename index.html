@@ -2,254 +2,507 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, orientation=landscape" />
-  <title>Voxel Devil: Craft of Traps | Mokuttan Labs</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#0d1117" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>Voxel Devil: Craft of Traps (96 Stages) | Mokuttan Labs</title>
+  <link rel="manifest" href="manifest.json">
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
-  
-  <!-- PWA Manifest & Icons -->
-  <link rel="manifest" href="manifest.json">
-  <link rel="icon" type="image/jpeg" href="assets/hero_banner.jpg">
-  <link rel="apple-touch-icon" href="assets/hero_banner.jpg">
-
-  <style>
-    /* Modern Reveal & Movement Keyframes for App Opening */
-    @keyframes revealZoom {
-      0% { transform: scale(0.7); filter: blur(8px); opacity: 0; }
-      60% { transform: scale(1.05); filter: blur(0px); opacity: 1; }
-      100% { transform: scale(1); opacity: 1; }
-    }
-    @keyframes slideUp {
-      0% { transform: translateY(20px); opacity: 0; }
-      100% { transform: translateY(0); opacity: 1; }
-    }
-    @keyframes loadingBar {
-      0% { width: 0%; }
-      100% { width: 100%; }
-    }
-
-    .animate-reveal-zoom {
-      animation: revealZoom 1.1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-    }
-    .animate-slide-up {
-      animation: slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-    }
-    .animate-loading-bar {
-      animation: loadingBar 1.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-    }
-  </style>
 </head>
-<body class="w-screen h-screen flex flex-col justify-between bg-[#0d1117] text-slate-100 overflow-hidden">
+<body class="min-h-screen flex flex-col justify-between bg-[#0d1117] text-slate-100">
 
-  <!-- MODERN APP OPENING SPLASH SCREEN -->
-  <div id="appSplashLoader" class="fixed inset-0 bg-[#0d1117] z-50 flex flex-col items-center justify-center overflow-hidden transition-all duration-700">
-    <div class="absolute w-48 h-48 rounded-full bg-emerald-500/10 blur-3xl animate-pulse"></div>
-    
-    <div class="relative z-10 flex flex-col items-center animate-reveal-zoom text-center">
-      <img src="assets/hero_banner.jpg" alt="Voxel Devil" class="w-24 h-24 rounded-2xl border-2 border-emerald-500 shadow-2xl mb-4 object-cover ring-4 ring-emerald-500/20" />
-      
-      <h1 class="text-2xl font-extrabold text-white pixel-font tracking-widest animate-slide-up opacity-0" style="animation-delay: 0.3s;">
-        VOXEL DEVIL
-      </h1>
-      <p class="text-xs text-emerald-400 font-mono mt-1.5 tracking-wide animate-slide-up opacity-0" style="animation-delay: 0.6s;">
-        Craft of Traps • Mokuttan Labs
-      </p>
-
-      <div class="w-36 h-1 bg-slate-800 rounded-full mt-5 overflow-hidden animate-slide-up opacity-0 mx-auto" style="animation-delay: 0.9s;">
-        <div class="h-full bg-gradient-to-r from-emerald-500 to-teal-400 animate-loading-bar"></div>
+  <!-- ====================================================================== -->
+  <!-- CINEMATIC INTRO & AUDIO UNLOCK SPLASH SCREEN                           -->
+  <!-- ====================================================================== -->
+  <div id="introSplashModal" class="fixed inset-0 bg-[#090d16]/95 backdrop-blur-md z-50 flex items-center justify-center p-4">
+    <div class="voxel-card max-w-lg w-full rounded-2xl p-6 text-center space-y-4 border-2 border-emerald-500/50">
+      <div class="relative w-24 h-24 mx-auto rounded-2xl overflow-hidden border-2 border-emerald-400 shadow-lg shadow-emerald-500/20">
+        <img src="assets/hero_banner.jpg" alt="Voxel Devil Hero" class="w-full h-full object-cover" />
       </div>
-    </div>
-  </div>
-
-  <script>
-    window.addEventListener('load', () => {
-      setTimeout(() => {
-        const splash = document.getElementById('appSplashLoader');
-        if (splash) {
-          splash.style.transform = 'scale(1.08)';
-          splash.style.opacity = '0';
-          setTimeout(() => splash.remove(), 700);
-        }
-      }, 2600);
-    });
-  </script>
-
-  <!-- 1. HOME LANDING SCREEN -->
-  <div id="homeLandingScreen" class="screen-view w-full h-full flex flex-col items-center justify-center p-4 bg-[#0d1117] text-center z-30">
-    <div class="w-full max-w-lg bg-[#161b22]/90 border border-slate-700/80 rounded-2xl p-5 shadow-2xl space-y-4 backdrop-blur-md">
-      <div class="flex flex-col items-center gap-1.5">
-        <img src="assets/hero_banner.jpg" alt="Voxel Devil Banner" class="w-14 h-14 rounded-xl object-cover border-2 border-emerald-500 shadow-md" />
-        <h1 class="text-2xl font-extrabold tracking-tight text-white pixel-font">VOXEL DEVIL</h1>
-        <p class="text-xs text-slate-400 font-semibold">Craft of Traps • 21 Stages Across 3 Worlds</p>
+      <div>
+        <span class="inline-block px-3 py-0.5 rounded-full text-[11px] font-extrabold uppercase tracking-wider bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+          Mokuttan Labs Presents • v2.0 Chaos Edition
+        </span>
+        <h2 class="text-2xl sm:text-3xl font-extrabold text-white pixel-font glow-title mt-2">
+          VOXEL DEVIL: CRAFT OF TRAPS
+        </h2>
+        <p class="text-xs text-slate-300 mt-1">
+          <strong>96 Unpredictable Stages</strong> Across 3 Worlds • Dynamic Trap Remixer on Every Retry
+        </p>
       </div>
 
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
-        <button id="btnMenuStart" type="button" class="voxel-btn bg-emerald-600 hover:bg-emerald-500 text-white py-2.5 px-4 rounded-xl font-bold text-xs shadow-lg flex items-center justify-center gap-2 sm:col-span-2">
-          ▶ Start Game / Choose Stages
-        </button>
-        <button id="btnInstallApp" type="button" class="voxel-btn bg-purple-600 hover:bg-purple-500 text-white py-2 px-3 rounded-xl font-bold text-xs shadow-lg hidden flex items-center justify-center gap-1.5 sm:col-span-2">
-          📲 Install App on Phone
-        </button>
-        <button id="btnMenuResume" type="button" class="voxel-btn bg-indigo-600 hover:bg-indigo-500 text-white py-2 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5">
-          🔑 Login / Resume ID
-        </button>
-        <button id="btnMenuHelp" type="button" class="voxel-btn bg-amber-600 hover:bg-amber-500 text-white py-2 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5">
-          ❓ Help Desk &amp; Guide
-        </button>
-        <button id="btnMenuCredits" type="button" class="voxel-btn bg-slate-800 hover:bg-slate-700 text-slate-200 py-2 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5">
-          🏛️ Mokuttan Labs
-        </button>
-        <button id="btnMenuExit" type="button" class="voxel-btn bg-rose-700 hover:bg-rose-600 text-white py-2 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5">
-          ✖ Exit App
-        </button>
-      </div>
-
-      <div class="text-[11px] text-slate-500 pt-1 border-t border-slate-800/80">
-        Crafted by <a href="https://sreekuttan28.github.io/Mokuttan-Lab/" target="_blank" rel="noopener noreferrer" class="text-emerald-400 hover:underline">Mokuttan Labs</a>
-      </div>
-    </div>
-  </div>
-
-  <!-- 2. STAGE SELECTOR SCREEN -->
-  <div id="stageSelectorScreen" class="screen-view hidden w-full h-full flex flex-col items-center justify-center p-3 bg-[#0d1117] z-30 overflow-y-auto">
-    <div class="w-full max-w-4xl bg-[#161b22] border border-slate-700 rounded-2xl p-5 shadow-2xl space-y-4 my-auto">
-      <div class="flex items-center justify-between border-b border-slate-800 pb-2.5">
-        <div>
-          <h2 class="text-lg font-extrabold text-white pixel-font">SELECT A WORLD &amp; STAGE</h2>
-          <p class="text-xs text-slate-400">Choose a world to view its 7 stages.</p>
+      <!-- Loading Progress Bar -->
+      <div class="space-y-1.5">
+        <div class="w-full bg-slate-900 rounded-full h-2.5 overflow-hidden border border-slate-700">
+          <div id="introProgressBar" class="bg-gradient-to-r from-emerald-500 via-teal-400 to-amber-400 h-full w-1/4 transition-all duration-200"></div>
         </div>
-        <button id="btnBackToHomeFromSelector" type="button" class="voxel-btn bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-lg text-xs font-bold">
-          🏠 Main Menu
-        </button>
+        <p id="introStatusText" class="text-[11px] font-mono text-emerald-300">Initializing Voxel Forge...</p>
       </div>
-      <div id="selectorWorldCards" class="grid grid-cols-1 md:grid-cols-3 gap-2.5"></div>
-      <div class="bg-slate-900 border border-slate-800 rounded-xl p-3 space-y-2">
-        <div class="flex items-center justify-between">
-          <span id="selectorActiveWorldTitle" class="text-xs font-bold uppercase tracking-wider text-emerald-400">Stages</span>
-        </div>
-        <div id="selectorSubLevelGrid" class="grid grid-cols-4 sm:grid-cols-7 gap-2"></div>
+
+      <div class="flex flex-col sm:flex-row items-center justify-center gap-2.5 pt-2">
+        <button id="btnEnterGameIntro" type="button" class="voxel-btn bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold px-5 py-3 rounded-xl text-xs sm:text-sm w-full sm:w-auto flex-1">
+          🔥 Enter the Devil's Forge (Play With Music 🎵)
+        </button>
+        <button id="btnEnterMutedIntro" type="button" class="voxel-btn bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold px-3.5 py-3 rounded-xl text-xs">
+          🔇 Start Muted
+        </button>
       </div>
     </div>
   </div>
 
-  <!-- 3. GAMEPLAY WORKSPACE -->
-  <main id="gameplayWorkspace" class="screen-view hidden w-full h-full flex-1 flex flex-col justify-between p-1.5 sm:p-2 overflow-hidden">
-    <header class="w-full bg-[#161b22]/80 backdrop-blur-md border border-slate-800/80 rounded-lg px-3 py-1 flex items-center justify-between gap-2 shadow-lg">
-      <div class="flex items-center gap-2.5">
-        <span id="hudWorldBadge" class="text-[11px] font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">World 1 • Sub 1/7</span>
-        <span id="hudStageTitle" class="text-xs sm:text-sm font-bold text-white truncate max-w-[220px] sm:max-w-none">1-1: Trust the Grass</span>
-      </div>
-      <div class="flex items-center gap-3 text-xs font-mono hidden sm:flex">
-        <span>Deaths: <strong id="hudDeaths" class="text-rose-400">0</strong></span>
-        <span>Cleared: <strong id="hudProgress" class="text-emerald-400">0 / 21</strong></span>
-      </div>
-      <button id="btnOpenInGameMenu" type="button" class="voxel-btn bg-indigo-600 hover:bg-indigo-500 text-white px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-1 shadow">
-        ⚙️ Menu
-      </button>
-    </header>
-
-    <section class="relative w-full flex-1 flex items-center justify-center my-1 overflow-hidden">
-      <div class="relative w-full h-full bg-slate-950 rounded-lg overflow-hidden border border-slate-800 shadow-2xl flex items-center justify-center">
-        <canvas id="gameCanvas" width="800" height="450" class="w-full h-full object-contain"></canvas>
-
-        <div id="pauseOverlay" class="hidden absolute inset-0 bg-slate-950/85 backdrop-blur-sm flex flex-col items-center justify-center p-4 text-center z-20">
-          <div class="max-w-md w-full bg-[#161b22] border-2 border-slate-700 rounded-xl p-5 shadow-2xl space-y-3">
-            <span class="px-2.5 py-1 rounded text-xs font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 uppercase">In-Game Options</span>
-            <h2 class="text-lg font-extrabold text-white">Game Paused</h2>
-            <div class="flex flex-col gap-2 pt-2">
-              <button type="button" onclick="GameApp.togglePause()" class="voxel-btn bg-emerald-600 hover:bg-emerald-500 text-white py-2 px-4 rounded-lg font-bold text-xs">▶ Resume Game</button>
-              <button type="button" onclick="GameApp.restartStage(); GameApp.togglePause();" class="voxel-btn bg-amber-600 hover:bg-amber-500 text-white py-2 px-4 rounded-lg font-bold text-xs">🔄 Restart Stage</button>
-              <button type="button" onclick="GameApp.saveSessionToStorage(true)" class="voxel-btn bg-indigo-600 hover:bg-indigo-500 text-white py-2 px-4 rounded-lg font-bold text-xs">💾 Save Session</button>
-              <button type="button" onclick="GameApp.returnHome()" class="voxel-btn bg-slate-700 hover:bg-slate-600 text-white py-2 px-4 rounded-lg font-bold text-xs">🏠 Return to Main Menu</button>
-            </div>
+  <!-- ====================================================================== -->
+  <!-- MAIN MENU OVERLAY MODAL (WITH LIVE CHIPTUNE MUSIC & PWA SCREEN TOOLS)  -->
+  <!-- ====================================================================== -->
+  <div id="mainMenuModal" class="hidden fixed inset-0 bg-[#090d16]/90 backdrop-blur-md z-40 flex items-center justify-center p-4">
+    <div class="voxel-card max-w-lg w-full rounded-2xl p-6 space-y-4 border-2 border-slate-700">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div class="flex items-center gap-3">
+          <img src="assets/hero_banner.jpg" alt="Voxel Devil" class="w-12 h-12 rounded-lg object-cover border border-emerald-400/50" />
+          <div>
+            <h3 class="text-lg font-extrabold text-white pixel-font">VOXEL DEVIL MAIN MENU</h3>
+            <p class="text-xs text-emerald-400 font-semibold">96 Stages • Dynamic Retry Chaos • Chiptune Synth</p>
           </div>
         </div>
+        <button id="btnCloseMainMenu" type="button" class="text-slate-400 hover:text-white text-sm font-bold px-2">✕</button>
+      </div>
 
-        <div id="stageOverlay" class="hidden absolute inset-0 bg-slate-950/80 backdrop-blur-sm flex flex-col items-center justify-center p-4 text-center z-20">
-          <div class="max-w-md w-full bg-[#161b22] border-2 border-slate-700 rounded-xl p-5 shadow-2xl">
-            <div id="overlayBadge">STAGE FAILED</div>
-            <h2 id="overlayTitle" class="text-xl sm:text-2xl font-extrabold text-white pixel-font">YOU GOT TROLLED!</h2>
-            <p id="overlayReason" class="text-xs sm:text-sm text-slate-300 mt-2 leading-relaxed"></p>
-            <div class="flex flex-wrap items-center justify-center gap-2.5 mt-4">
-              <button id="btnOverlayRetry" type="button" class="voxel-btn bg-amber-600 hover:bg-amber-500 text-white px-3 py-1.5 rounded-lg font-bold text-xs">🔄 Try Again (R)</button>
-              <button id="btnOverlayNext" type="button" class="hidden voxel-btn bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded-lg font-bold text-xs">Next Sub-Level ▶</button>
-              <button type="button" onclick="GameApp.returnHome()" class="voxel-btn bg-slate-700 hover:bg-slate-600 text-white px-3 py-1.5 rounded-lg font-bold text-xs">🏠 Main Menu</button>
-            </div>
+      <div class="grid grid-cols-3 gap-2 text-center bg-slate-900/90 border border-slate-800 rounded-xl p-3 text-xs">
+        <div>
+          <div class="text-slate-400 text-[10px] uppercase">Active Stage</div>
+          <strong id="menuCurrentStageLabel" class="text-emerald-400 font-mono text-sm">Stage 1-1</strong>
+        </div>
+        <div>
+          <div class="text-slate-400 text-[10px] uppercase">Stages Cleared</div>
+          <strong id="menuClearedCountLabel" class="text-amber-300 font-mono text-sm">0 / 96</strong>
+        </div>
+        <div>
+          <div class="text-slate-400 text-[10px] uppercase">Total Deaths</div>
+          <strong id="menuTotalDeathsLabel" class="text-rose-400 font-mono text-sm">0</strong>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+        <button id="btnMenuResumePlay" type="button" class="voxel-btn bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 px-4 rounded-xl text-xs">
+          ▶ Resume Current Stage
+        </button>
+        <button id="btnMenuToggleMusic" type="button" class="voxel-btn bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2.5 px-4 rounded-xl text-xs">
+          🎵 Menu Music: ON
+        </button>
+        <button id="btnInstallPwa" type="button" class="voxel-btn bg-purple-700 hover:bg-purple-600 text-white font-bold py-2.5 px-4 rounded-xl text-xs sm:col-span-2">
+          📲 Install App (Fullscreen Landscape PWA)
+        </button>
+      </div>
+
+      <p class="text-[11px] text-slate-400 text-center">
+        Crafted by <a href="https://sreekuttan28.github.io/Mokuttan-Lab/" target="_blank" rel="noopener noreferrer" class="text-emerald-400 underline font-semibold">Mokuttan Labs</a> • Creator: <a href="https://sreekuttan28.github.io/sreehari-portfolio/" target="_blank" rel="noopener noreferrer" class="text-slate-200 underline font-semibold">Sreehari N P</a>
+      </p>
+    </div>
+  </div>
+
+  <!-- TOP NAVIGATION & SESSION BAR -->
+  <header class="w-full bg-[#161b22] border-b border-slate-800 px-3 py-2">
+    <div class="max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-2">
+      <!-- Brand Title & Mokuttan Labs Credit -->
+      <div class="flex items-center gap-3">
+        <img src="assets/hero_banner.jpg" alt="Voxel Devil Banner" class="w-10 h-10 rounded-md object-cover border border-emerald-500/50" />
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-sm sm:text-base font-extrabold tracking-tight text-white pixel-font">VOXEL DEVIL</h1>
+            <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">96 STAGES</span>
+            <span id="musicEqIndicator" class="inline-flex items-end h-3 px-1.5 py-0.5 rounded bg-slate-900 border border-slate-700" title="Chiptune Music Active">
+              <span class="eq-bar"></span><span class="eq-bar"></span><span class="eq-bar"></span>
+            </span>
+          </div>
+          <p class="text-[11px] text-slate-400">
+            Crafted by <a href="https://sreekuttan28.github.io/Mokuttan-Lab/" target="_blank" rel="noopener noreferrer" class="text-emerald-400 hover:text-emerald-300 font-semibold underline underline-offset-2">Mokuttan Labs</a> • Creator: <a href="https://sreekuttan28.github.io/sreehari-portfolio/" target="_blank" rel="noopener noreferrer" class="text-slate-200 hover:text-emerald-300 font-semibold underline underline-offset-2">Sreehari N P</a>
+          </p>
+        </div>
+      </div>
+
+      <!-- Session Status & Screen/Audio Controls -->
+      <div class="flex flex-wrap items-center gap-1.5 text-xs">
+        <div class="bg-slate-900 border border-slate-700 rounded px-2 py-1 flex items-center gap-1.5">
+          <span class="text-slate-400">Player:</span>
+          <strong id="hudPlayerName" class="text-emerald-400 font-mono">Explorer</strong>
+          <span class="text-slate-600">|</span>
+          <code id="hudStatemId" class="text-amber-300 font-mono text-[11px]">MKL-EXP-W1S1-000</code>
+        </div>
+
+        <button id="btnOpenMainMenu" type="button" class="voxel-btn bg-emerald-700 hover:bg-emerald-600 text-white px-2.5 py-1 rounded text-xs font-semibold">
+          🏠 Menu
+        </button>
+        <button id="btnScreenFitMode" type="button" class="voxel-btn bg-slate-800 hover:bg-slate-700 text-sky-300 border border-sky-500/40 px-2.5 py-1 rounded text-xs font-semibold" title="Switch Screen Fit Mode (Saved for Installed App)">
+          📺 Screen: Fit 16:9
+        </button>
+        <button id="btnFullscreenLandscape" type="button" class="voxel-btn bg-slate-800 hover:bg-slate-700 text-emerald-300 border border-emerald-500/40 px-2.5 py-1 rounded text-xs font-semibold" title="Fullscreen Landscape Mode">
+          ⛶ Fullscreen
+        </button>
+        <button id="btnOpenSessionModal" type="button" class="voxel-btn bg-indigo-600 hover:bg-indigo-500 text-white px-2.5 py-1 rounded text-xs font-semibold">
+          🔑 Login / Resume ID
+        </button>
+        <button id="btnOpenHelpModal" type="button" class="voxel-btn bg-amber-600 hover:bg-amber-500 text-white px-2.5 py-1 rounded text-xs font-semibold">
+          ❓ Help Desk
+        </button>
+        <button id="btnOpenCreditsModal" type="button" class="voxel-btn bg-slate-700 hover:bg-slate-600 text-slate-100 px-2.5 py-1 rounded text-xs font-semibold">
+          🏛️ Mokuttan Labs
+        </button>
+        <button id="btnCloseGamePrompt" type="button" class="voxel-btn bg-rose-700 hover:bg-rose-600 text-white px-2.5 py-1 rounded text-xs font-semibold">
+          ✖ Save &amp; Close
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN WORKSPACE -->
+  <main class="max-w-6xl w-full mx-auto px-2.5 sm:px-3 py-2 flex-1 flex flex-col gap-2">
+
+    <!-- 3 WORLD DIFFICULTY SELECTOR -->
+    <section aria-label="Select Difficulty Level" class="hide-in-cinema">
+      <div class="flex flex-wrap items-center justify-between gap-2 mb-1.5">
+        <div class="text-xs font-bold uppercase tracking-wider text-slate-300">
+          Choose World (3 Worlds × 32 Sub-Levels = 96 Unpredictable Stages)
+        </div>
+        <div class="flex flex-wrap items-center gap-1.5">
+          <button id="btnToggleChaos" type="button" class="voxel-btn bg-purple-900/80 text-purple-200 border border-purple-500/50 px-2.5 py-1 rounded text-[11px] font-semibold">
+            🎲 Random Chaos: ON
+          </button>
+          <button id="btnToggleUnlockAll" type="button" class="voxel-btn bg-slate-800 text-slate-200 border border-slate-600 px-2.5 py-1 rounded text-[11px] font-semibold">
+            🔒 Sequential Unlock Mode
+          </button>
+          <button id="btnToggleMusic" type="button" class="voxel-btn bg-slate-800 text-emerald-300 border border-slate-600 px-2.5 py-1 rounded text-[11px] font-semibold">
+            🎵 Music: ON
+          </button>
+          <button id="btnMute" type="button" class="voxel-btn bg-slate-800 text-slate-200 border border-slate-600 px-2.5 py-1 rounded text-[11px] font-semibold">
+            🔊 SFX On
+          </button>
+        </div>
+      </div>
+
+      <div id="worldSelectorContainer" class="grid grid-cols-1 md:grid-cols-3 gap-2"></div>
+    </section>
+
+    <!-- 32 SUB-LEVEL SELECTOR BAR PER WORLD -->
+    <section class="bg-[#161b22] border border-slate-800 rounded-lg p-2 hide-in-cinema">
+      <div class="flex flex-wrap items-center justify-between gap-2 mb-1.5">
+        <div class="flex flex-wrap items-center gap-1.5">
+          <button id="btnPrevStage" type="button" class="voxel-btn bg-slate-800 hover:bg-slate-700 text-slate-200 px-2 py-0.5 rounded text-xs font-bold" title="Previous Stage">◀</button>
+          <span id="hudWorldBadge" class="text-xs font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">World 1 • Stage 1/32</span>
+          <button id="btnNextStageQuick" type="button" class="voxel-btn bg-slate-800 hover:bg-slate-700 text-slate-200 px-2 py-0.5 rounded text-xs font-bold" title="Next Stage">▶</button>
+          <span id="hudStageTitle" class="text-xs sm:text-sm font-extrabold text-white ml-1">1-1: Trust the Grass</span>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2 text-xs font-mono">
+          <div class="flex items-center gap-1 bg-slate-900 px-1.5 py-0.5 rounded border border-slate-800">
+            <button id="btnSubPage0" type="button" class="px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-600 text-white">1–16</button>
+            <button id="btnSubPage1" type="button" class="px-2 py-0.5 rounded text-[11px] font-semibold bg-slate-800 text-slate-300">17–32</button>
+            <button id="btnSubPage2" type="button" class="px-2 py-0.5 rounded text-[11px] font-semibold bg-slate-800 text-slate-300">All 32</button>
+          </div>
+          <span>Stage Deaths: <strong id="hudStageDeaths" class="text-rose-400">0</strong></span>
+          <span>Total Deaths: <strong id="hudDeaths" class="text-rose-400">0</strong></span>
+          <span>Cleared: <strong id="hudProgress" class="text-emerald-400">0 / 96</strong></span>
+        </div>
+      </div>
+      <div id="subLevelGrid" class="grid grid-cols-4 sm:grid-cols-8 gap-1 max-h-28 overflow-y-auto pr-1"></div>
+    </section>
+
+    <!-- ================================================================== -->
+    <!-- HIGH-CLARITY IN-GAME HINT & ACTIVE CHAOS BANNER                    -->
+    <!-- ================================================================== -->
+    <section aria-label="High Clarity Stage Hint Banner" class="w-full max-w-4xl mx-auto hint-banner-glow rounded-xl px-3 py-2 flex flex-wrap items-center justify-between gap-2">
+      <div class="flex items-center gap-2 flex-1 min-w-[240px]">
+        <span id="hudHintTypeBadge" class="px-2 py-0.5 rounded text-[11px] font-extrabold uppercase bg-amber-500/25 text-amber-300 border border-amber-400/50 shrink-0">
+          😈 DEVIL'S HINT
+        </span>
+        <p id="hudHighClarityHintText" class="text-xs sm:text-sm font-extrabold text-amber-100 leading-snug">
+          "Hold RIGHT all the way across! The meadow bridge is 100% sturdy oak &amp; dirt."
+        </p>
+      </div>
+      <div class="flex items-center gap-2 shrink-0">
+        <span id="hudActiveChaosBadge" class="px-2 py-0.5 rounded bg-purple-950/90 border border-purple-500/40 text-purple-200 text-[11px] font-mono">
+          🎲 Try #1: Original Devil Blueprint
+        </span>
+        <button id="btnPeekTrueHint" type="button" class="voxel-btn bg-emerald-700 hover:bg-emerald-600 text-white px-2.5 py-1 rounded text-[11px] font-bold">
+          💡 Peek True Solution
+        </button>
+      </div>
+    </section>
+
+    <!-- GAME CANVAS + OVERLAYS -->
+    <section id="canvasViewportSection" class="relative w-full max-w-4xl mx-auto aspect-[16/9] bg-slate-950 rounded-xl overflow-hidden voxel-border">
+      <canvas id="gameCanvas" class="fit-mode-contain" width="800" height="450"></canvas>
+
+      <!-- PAUSE OVERLAY -->
+      <div id="pauseOverlay" class="hidden absolute inset-0 bg-slate-950/85 backdrop-blur-sm flex flex-col items-center justify-center p-4 text-center z-20">
+        <div class="max-w-md bg-[#161b22] border-2 border-slate-700 rounded-xl p-6 shadow-2xl">
+          <span class="px-2.5 py-1 rounded text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40">GAME PAUSED</span>
+          <h2 class="text-xl font-extrabold text-white mt-2">Take a Breath!</h2>
+          <p class="text-xs text-slate-300 mt-1">
+            Your progress across all 96 stages is tracked under <strong class="text-emerald-400" id="pausePlayerLabel">Explorer</strong>.
+          </p>
+          <div class="flex flex-wrap justify-center gap-2 mt-4">
+            <button type="button" onclick="GameApp.togglePause()" class="voxel-btn bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded font-bold text-xs">
+              ▶ Resume Game
+            </button>
+            <button type="button" onclick="GameApp.saveSessionToStorage(true)" class="voxel-btn bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded font-bold text-xs">
+              💾 Save Session
+            </button>
+            <button type="button" onclick="GameApp.restartStage(); GameApp.togglePause();" class="voxel-btn bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded font-bold text-xs">
+              🔄 Restart Stage
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- DEATH / STAGE WIN OVERLAY -->
+      <div id="stageOverlay" class="hidden absolute inset-0 bg-slate-950/85 backdrop-blur-sm flex flex-col items-center justify-center p-4 text-center z-20">
+        <div class="max-w-md w-full bg-[#161b22] border-2 border-slate-700 rounded-xl p-5 shadow-2xl">
+          <div id="overlayBadge">STAGE FAILED</div>
+          <h2 id="overlayTitle" class="text-2xl font-extrabold text-white pixel-font">YOU GOT TROLLED!</h2>
+          <div id="overlayReason" class="text-xs sm:text-sm text-slate-300 mt-2 leading-relaxed"></div>
+          <div class="flex flex-wrap items-center justify-center gap-2.5 mt-4">
+            <button id="btnOverlayRetry" type="button" class="voxel-btn bg-amber-600 hover:bg-amber-500 text-white px-4 py-2 rounded-lg font-bold text-xs sm:text-sm">
+              🔄 Try Again (R)
+            </button>
+            <button id="btnOverlayNext" type="button" class="hidden voxel-btn bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-lg font-bold text-xs sm:text-sm">
+              Next Sub-Level ▶
+            </button>
           </div>
         </div>
       </div>
     </section>
 
-    <section aria-label="Game Console Controls" class="w-full bg-[#161b22]/90 border border-slate-800 rounded-xl p-1.5 shadow-lg flex items-center justify-between gap-2">
-      <div class="flex items-center gap-2">
-        <button id="btnConsoleLeft" type="button" aria-label="Move Left" class="console-dpad-btn bg-slate-800 hover:bg-slate-700 active:bg-emerald-700 text-white w-14 h-11 sm:w-16 sm:h-11 rounded-lg flex flex-col items-center justify-center">
-          <span class="text-sm font-extrabold leading-none">◀</span>
-          <span class="text-[8px] font-bold text-slate-300 mt-0.5">LEFT</span>
-        </button>
-        <button id="btnConsoleRight" type="button" aria-label="Move Right" class="console-dpad-btn bg-slate-800 hover:bg-slate-700 active:bg-emerald-700 text-white w-14 h-11 sm:w-16 sm:h-11 rounded-lg flex flex-col items-center justify-center">
-          <span class="text-sm font-extrabold leading-none">▶</span>
-          <span class="text-[8px] font-bold text-slate-300 mt-0.5">RIGHT</span>
-        </button>
-      </div>
-      <div class="flex items-center gap-1.5">
-        <button id="btnPause" type="button" class="voxel-btn bg-slate-800 text-slate-200 px-2.5 py-1 rounded-lg text-[10px] font-bold">⏸ Pause</button>
-        <button id="btnRestart" type="button" class="voxel-btn bg-slate-800 text-amber-300 px-2.5 py-1 rounded-lg text-[10px] font-bold">🔄 Restart</button>
-        <button id="btnToggleChaos" type="button" class="voxel-btn bg-purple-900/70 text-purple-200 px-2 py-1 rounded-lg text-[9px] font-semibold">🎲 Chaos: ON</button>
-      </div>
-      <div>
-        <button id="btnConsoleJump" type="button" aria-label="Jump" class="console-dpad-btn bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-400 text-white w-22 h-11 sm:w-28 sm:h-11 rounded-lg flex flex-col items-center justify-center">
-          <span class="text-xs font-extrabold leading-none">▲ JUMP</span>
-          <span class="text-[8px] font-semibold text-emerald-100 mt-0.5">SPACE / W</span>
-        </button>
+    <!-- SIMPLE CONSOLE CONTROLLER DOCK (TOUCH & DESKTOP READY) -->
+    <section aria-label="Game Console Controls" class="w-full max-w-4xl mx-auto bg-[#161b22] border-2 border-slate-800 rounded-xl p-2.5 sm:p-3 shadow-lg">
+      <div class="flex flex-wrap items-center justify-between gap-2.5">
+        <!-- Left D-Pad -->
+        <div class="flex items-center gap-2">
+          <button id="btnConsoleLeft" type="button" aria-label="Move Left"
+            class="console-dpad-btn bg-slate-800 hover:bg-slate-700 active:bg-emerald-700 text-white w-16 h-12 sm:w-20 sm:h-14 rounded-xl flex flex-col items-center justify-center">
+            <span class="text-lg font-extrabold leading-none">◀</span>
+            <span class="text-[10px] font-bold text-slate-300 mt-0.5">LEFT (A)</span>
+          </button>
+          <button id="btnConsoleRight" type="button" aria-label="Move Right"
+            class="console-dpad-btn bg-slate-800 hover:bg-slate-700 active:bg-emerald-700 text-white w-16 h-12 sm:w-20 sm:h-14 rounded-xl flex flex-col items-center justify-center">
+            <span class="text-lg font-extrabold leading-none">▶</span>
+            <span class="text-[10px] font-bold text-slate-300 mt-0.5">RIGHT (D)</span>
+          </button>
+        </div>
+
+        <!-- Center Console System Buttons -->
+        <div class="flex flex-wrap items-center justify-center gap-1.5">
+          <button id="btnPause" type="button" class="voxel-btn bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-2 rounded-lg text-xs font-bold">
+            ⏸ Pause (P)
+          </button>
+          <button id="btnRestart" type="button" class="voxel-btn bg-slate-800 hover:bg-slate-700 text-amber-300 px-3 py-2 rounded-lg text-xs font-bold">
+            🔄 Restart (R)
+          </button>
+          <button id="btnQuickSave" type="button" class="voxel-btn bg-slate-800 hover:bg-slate-700 text-emerald-300 px-3 py-2 rounded-lg text-xs font-bold">
+            💾 Quick Save
+          </button>
+        </div>
+
+        <!-- Right Jump Action Button -->
+        <div>
+          <button id="btnConsoleJump" type="button" aria-label="Jump"
+            class="console-dpad-btn bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-400 text-white w-28 h-12 sm:w-32 sm:h-14 rounded-xl flex flex-col items-center justify-center">
+            <span class="text-base font-extrabold leading-none">▲ JUMP</span>
+            <span class="text-[10px] font-semibold text-emerald-100 mt-0.5">SPACE / W / UP</span>
+          </button>
+        </div>
       </div>
     </section>
   </main>
 
-  <!-- MODALS -->
-  <div id="closedSessionScreen" class="hidden fixed inset-0 bg-[#0d1117] z-50 flex flex-col items-center justify-center p-6 text-center">
-    <div class="max-w-md w-full bg-[#161b22] border-2 border-rose-500/50 rounded-xl p-6 shadow-2xl space-y-4">
-      <h2 class="text-xl font-extrabold text-white pixel-font">GAME EXITED SUCCESSFULLY</h2>
-      <button id="btnReopenGameFromClosed" type="button" class="voxel-btn bg-emerald-600 text-white px-4 py-2 rounded-lg text-xs font-bold w-full">▶ Return to Main Menu</button>
-    </div>
-  </div>
+  <!-- FOOTER WITH MOKUTTAN LABS HYPERLINK -->
+  <footer class="w-full bg-[#161b22] border-t border-slate-800 px-4 py-2 text-center text-xs text-slate-400 hide-in-cinema">
+    Built by <a href="https://sreekuttan28.github.io/Mokuttan-Lab/" target="_blank" rel="noopener noreferrer" class="text-emerald-400 hover:text-emerald-300 font-semibold underline">Mokuttan Labs</a> • Created by <a href="https://sreekuttan28.github.io/sreehari-portfolio/" target="_blank" rel="noopener noreferrer" class="text-slate-200 hover:text-emerald-300 font-semibold underline">Sreehari N P</a> • 96-Stage PWA &amp; Play Store Ready Console Edition
+  </footer>
 
+  <!-- ====================================================================== -->
+  <!-- MODAL 1: LOGIN NAME & STATEM ID SAVE / RESUME                          -->
+  <!-- ====================================================================== -->
   <div id="sessionModal" class="hidden fixed inset-0 bg-black/75 backdrop-blur-sm z-40 flex items-center justify-center p-4">
     <div class="bg-[#161b22] border-2 border-slate-700 rounded-xl max-w-md w-full p-5 shadow-2xl space-y-4">
       <div class="flex items-center justify-between border-b border-slate-800 pb-2.5">
-        <h3 class="text-base font-extrabold text-white">🔑 Login &amp; Statem ID Resume</h3>
-        <button id="btnCloseSessionModal" type="button" class="text-slate-400 font-bold px-2">✕</button>
+        <h3 class="text-base font-extrabold text-white">🔑 Temporary Save &amp; Statem ID Resume</h3>
+        <button id="btnCloseSessionModal" type="button" class="text-slate-400 hover:text-white text-sm font-bold px-2">✕</button>
       </div>
-      <input id="inputLoginName" type="text" placeholder="e.g. Sreehari" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white" />
-      <input id="inputStatemId" type="text" placeholder="e.g. MKL-SREE-W2S4-00A" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm font-mono text-amber-300" />
-      <div class="flex justify-end gap-2">
-        <button id="btnResumeSessionModal" type="button" class="voxel-btn bg-indigo-600 text-white px-3 py-2 rounded-lg text-xs font-bold">Resume</button>
+
+      <p class="text-xs text-slate-300 leading-relaxed">
+        Save your progress across all <strong>96 Stages</strong> using your <strong>Login Name</strong> and <strong>Statem ID</strong>. Enter both anytime to resume from the exact World and Stage where you stopped!
+      </p>
+
+      <div class="space-y-3">
+        <div>
+          <label for="inputLoginName" class="block text-xs font-semibold text-slate-300 mb-1">Login Name</label>
+          <input id="inputLoginName" type="text" placeholder="e.g. Sreehari"
+            class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500" />
+        </div>
+
+        <div>
+          <div class="flex items-center justify-between mb-1">
+            <label for="inputStatemId" class="block text-xs font-semibold text-slate-300">Statem ID (Resume Code)</label>
+            <button id="btnCopyStatemId" type="button" class="text-[11px] text-emerald-400 hover:underline font-semibold">📋 Copy Current ID</button>
+          </div>
+          <input id="inputStatemId" type="text" placeholder="e.g. MKL-SREE-W2S18-00A"
+            class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm font-mono text-amber-300 focus:outline-none focus:border-emerald-500" />
+        </div>
+      </div>
+
+      <div class="flex flex-wrap items-center justify-end gap-2 pt-2">
+        <button id="btnSaveSessionModal" type="button" class="voxel-btn bg-emerald-600 hover:bg-emerald-500 text-white px-3.5 py-2 rounded-lg text-xs font-bold">
+          💾 Save Current Progress
+        </button>
+        <button id="btnResumeSessionModal" type="button" class="voxel-btn bg-indigo-600 hover:bg-indigo-500 text-white px-3.5 py-2 rounded-lg text-xs font-bold">
+          📂 Resume From Statem ID
+        </button>
       </div>
     </div>
   </div>
 
+  <!-- ====================================================================== -->
+  <!-- MODAL 2: HELP DESK & 96-STAGE INSTRUCTION GENERATOR                    -->
+  <!-- ====================================================================== -->
   <div id="helpModal" class="hidden fixed inset-0 bg-black/75 backdrop-blur-sm z-40 flex items-center justify-center p-4">
     <div class="bg-[#161b22] border-2 border-slate-700 rounded-xl max-w-2xl w-full p-5 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
       <div class="flex items-center justify-between border-b border-slate-800 pb-2.5">
-        <h3 class="text-base font-extrabold text-white">❓ Help Desk</h3>
-        <button id="btnCloseHelpModal" type="button" class="text-slate-400 font-bold px-2">✕</button>
+        <h3 class="text-base font-extrabold text-white">❓ Help Desk &amp; 96-Stage Solution Generator</h3>
+        <button id="btnCloseHelpModal" type="button" class="text-slate-400 hover:text-white text-sm font-bold px-2">✕</button>
       </div>
-      <select id="helpStageSelect" class="bg-slate-950 border border-slate-700 rounded px-3 py-1.5 text-xs text-white w-full"></select>
-      <div id="helpGeneratedOutput"></div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+        <div class="bg-slate-900/90 border border-slate-800 p-3 rounded-lg space-y-1.5">
+          <div class="font-bold text-emerald-400 uppercase">🎮 Controls &amp; Screen Fit</div>
+          <p><strong>Move / Jump:</strong> On-screen D-Pad or <code class="text-amber-300">A/D/Arrows</code> + <code class="text-emerald-300">Space/W/Up</code>.</p>
+          <p><strong>Installed App Screen Mode:</strong> Tap <code class="text-sky-300">📺 Screen</code> in the header to lock Fit 16:9, Stretch Fill, or Full Cinema mode permanently!</p>
+        </div>
+
+        <div class="bg-slate-900/90 border border-slate-800 p-3 rounded-lg space-y-1.5">
+          <div class="font-bold text-amber-400 uppercase">🎲 Dynamic Retry Chaos</div>
+          <p><strong>Never Repeats Twice:</strong> Every time you fail or restart a stage, the Chaos Director remixes spike timings, portal dodges, ice patches, or sawblades so you stay on your toes!</p>
+        </div>
+      </div>
+
+      <!-- Interactive Stage Instruction Generator -->
+      <div class="bg-slate-900 border border-slate-800 rounded-lg p-3.5 space-y-3">
+        <div class="text-xs font-bold text-white uppercase tracking-wider">
+          ⚙️ Generate Instructions for Any of the 96 Sub-Levels (1-1 to 3-32)
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+          <select id="helpStageSelect" class="bg-slate-950 border border-slate-700 rounded px-3 py-1.5 text-xs text-white flex-1 min-w-[200px]"></select>
+          <button id="btnGenTrueGuide" type="button" class="voxel-btn bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded text-xs font-bold">
+            🛡️ Generate True Solution
+          </button>
+          <button id="btnGenFalseHint" type="button" class="voxel-btn bg-amber-600 hover:bg-amber-500 text-white px-3 py-1.5 rounded text-xs font-bold">
+            😈 Show Devil's False Hint
+          </button>
+        </div>
+        <div id="helpGeneratedOutput"></div>
+      </div>
     </div>
   </div>
 
+  <!-- ====================================================================== -->
+  <!-- MODAL 3: CREDITS — MOKUTTAN LABS & CREATOR SREEHARI                    -->
+  <!-- ====================================================================== -->
   <div id="creditsModal" class="hidden fixed inset-0 bg-black/75 backdrop-blur-sm z-40 flex items-center justify-center p-4">
     <div class="bg-[#161b22] border-2 border-slate-700 rounded-xl max-w-lg w-full p-5 shadow-2xl space-y-4">
       <div class="flex items-center justify-between border-b border-slate-800 pb-2.5">
-        <h3 class="text-base font-extrabold text-white">🏛️ Credits</h3>
-        <button id="btnCloseCreditsModal" type="button" class="text-slate-400 font-bold px-2">✕</button>
+        <h3 class="text-base font-extrabold text-white">🏛️ Builder &amp; Creator Credits</h3>
+        <button id="btnCloseCreditsModal" type="button" class="text-slate-400 hover:text-white text-sm font-bold px-2">✕</button>
       </div>
-      <p class="text-sm font-bold text-white">Sreehari N P (Mokuttan Labs)</p>
+
+      <div class="bg-slate-900 border border-slate-800 rounded-lg p-4 space-y-3 text-xs leading-relaxed">
+        <div class="flex items-center justify-between">
+          <div>
+            <div class="text-[11px] uppercase tracking-wider text-emerald-400 font-bold">Official Builder Studio</div>
+            <div class="text-lg font-extrabold text-white mt-0.5">
+              <a href="https://sreekuttan28.github.io/Mokuttan-Lab/" target="_blank" rel="noopener noreferrer" class="hover:text-emerald-400 underline decoration-emerald-500">
+                Mokuttan Labs
+              </a>
+            </div>
+          </div>
+          <a href="https://sreekuttan28.github.io/Mokuttan-Lab/" target="_blank" rel="noopener noreferrer"
+            class="voxel-btn bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded font-bold text-xs">
+            Visit Mokuttan Labs ↗
+          </a>
+        </div>
+
+        <div class="border-t border-slate-800 pt-3 space-y-1.5">
+          <div class="text-[11px] uppercase tracking-wider text-amber-400 font-bold">Creator &amp; Lead Developer</div>
+          <p class="text-sm font-bold text-white">
+            <a href="https://sreekuttan28.github.io/sreehari-portfolio/" target="_blank" rel="noopener noreferrer" class="hover:text-emerald-300 underline">Sreehari N P</a>
+          </p>
+          <p class="text-slate-300">
+            Founder &amp; AI Developer at <a href="https://sreekuttan28.github.io/Mokuttan-Lab/" target="_blank" rel="noopener noreferrer" class="text-emerald-400 underline font-semibold">Mokuttan Labs</a>, crafting interactive web experiences, AI systems, and cross-platform games.
+          </p>
+        </div>
+
+        <div class="border-t border-slate-800 pt-3 space-y-1.5">
+          <div class="text-[11px] uppercase tracking-wider text-sky-400 font-bold">Connect &amp; Links</div>
+          <ul class="space-y-1 text-slate-300">
+            <li>• <strong>Studio Portal:</strong> <a href="https://sreekuttan28.github.io/Mokuttan-Lab/" target="_blank" rel="noopener noreferrer" class="text-emerald-400 underline font-semibold">Mokuttan Labs Official Website</a></li>
+            <li>• <strong>Creator Portfolio:</strong> <a href="https://sreekuttan28.github.io/sreehari-portfolio/" target="_blank" rel="noopener noreferrer" class="text-amber-300 underline font-semibold">Sreehari N P Portfolio</a></li>
+            <li>• <strong>GitHub Repository:</strong> <a href="https://github.com/Sreekuttan28/Voxel-Devil" target="_blank" rel="noopener noreferrer" class="text-sky-400 underline font-semibold">github.com/Sreekuttan28/Voxel-Devil</a></li>
+          </ul>
+        </div>
+      </div>
     </div>
   </div>
 
+  <!-- ====================================================================== -->
+  <!-- MODAL 4: SAVE & CLOSE CONFIRMATION                                     -->
+  <!-- ====================================================================== -->
+  <div id="closeConfirmModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-[#161b22] border-2 border-rose-500/50 rounded-xl max-w-md w-full p-5 shadow-2xl space-y-4 text-center">
+      <div class="inline-block px-3 py-1 rounded bg-rose-500/20 text-rose-300 border border-rose-500/40 text-xs font-bold uppercase">
+        Save Before Closing?
+      </div>
+      <h3 class="text-lg font-extrabold text-white">Want to Save Your Progress &amp; Close?</h3>
+      <p class="text-xs text-slate-300 leading-relaxed">
+        We'll save your current stage under your Login Name and Statem ID (<code id="closeConfirmStatemId" class="text-amber-300 font-mono">MKL-EXP-W1S1-000</code>) so you can resume right where you stopped next time.
+      </p>
+      <div class="flex flex-wrap items-center justify-center gap-2.5 pt-2">
+        <button id="btnSaveAndCloseGame" type="button" class="voxel-btn bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-lg text-xs font-bold">
+          💾 Save &amp; Close Game
+        </button>
+        <button id="btnCancelCloseGame" type="button" class="voxel-btn bg-slate-700 hover:bg-slate-600 text-slate-200 px-4 py-2 rounded-lg text-xs font-bold">
+          Keep Playing
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====================================================================== -->
+  <!-- CLOSED SESSION STANDBY SCREEN                                          -->
+  <!-- ====================================================================== -->
+  <div id="closedSessionScreen" class="hidden fixed inset-0 bg-[#0d1117] z-50 flex flex-col items-center justify-center p-6 text-center">
+    <div class="max-w-md w-full bg-[#161b22] border-2 border-emerald-500/50 rounded-xl p-6 shadow-2xl space-y-4">
+      <span class="px-3 py-1 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-xs font-bold uppercase">
+        Session Saved &amp; Closed Safely
+      </span>
+      <h2 class="text-xl font-extrabold text-white pixel-font">PROGRESS LOCKED IN!</h2>
+      <div class="bg-slate-900 border border-slate-800 rounded-lg p-3.5 text-xs space-y-1.5 text-left font-mono">
+        <div>Player Login: <strong id="closedSummaryName" class="text-emerald-400">Explorer</strong></div>
+        <div>Statem ID: <strong id="closedSummaryStatem" class="text-amber-300">MKL-EXP-W1S1-000</strong></div>
+        <div>Saved Checkpoint: <strong id="closedSummaryStage" class="text-sky-300">Stage 1-1</strong></div>
+      </div>
+      <p class="text-xs text-slate-400">
+        Keep your Statem ID handy to resume anytime. Built by <a href="https://sreekuttan28.github.io/Mokuttan-Lab/" target="_blank" rel="noopener noreferrer" class="text-emerald-400 underline font-semibold">Mokuttan Labs</a> (Sreehari N P).
+      </p>
+      <button id="btnReopenGameFromClosed" type="button" class="voxel-btn bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2.5 rounded-lg text-xs font-bold w-full">
+        ▶ Resume Session Now
+      </button>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION -->
   <div id="toastBanner" class="hidden"></div>
+
   <script src="js/game.js"></script>
 </body>
 </html>
