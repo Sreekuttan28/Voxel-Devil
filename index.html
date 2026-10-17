@@ -836,5 +836,13 @@
   <div id="toastBanner" class="hidden"></div>
 
   <script src="js/game.js"></script>
+  <script>
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("/Voxel-Devil/sw.js")
+        .catch((error) => console.error("Service worker registration failed:", error));
+    });
+  }
+</script>
 </body>
 </html>
