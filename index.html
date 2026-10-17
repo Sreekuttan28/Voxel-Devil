@@ -256,15 +256,31 @@
       <section id="canvasViewportSection" class="relative w-full h-full max-w-5xl max-h-full aspect-[16/9] bg-slate-950 rounded-xl overflow-hidden voxel-border flex items-center justify-center">
         <canvas id="gameCanvas" class="fit-mode-contain" width="800" height="450"></canvas>
 
-        <!-- IN-GAME MENU / PAUSE / AUDIO MODAL (OPENED BY TOP BUTTON) -->
-        <div id="pauseOverlay" class="hidden absolute inset-0 bg-slate-950/90 backdrop-blur-md flex flex-col items-center justify-center p-4 text-center z-30">
-          <div class="max-w-md w-full bg-[#161b22] border-2 border-emerald-500/50 rounded-2xl p-5 shadow-2xl space-y-4">
-            <div class="flex items-center justify-between border-b border-slate-800 pb-2.5">
-              <span class="px-2.5 py-0.5 rounded text-xs font-extrabold bg-amber-500/20 text-amber-300 border border-amber-500/40">
-                ⏸ IN-GAME MENU &amp; AUDIO
-              </span>
-              <span class="text-xs text-slate-400 font-mono">Player: <strong class="text-emerald-400" id="pausePlayerLabel">Explorer</strong></span>
-            </div>
+       
+<!-- IN-GAME MENU / PAUSE / AUDIO MODAL (OPENED BY TOP BUTTON) -->
+<div
+  id="pauseOverlay"
+  class="hidden absolute inset-0 bg-slate-950/90 backdrop-blur-md flex flex-col items-center justify-start p-2 sm:p-4 text-center z-30 overflow-y-auto overscroll-contain"
+  style="-webkit-overflow-scrolling: touch;"
+>
+  <div class="max-w-md w-full shrink-0 my-auto bg-[#161b22] border-2 border-emerald-500/50 rounded-2xl p-5 shadow-2xl space-y-4">
+    
+    <div class="flex items-center justify-between border-b border-slate-800 pb-2.5">
+      <span class="px-2.5 py-0.5 rounded text-xs font-extrabold bg-amber-500/20 text-amber-300 border border-amber-500/40">
+        ⏸ IN-GAME MENU &amp; AUDIO
+      </span>
+
+      <span class="text-xs text-slate-400 font-mono">
+        Player:
+        <strong class="text-emerald-400" id="pausePlayerLabel">Explorer</strong>
+      </span>
+    </div>
+
+    <!-- KEEP ALL YOUR EXISTING MENU BUTTONS, AUDIO SETTINGS,
+         AND OTHER POPUP CONTENT BELOW THIS POINT UNCHANGED -->
+
+  </div>
+</div>
 
             <div class="grid grid-cols-2 gap-2.5">
               <button type="button" onclick="GameApp.togglePause()" class="voxel-btn bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-2.5 rounded-xl font-extrabold text-xs col-span-2">
