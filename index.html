@@ -257,65 +257,126 @@
         <canvas id="gameCanvas" class="fit-mode-contain" width="800" height="450"></canvas>
 
        
-<!-- IN-GAME MENU / PAUSE / AUDIO MODAL (OPENED BY TOP BUTTON) -->
+
+<!-- IN-GAME MENU / PAUSE / AUDIO MODAL -->
 <div
   id="pauseOverlay"
-  class="hidden absolute inset-0 bg-slate-950/90 backdrop-blur-md flex flex-col items-center justify-start p-2 sm:p-4 text-center z-30 overflow-y-auto overscroll-contain"
+  class="hidden absolute inset-0 z-30 bg-slate-950/90 backdrop-blur-md overflow-y-auto overscroll-contain p-3 sm:p-5"
   style="-webkit-overflow-scrolling: touch;"
 >
-  <div class="max-w-md w-full shrink-0 my-auto bg-[#161b22] border-2 border-emerald-500/50 rounded-2xl p-5 shadow-2xl space-y-4">
-    
-    <div class="flex items-center justify-between border-b border-slate-800 pb-2.5">
-      <span class="px-2.5 py-0.5 rounded text-xs font-extrabold bg-amber-500/20 text-amber-300 border border-amber-500/40">
-        ⏸ IN-GAME MENU &amp; AUDIO
-      </span>
+  <!-- Center the menu when it fits; allow scrolling when it doesn't -->
+  <div class="min-h-full w-full flex items-start sm:items-center justify-center">
+    <div
+      class="w-full max-w-md shrink-0 my-auto bg-[#161b22] border-2 border-emerald-500/50 rounded-2xl p-4 sm:p-5 shadow-2xl space-y-4 text-center"
+    >
 
-      <span class="text-xs text-slate-400 font-mono">
-        Player:
-        <strong class="text-emerald-400" id="pausePlayerLabel">Explorer</strong>
-      </span>
+      <!-- Header -->
+      <div class="flex items-center justify-between gap-2 border-b border-slate-800 pb-3">
+        <span class="px-2.5 py-1 rounded text-xs font-extrabold bg-amber-500/20 text-amber-300 border border-amber-500/40">
+          ⏸ IN-GAME MENU &amp; AUDIO
+        </span>
+
+        <span class="text-xs text-slate-400 font-mono whitespace-nowrap">
+          Player:
+          <strong class="text-emerald-400" id="pausePlayerLabel">Explorer</strong>
+        </span>
+      </div>
+
+      <!-- Resume -->
+      <button
+        id="btnResumeGame"
+        type="button"
+        class="w-full min-h-16 rounded-2xl border-2 border-emerald-400/60 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-lg p-4 shadow-lg"
+      >
+        ▶ Resume Game
+      </button>
+
+      <!-- Restart and level selection -->
+      <div class="grid grid-cols-2 gap-3">
+        <button
+          id="btnRestartStage"
+          type="button"
+          class="min-h-20 rounded-2xl border-2 border-orange-400/50 bg-orange-600 hover:bg-orange-500 text-white font-bold p-3 break-words"
+        >
+          🔄 Restart Stage
+        </button>
+
+        <button
+          id="btnLevelSelect"
+          type="button"
+          class="min-h-20 rounded-2xl border-2 border-indigo-400/50 bg-indigo-600 hover:bg-indigo-500 text-white font-bold p-3 break-words"
+        >
+          🗺️ Level Select
+        </button>
+      </div>
+
+      <!-- Main menu and save -->
+      <div class="grid grid-cols-2 gap-3">
+        <button
+          id="btnReturnToMenu"
+          type="button"
+          class="min-h-20 rounded-2xl border-2 border-slate-500 bg-slate-700 hover:bg-slate-600 text-white font-bold p-3"
+        >
+          🏠 Menu
+        </button>
+
+        <button
+          id="btnSaveSession"
+          type="button"
+          class="min-h-20 rounded-2xl border-2 border-teal-400/50 bg-teal-700 hover:bg-teal-600 text-white font-bold p-3"
+        >
+          💾 Save Session
+        </button>
+      </div>
+
+      <!-- Audio settings -->
+      <div class="rounded-2xl border border-slate-700 bg-slate-900/80 p-4 space-y-3">
+        <h3 class="text-left text-sm sm:text-base font-extrabold text-slate-300">
+          🔊 MUSIC &amp; SOUND EFFECTS
+        </h3>
+
+        <div class="grid grid-cols-2 gap-3">
+          <button
+            id="btnToggleMusic"
+            type="button"
+            class="min-h-20 rounded-xl border-2 border-slate-600 bg-slate-800 hover:bg-slate-700 text-emerald-300 font-bold p-3"
+          >
+            🎵 Music
+            <span class="block">ON / OFF</span>
+          </button>
+
+          <button
+            id="btnToggleSFX"
+            type="button"
+            class="min-h-20 rounded-xl border-2 border-slate-600 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold p-3"
+          >
+            🔊 SFX
+            <span class="block">ON / OFF</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Mobile and tablet controls -->
+      <button
+        id="btnCustomizeConsole"
+        type="button"
+        class="w-full min-h-16 rounded-2xl border-2 border-purple-400/50 bg-purple-800 hover:bg-purple-700 text-white font-bold p-4"
+      >
+        📱 Customize Mobile/Tablet Console Position
+      </button>
+
+      <!-- Close / resume -->
+      <button
+        id="btnClosePauseMenu"
+        type="button"
+        class="w-full rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-200 font-semibold p-3"
+      >
+        ✕ Close Menu
+      </button>
+
     </div>
-
-    <!-- KEEP ALL YOUR EXISTING MENU BUTTONS, AUDIO SETTINGS,
-         AND OTHER POPUP CONTENT BELOW THIS POINT UNCHANGED -->
-
   </div>
 </div>
-
-            <div class="grid grid-cols-2 gap-2.5">
-              <button type="button" onclick="GameApp.togglePause()" class="voxel-btn bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-2.5 rounded-xl font-extrabold text-xs col-span-2">
-                ▶ Resume Game
-              </button>
-              <button type="button" onclick="GameApp.restartStage(); GameApp.togglePause();" class="voxel-btn bg-amber-600 hover:bg-amber-500 text-white px-3 py-2.5 rounded-xl font-bold text-xs">
-                🔄 Restart Stage
-              </button>
-              <button id="btnPauseToLevels" type="button" class="voxel-btn bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-2.5 rounded-xl font-bold text-xs">
-                🗺️ Level Select
-              </button>
-              <button id="btnOpenMainMenu" type="button" class="voxel-btn bg-slate-700 hover:bg-slate-600 text-white px-3 py-2.5 rounded-xl font-bold text-xs">
-                🏠 Menu
-              </button>
-              <button type="button" onclick="GameApp.saveSessionToStorage(true)" class="voxel-btn bg-teal-700 hover:bg-teal-600 text-white px-3 py-2.5 rounded-xl font-bold text-xs">
-                💾 Save Session
-              </button>
-            </div>
-
-            <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-3 space-y-2 text-left">
-              <div class="text-[11px] font-bold uppercase tracking-wider text-slate-400">🔊 Music &amp; Sound Effects</div>
-              <div class="grid grid-cols-2 gap-2">
-                <button id="btnToggleMusic" type="button" class="voxel-btn bg-slate-800 text-emerald-300 border border-slate-600 px-3 py-2 rounded-lg text-xs font-bold">
-                  🎵 Music: ON
-                </button>
-                <button id="btnMute" type="button" class="voxel-btn bg-slate-800 text-slate-200 border border-slate-600 px-3 py-2 rounded-lg text-xs font-bold">
-                  🔊 SFX On
-                </button>
-              </div>
-              <button id="btnPauseToSettings" type="button" class="voxel-btn bg-purple-800/80 hover:bg-purple-700 text-purple-100 border border-purple-500/40 w-full py-2 rounded-lg text-xs font-bold text-center mt-1">
-                📱 Customize Mobile/Tab Console Position
-              </button>
-            </div>
-          </div>
-        </div>
 
         <!-- DEATH / STAGE WIN OVERLAY -->
         <div id="stageOverlay" class="hidden absolute inset-0 bg-slate-950/88 backdrop-blur-sm flex flex-col items-center justify-center p-4 text-center z-30">
