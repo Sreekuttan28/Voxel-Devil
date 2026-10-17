@@ -259,77 +259,73 @@
        
 
 <!-- IN-GAME MENU / PAUSE / AUDIO MODAL -->
+
+<!-- IN-GAME MENU / PAUSE / AUDIO MODAL -->
 <div
   id="pauseOverlay"
-  class="hidden absolute inset-0 z-30 bg-slate-950/90 backdrop-blur-md overflow-y-auto overscroll-contain p-3 sm:p-5"
+  class="hidden absolute inset-0 z-30 bg-slate-950/90 backdrop-blur-md overflow-y-auto overscroll-contain p-2 sm:p-4"
   style="-webkit-overflow-scrolling: touch;"
 >
-  <!-- Center the menu when it fits; allow scrolling when it doesn't -->
-  <div class="min-h-full w-full flex items-start sm:items-center justify-center">
-    <div
-      class="w-full max-w-md shrink-0 my-auto bg-[#161b22] border-2 border-emerald-500/50 rounded-2xl p-4 sm:p-5 shadow-2xl space-y-4 text-center"
-    >
+  <div class="min-h-full w-full flex items-start justify-center">
+    <div class="w-full max-w-md shrink-0 my-auto bg-[#161b22] border-2 border-emerald-500/50 rounded-2xl p-4 sm:p-5 shadow-2xl space-y-4 text-center">
 
       <!-- Header -->
-      <div class="flex items-center justify-between gap-2 border-b border-slate-800 pb-3">
+      <div class="flex items-center justify-between gap-2 border-b border-slate-800 pb-2.5">
         <span class="px-2.5 py-1 rounded text-xs font-extrabold bg-amber-500/20 text-amber-300 border border-amber-500/40">
           ⏸ IN-GAME MENU &amp; AUDIO
         </span>
-
         <span class="text-xs text-slate-400 font-mono whitespace-nowrap">
           Player:
           <strong class="text-emerald-400" id="pausePlayerLabel">Explorer</strong>
         </span>
       </div>
 
-      <!-- Resume -->
+      <!-- Resume Game -->
       <button
-        id="btnResumeGame"
         type="button"
-        class="w-full min-h-16 rounded-2xl border-2 border-emerald-400/60 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-lg p-4 shadow-lg"
+        onclick="GameApp.togglePause()"
+        class="voxel-btn w-full bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-3 rounded-xl font-extrabold text-base"
       >
         ▶ Resume Game
       </button>
 
-      <!-- Restart and level selection -->
+      <!-- Restart and Level Select -->
       <div class="grid grid-cols-2 gap-3">
         <button
-          id="btnRestartStage"
+          id="btnRestart"
           type="button"
-          class="min-h-20 rounded-2xl border-2 border-orange-400/50 bg-orange-600 hover:bg-orange-500 text-white font-bold p-3 break-words"
+          class="voxel-btn bg-amber-600 hover:bg-amber-500 text-white px-3 py-3 rounded-xl font-bold text-sm min-w-0"
         >
           🔄 Restart Stage
         </button>
 
         <button
-          id="btnLevelSelect"
+          id="btnPauseToLevels"
           type="button"
-          class="min-h-20 rounded-2xl border-2 border-indigo-400/50 bg-indigo-600 hover:bg-indigo-500 text-white font-bold p-3 break-words"
+          class="voxel-btn bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-3 rounded-xl font-bold text-sm min-w-0"
         >
           🗺️ Level Select
         </button>
-      </div>
 
-      <!-- Main menu and save -->
-      <div class="grid grid-cols-2 gap-3">
+        <!-- Menu and Save Session -->
         <button
-          id="btnReturnToMenu"
+          id="btnOpenMainMenu"
           type="button"
-          class="min-h-20 rounded-2xl border-2 border-slate-500 bg-slate-700 hover:bg-slate-600 text-white font-bold p-3"
+          class="voxel-btn bg-slate-700 hover:bg-slate-600 text-white px-3 py-3 rounded-xl font-bold text-sm min-w-0"
         >
           🏠 Menu
         </button>
 
         <button
-          id="btnSaveSession"
+          id="btnQuickSave"
           type="button"
-          class="min-h-20 rounded-2xl border-2 border-teal-400/50 bg-teal-700 hover:bg-teal-600 text-white font-bold p-3"
+          class="voxel-btn bg-teal-700 hover:bg-teal-600 text-white px-3 py-3 rounded-xl font-bold text-sm min-w-0"
         >
           💾 Save Session
         </button>
       </div>
 
-      <!-- Audio settings -->
+      <!-- Music and sound settings -->
       <div class="rounded-2xl border border-slate-700 bg-slate-900/80 p-4 space-y-3">
         <h3 class="text-left text-sm sm:text-base font-extrabold text-slate-300">
           🔊 MUSIC &amp; SOUND EFFECTS
@@ -337,47 +333,35 @@
 
         <div class="grid grid-cols-2 gap-3">
           <button
-            id="btnToggleMusic"
+            id="btnPauseMusicToggle"
             type="button"
-            class="min-h-20 rounded-xl border-2 border-slate-600 bg-slate-800 hover:bg-slate-700 text-emerald-300 font-bold p-3"
+            class="voxel-btn min-w-0 bg-slate-800 hover:bg-slate-700 text-emerald-300 px-3 py-3 rounded-xl font-bold text-sm"
           >
-            🎵 Music
-            <span class="block">ON / OFF</span>
+            🎵 Music: ON
           </button>
 
           <button
-            id="btnToggleSFX"
+            id="btnPauseSfxToggle"
             type="button"
-            class="min-h-20 rounded-xl border-2 border-slate-600 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold p-3"
+            class="voxel-btn min-w-0 bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-3 rounded-xl font-bold text-sm"
           >
-            🔊 SFX
-            <span class="block">ON / OFF</span>
+            🔊 SFX On
           </button>
         </div>
       </div>
 
-      <!-- Mobile and tablet controls -->
+      <!-- Open the existing Settings screen -->
       <button
-        id="btnCustomizeConsole"
+        id="btnPauseToSettings"
         type="button"
-        class="w-full min-h-16 rounded-2xl border-2 border-purple-400/50 bg-purple-800 hover:bg-purple-700 text-white font-bold p-4"
+        class="voxel-btn w-full bg-purple-800 hover:bg-purple-700 text-purple-100 border border-purple-500/40 px-3 py-3 rounded-xl text-sm font-bold"
       >
         📱 Customize Mobile/Tablet Console Position
-      </button>
-
-      <!-- Close / resume -->
-      <button
-        id="btnClosePauseMenu"
-        type="button"
-        class="w-full rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-200 font-semibold p-3"
-      >
-        ✕ Close Menu
       </button>
 
     </div>
   </div>
 </div>
-
         <!-- DEATH / STAGE WIN OVERLAY -->
         <div id="stageOverlay" class="hidden absolute inset-0 bg-slate-950/88 backdrop-blur-sm flex flex-col items-center justify-center p-4 text-center z-30">
           <div class="max-w-md w-full bg-[#161b22] border-2 border-slate-700 rounded-2xl p-5 shadow-2xl">
