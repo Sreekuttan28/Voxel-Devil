@@ -1,25 +1,28 @@
+
 {
+  "id": "/Voxel-Devil/",
   "short_name": "VoxelDevil",
-  "name": "Voxel Devil: Craft of Traps (96 Stages) by Mokuttan Labs",
-  "description": "96-Stage 2D Voxel Trap Platformer with Dynamic Chaos Remixer by Sreehari (Mokuttan Labs)",
-  "start_url": "./index.html",
-  "display": "fullscreen",
+  "name": "Voxel Devil: Craft of Traps",
+  "description": "A 96-stage voxel trap platformer by Mokuttan Labs.",
+  "start_url": "/Voxel-Devil/",
+  "scope": "/Voxel-Devil/",
+  "display": "standalone",
   "display_override": ["fullscreen", "standalone"],
   "orientation": "landscape",
   "background_color": "#0d1117",
   "theme_color": "#0d1117",
   "icons": [
     {
-      "src": "assets/hero_banner.jpg",
+      "src": "assets/icon-192.png",
       "sizes": "192x192",
-      "type": "image/jpeg",
-      "purpose": "any maskable"
+      "type": "image/png",
+      "purpose": "any"
     },
     {
-      "src": "assets/hero_banner.jpg",
+      "src": "assets/icon-512.png",
       "sizes": "512x512",
-      "type": "image/jpeg",
-      "purpose": "any maskable"
+      "type": "image/png",
+      "purpose": "any"
     }
   ]
 }
