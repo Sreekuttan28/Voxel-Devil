@@ -1,5 +1,5 @@
 // ============================================================================
-// VOXEL DEVIL: CRAFT OF TRAPS (v3.1 — WORLD & STAGE VISUAL REDESIGN)
+// VOXEL DEVIL: CRAFT OF TRAPS (v3.9 — UNSKIPPABLE 8-SECOND 250-DEATH HOSTAGE EXECUTION LOCK & AUTO-RESET)
 // Built by Mokuttan Labs (https://sreekuttan28.github.io/Mokuttan-Lab/)
 // Creator: Sreehari N P (@sreekuttan28)
 // ============================================================================
@@ -187,6 +187,73 @@ class VoxelAudio {
         leadType: "sawtooth",
         leadVol: 0.03,
         bassVol: 0.038
+      },
+      victory_palace: {
+        // Inspired by Solo Leveling "ARISE / DARK ARIA" — Emotional D-Minor Escalation to Heroic Drop!
+        tempoMs: 145,
+        lead: [
+          // Phrase 1: Haunting Awakening (D5 - F5 - A5 - Bb5 - A5 - G5 - F5 - E5)
+          587, 0, 698, 784, 880, 0, 932, 880, 784, 698, 659, 0, 698, 880, 587, 0,
+          // Phrase 2: The Shadow Monarch Rises (D5 - F5 - A5 - C6 - Bb5 - A5 - G5 - A5)
+          587, 698, 880, 1046, 932, 880, 784, 880, 1046, 1175, 1046, 880, 932, 880, 1175, 0,
+          // Phrase 3: Goosebump Climax Drop ("ARISE!" High Octave Soaring Lead)
+          1175, 1175, 1397, 1175, 1046, 932, 880, 1046, 1175, 1397, 1568, 1397, 1319, 1175, 1175, 0
+        ],
+        harmony: [
+          294, 294, 349, 440, 466, 466, 466, 440, 392, 349, 330, 330, 349, 440, 294, 294,
+          294, 349, 440, 523, 466, 440, 392, 440, 523, 587, 523, 440, 466, 440, 587, 587,
+          587, 587, 698, 587, 523, 466, 440, 523, 587, 698, 784, 698, 659, 587, 587, 440
+        ],
+        bass: [
+          // Deep driving D-minor -> Bb -> G -> A ostinato sub-bass
+          73.4, 146.8, 73.4, 146.8, 58.3, 116.5, 58.3, 116.5, 49.0, 98.0, 49.0, 98.0, 55.0, 110.0, 73.4, 146.8,
+          73.4, 146.8, 73.4, 146.8, 58.3, 116.5, 58.3, 116.5, 65.4, 130.8, 65.4, 130.8, 55.0, 110.0, 73.4, 73.4,
+          73.4, 146.8, 73.4, 146.8, 58.3, 116.5, 58.3, 116.5, 65.4, 130.8, 49.0, 98.0, 55.0, 110.0, 73.4, 73.4
+        ],
+        leadType: "sawtooth",
+        leadVol: 0.062,
+        bassVol: 0.058,
+        isEpicAnthem: true
+      },
+      story_prologue: {
+        // Mysterious Ancient Kingdom Gate & Dark Storytelling Music (A-minor arpeggio + atmospheric pad)
+        tempoMs: 185,
+        lead: [
+          440, 523, 659, 880, 784, 659, 523, 0,  349, 440, 523, 698, 659, 523, 440, 0,
+          392, 494, 587, 784, 659, 587, 494, 392, 330, 415, 494, 659, 587, 494, 440, 0
+        ],
+        harmony: [
+          220, 220, 330, 330, 262, 262, 330, 220, 175, 175, 262, 262, 220, 220, 262, 175,
+          196, 196, 294, 294, 247, 247, 196, 196, 165, 165, 247, 247, 220, 220, 220, 0
+        ],
+        bass: [
+          110, 0, 110, 165, 110, 0, 110, 0,  87.3, 0, 87.3, 131, 87.3, 0, 87.3, 0,
+          98.0, 0, 98.0, 147, 98.0, 0, 98.0, 0, 82.4, 0, 123.5, 0, 110, 0, 110, 0
+        ],
+        leadType: "triangle",
+        leadVol: 0.048,
+        bassVol: 0.042,
+        isEpicAnthem: true
+      },
+      devil_execution: {
+        // Dark Horror Palace Hostage & Execution Theme (Diminished Doom Ostinato)
+        tempoMs: 150,
+        lead: [
+          311, 294, 277, 0, 311, 349, 277, 0,  262, 247, 220, 0, 233, 220, 196, 0,
+          370, 349, 311, 294, 277, 262, 247, 233, 220, 0, 440, 415, 370, 311, 220, 0
+        ],
+        harmony: [
+          155, 147, 138, 138, 155, 175, 138, 138, 131, 123, 110, 110, 116, 110, 98, 98,
+          185, 175, 155, 147, 138, 131, 123, 116, 110, 110, 220, 207, 185, 155, 110, 110
+        ],
+        bass: [
+          55, 110, 55, 103.8, 55, 110, 55, 98,  55, 110, 55, 103.8, 55, 98, 51.9, 49,
+          55, 110, 58.3, 116.5, 55, 110, 51.9, 103.8, 55, 55, 110, 103.8, 92.5, 77.8, 55, 0
+        ],
+        leadType: "sawtooth",
+        leadVol: 0.056,
+        bassVol: 0.055,
+        isEpicAnthem: true
       }
     };
 
@@ -209,12 +276,67 @@ class VoxelAudio {
           const gain = this.ctx.createGain();
           osc.type = cfg.leadType;
           osc.frequency.setValueAtTime(lFreq, now);
+          const noteDur = cfg.isEpicAnthem ? dur * 1.45 : dur;
           gain.gain.setValueAtTime(cfg.leadVol * this.musicVolume, now);
-          gain.gain.exponentialRampToValueAtTime(0.0008, now + dur);
-          osc.connect(gain);
-          gain.connect(this.ctx.destination);
-          osc.start(now);
-          osc.stop(now + dur);
+          gain.gain.exponentialRampToValueAtTime(0.0008, now + noteDur);
+
+          if (cfg.isEpicAnthem) {
+            // Warm Solo-Leveling style resonant filter + detuned unison choir oscillator
+            const flt = this.ctx.createBiquadFilter();
+            flt.type = "lowpass";
+            flt.frequency.setValueAtTime(2400, now);
+            flt.frequency.exponentialRampToValueAtTime(950, now + noteDur);
+            osc.connect(flt);
+
+            const osc2 = this.ctx.createOscillator();
+            osc2.type = "triangle";
+            osc2.frequency.setValueAtTime(lFreq * 1.004, now);
+            osc2.connect(flt);
+            flt.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start(now);
+            osc2.start(now);
+            osc.stop(now + noteDur);
+            osc2.stop(now + noteDur);
+          } else {
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start(now);
+            osc.stop(now + noteDur);
+          }
+        } catch (e) {}
+      }
+
+      if (cfg.harmony && cfg.harmony[idx % cfg.harmony.length] > 0) {
+        try {
+          const hFreq = cfg.harmony[idx % cfg.harmony.length];
+          const hOsc = this.ctx.createOscillator();
+          const hGain = this.ctx.createGain();
+          hOsc.type = "sine";
+          hOsc.frequency.setValueAtTime(hFreq, now);
+          hGain.gain.setValueAtTime(0.036 * this.musicVolume, now);
+          hGain.gain.exponentialRampToValueAtTime(0.0008, now + dur * 1.6);
+          hOsc.connect(hGain);
+          hGain.connect(this.ctx.destination);
+          hOsc.start(now);
+          hOsc.stop(now + dur * 1.6);
+        } catch (e) {}
+      }
+
+      // Cinematic Taiko Drum Hit every 4 steps during Epic Anthem
+      if (cfg.isEpicAnthem && idx % 4 === 0) {
+        try {
+          const kOsc = this.ctx.createOscillator();
+          const kGain = this.ctx.createGain();
+          kOsc.type = "sine";
+          kOsc.frequency.setValueAtTime(115, now);
+          kOsc.frequency.exponentialRampToValueAtTime(32, now + 0.16);
+          kGain.gain.setValueAtTime(0.075 * this.musicVolume, now);
+          kGain.gain.exponentialRampToValueAtTime(0.001, now + 0.17);
+          kOsc.connect(kGain);
+          kGain.connect(this.ctx.destination);
+          kOsc.start(now);
+          kOsc.stop(now + 0.17);
         } catch (e) {}
       }
 
@@ -429,6 +551,49 @@ class VoxelAudio {
         this.playTone(n * 0.5, "sine", 0.32, 0.12);
       }, idx * 110);
     });
+  }
+
+  doorOpenSound() {
+    // Heavy stone sanctuary door unlatching + warm golden portal chime
+    this.playTone(140, "sawtooth", 0.16, 0.12, 95);
+    setTimeout(() => this.playTone(392, "triangle", 0.18, 0.12, 523), 110);
+    setTimeout(() => this.playTone(659, "sine", 0.24, 0.12, 784), 230);
+  }
+
+  devilCrySound() {
+    // Pathetic descending whimper/sob sound for defeated Devil on throne
+    const sobs = [
+      { f1: 380, f2: 260, delay: 0, dur: 0.18 },
+      { f1: 340, f2: 220, delay: 220, dur: 0.18 },
+      { f1: 290, f2: 175, delay: 450, dur: 0.25 }
+    ];
+    sobs.forEach(s => {
+      setTimeout(() => this.playTone(s.f1, "triangle", s.dur, 0.11, s.f2), s.delay);
+    });
+  }
+
+  thunderLandSound() {
+    // Heavy sky-fall impact thud + dimensional energy crackle
+    this.playTone(95, "sawtooth", 0.24, 0.18, 32);
+    setTimeout(() => this.playTone(180, "triangle", 0.18, 0.12, 55), 70);
+  }
+
+  smsPopupSound() {
+    // Crisp Voxel SMS two-tone notification chime
+    this.playTone(587, "square", 0.08, 0.11, 659);
+    setTimeout(() => this.playTone(880, "triangle", 0.14, 0.13, 1046), 85);
+  }
+
+  smsCloseSound() {
+    // Clean Voxel SMS dismiss click
+    this.playTone(660, "triangle", 0.06, 0.09, 440);
+  }
+
+  executionSlashSound() {
+    // Terrifying Devil execution blade slash + thunderous doom boom
+    this.playTone(880, "sawtooth", 0.14, 0.20, 110);
+    setTimeout(() => this.playTone(130, "sawtooth", 0.38, 0.22, 28), 90);
+    setTimeout(() => this.playTone(68, "square", 0.42, 0.18, 24), 180);
   }
 }
 
@@ -1239,7 +1404,7 @@ const SUBLEVELS = {
 
 // --- WORLD 2 (JUMP-REACHABLE MULTI-LAYER TREE SURVIVAL) & WORLD 3 (32 UNIQUE MULTI-LAYER STEP SANCTUMS) ---
 (function upgradeWorlds2And3() {
-  // World 2: Full-Screen Voxel Tree Survival Simulation (Every upper layer reachable via normal jump ΔY <= 62px!)
+  // World 2: Full-Screen Voxel Tree Survival Simulation (Every upper layer reachable via normal jump ΔY <= 54px and >=75px head clearance!)
   WORLD_META[1] = {
     id: 2,
     name: "World 2: Cursed Tree Survival",
@@ -1256,15 +1421,15 @@ const SUBLEVELS = {
     pitBottom: "#271505",
     pitHighlight: "#fef08a",
     musicTrack: "world2",
-    description: "Explore the colossal Cursed World-Tree across the entire screen! Every branch layer is aligned for smooth normal-jump climbing from roots to treetop crown."
+    description: "Explore the colossal Cursed World-Tree across the entire screen! Every branch layer is aligned with open jump corridors from roots to treetop crown."
   };
 
-  // World 3: Multi-Layer Stepped Ziggurat & Dimensional Sanctums (Unique layered step rooms + unique canvas styles)
+  // World 3: Multi-Layer Stepped Ziggurat & Dimensional Sanctums (Extreme Nightmare difficulty in Stages 16-32!)
   WORLD_META[2] = {
     id: 3,
     name: "World 3: Stepped Ziggurat Sanctum",
-    subtitle: "32 Unique Multi-Layer Step Gauntlets — Dimensional Staircases & Demon Trials",
-    difficultyBadge: "EXTREME LAYERS • 32 STAGES",
+    subtitle: "32 Unique Multi-Layer Step Gauntlets — Extreme Nightmare Trials After 3-15",
+    difficultyBadge: "NIGHTMARE • 32 STAGES",
     themeColor: "#f43f5e",
     skyTop: "#09020a",
     skyBottom: "#24062e",
@@ -1276,7 +1441,7 @@ const SUBLEVELS = {
     pitBottom: "#1f030b",
     pitHighlight: "#fda4af",
     musicTrack: "world3",
-    description: "Ascend and descend 32 unique multi-layer stepped sanctums—switchback pyramids, twin stepped towers, canyon amphitheaters, and 5-tier boss arenas."
+    description: "Ascend 32 multi-layer stepped sanctums. Stages 3-16 to 3-32 unleash Overlord Nightmare mode with dual crossfire saws, glacial ice steps, and relentless traps."
   };
 
   const w2Names = [
@@ -1290,136 +1455,143 @@ const SUBLEVELS = {
     "Canopy Storm", "Spirit Tree Labyrinth", "World-Tree Summit", "Forest Brother's Throne"
   ];
 
-  // World 2: All 32 stages have stepping branches every 52-60px vertically so normal jump ALWAYS reaches every layer!
+  // World 2: All 32 stages verified with zero ceiling head-bonks and 100% normal-jump reachability!
   for (let s = 1; s <= 32; s++) {
     const key = `2-${s}`;
     const title = `${key}: ${w2Names[s - 1]}`;
     const layoutType = (s - 1) % 4;
-    const shiftX = ((s % 3) - 1) * 12;
+    const shiftX = ((s % 3) - 1) * 10;
 
     if (layoutType === 0) {
-      // Type 0: 5-Layer Left-to-Right & Right-to-Left Tree Staircase (Y: 382 -> 326 -> 270 -> 214 -> 158 -> 108)
+      // Type 0 (Includes Stage 2-1!): Panoramic Open-Sky Tree Canopy Ascent!
+      // Zero overlapping roofs—every bough steps cleanly from Left to Right with 100% open sky above!
+      const isStage2_1 = (s === 1);
       SUBLEVELS[key] = {
         title,
-        falseHint: "Stay on the bottom forest floor—the upper tree branches cannot be climbed!",
-        trueGuide: "Climb the aligned tree steps using normal jumps! Step from Root (Y: 382) -> Low Branch (Y: 326) -> Mid Bough (Y: 270) -> Upper Branch (Y: 214) -> Canopy (Y: 158), hit the green switch at X: 145, and enter the crown portal at Y: 100!",
-        spawn: { x: 38, y: 342 },
-        portal: { x: 715, y: 52, behavior: s % 3 === 0 ? "runaway" : "locked", targetX: 665, triggerDist: 90, startsLocked: true },
+        falseHint: "Drop into the lower hollow root bridge—it is a secret shortcut to the exit!",
+        trueGuide: isStage2_1
+          ? "The lower root bridge is a fake hologram! Hop up the 5 wide open-sky tree branches from left to right (Y: 365 -> 320 -> 274 -> 228 -> 182), hop the pop-up spike on the 3rd branch, and walk straight into the Treetop Exit Door!"
+          : "The lower root bridge is a fake hologram! Hop up the 5 wide open-sky tree branches from left to right (Y: 365 -> 320 -> 274 -> 228 -> 182), step on the Emerald Switch on the 3rd branch (X: 420) to unlock the exit door, and enter the Treetop Portal!",
+        spawn: { x: 42, y: 325 },
+        portal: {
+          x: 725,
+          y: 126,
+          behavior: isStage2_1 ? "static" : (s % 4 === 0 ? "runaway" : "locked"),
+          targetX: 680,
+          triggerDist: 90,
+          startsLocked: !isStage2_1
+        },
         lavaY: 424,
         platforms: [
-          { x: 15, y: 382, w: 195, h: 42, type: "solid" },
-          { x: 225 + shiftX, y: 326, w: 145, h: 22, type: "solid" },
-          { x: 390 + shiftX, y: 270, w: 145, h: 22, type: "solid" },
-          { x: 555, y: 214, w: 220, h: 24, type: "solid" },
-          { x: 350 + shiftX, y: 160, w: 165, h: 22, type: "crumble", delay: Math.max(5, 9 - Math.floor(s / 8)), triggerDist: 65 },
-          { x: 95, y: 156, w: 215, h: 24, type: "solid" },
-          { x: 335, y: 108, w: 165, h: 22, type: s > 18 ? "ice" : "solid" },
-          { x: 530, y: 108, w: 250, h: 24, type: "solid" }
+          { x: 15, y: 365, w: 160, h: 55, type: "solid" },
+          { x: 190 + shiftX, y: 320, w: 140, h: 24, type: "solid" },
+          { x: 345 + shiftX, y: 274, w: 155, h: 24, type: "solid" },
+          { x: 515 + shiftX, y: 228, w: 135, h: 24, type: isStage2_1 ? "solid" : "crumble", delay: 14, triggerDist: 45 },
+          { x: 635, y: 182, w: 155, h: 36, type: s > 20 ? "ice" : "solid" },
+          // Decoy lower root bridge (fake illusion)
+          { x: 175, y: 382, w: 440, h: 22, type: "fake" }
         ],
         spikes: [
-          { x: 280 + shiftX, y: 326, w: 26, h: 15, dir: "up", hidden: true, triggerDist: 80 },
-          { x: 640, y: 214, w: 26, h: 15, dir: "up", hidden: true, triggerDist: 80 },
-          { x: 615, y: 108, w: 26, h: 15, dir: "up", hidden: true, triggerDist: 80 }
+          { x: 390 + shiftX, y: 274, w: 24, h: 14, dir: "up", hidden: true, triggerDist: 80 }
         ],
         objects: [
-          { type: "slime", x: 155, y: 370, w: 36, h: 12, vy: -12.8 },
-          { type: "switch", x: 145, y: 146, isFake: false, color: "#10b981" },
-          { type: "gem", x: 460 + shiftX, y: 235, isTrap: true, label: "SAP GEM?" },
-          { type: "sign", x: 70, y: 350, text: "CLIMB THE BRANCH STEPS!" }
+          ...(isStage2_1 ? [] : [{ type: "switch", x: 445 + shiftX, y: 264, isFake: false, color: "#10b981" }]),
+          { type: "gem", x: 255 + shiftX, y: 352, isTrap: true, label: "ROOT GEM?" },
+          { type: "sign", x: 65, y: 333, text: "HOP THE 5 SKY BRANCHES ->" }
         ]
       };
     } else if (layoutType === 1) {
-      // Type 1: Full-Screen Zigzag Bough Explorer (Every vertical step is 52-56px so normal jump reaches easily!)
+      // Type 1: Full-Screen Valley & Right Staircase Ascent (Open vertical channels, zero ceiling collisions)
       SUBLEVELS[key] = {
         title,
         falseHint: "Enter the bottom-center portal for an instant win!",
-        trueGuide: "The bottom portal at X: 410 is a decoy! Step down/across to the lower-left switch (X: 90, Y: 372), then climb the right-hand staircase steps (Y: 372 -> 318 -> 264 -> 210 -> 156 -> 104) using normal jumps to reach the treetop exit!",
+        trueGuide: "The bottom portal at X: 395 is a decoy! Drop from the starting branch to the lower-left root platform (Y: 374) to press the green switch at X: 95, then climb the staggered right-hand boughs (Y: 374 -> 322 -> 270 -> 216 -> 162 -> 108) to the treetop exit!",
         spawn: { x: 42, y: 100 },
-        portal: { x: 720, y: 48, behavior: "locked", startsLocked: true },
+        portal: { x: 720, y: 52, behavior: "locked", startsLocked: true },
         lavaY: 424,
         platforms: [
-          { x: 15, y: 142, w: 165, h: 22, type: "solid" },
-          { x: 205, y: 196, w: 145, h: 22, type: "solid" },
-          { x: 40, y: 372, w: 235, h: 42, type: "solid" },
-          { x: 185, y: 318, w: 135, h: 22, type: "solid" },
-          { x: 335, y: 372, w: 215, h: 42, type: "solid" },
-          { x: 575, y: 318, w: 205, h: 24, type: "solid" },
-          { x: 420 + shiftX, y: 264, w: 145, h: 22, type: "solid" },
-          { x: 255 + shiftX, y: 210, w: 150, h: 22, type: s > 14 ? "ice" : "solid" },
-          { x: 435, y: 156, w: 155, h: 22, type: "crumble", delay: 6, triggerDist: 65 },
-          { x: 605, y: 104, w: 175, h: 24, type: "solid" }
+          { x: 15, y: 142, w: 150, h: 20, type: "solid" },
+          { x: 25, y: 374, w: 250, h: 42, type: "solid" },
+          { x: 195, y: 322, w: 135, h: 20, type: "solid" },
+          { x: 345, y: 374, w: 190, h: 42, type: "solid" },
+          { x: 565, y: 322, w: 210, h: 22, type: "solid" },
+          { x: 390 + shiftX, y: 270, w: 155, h: 20, type: "solid" },
+          { x: 205 + shiftX, y: 216, w: 165, h: 20, type: s > 16 ? "ice" : "solid" },
+          { x: 405, y: 162, w: 165, h: 20, type: "crumble", delay: 11, triggerDist: 45 },
+          { x: 595, y: 108, w: 185, h: 22, type: "solid" }
         ],
         spikes: [
-          { x: 655, y: 318, w: 26, h: 15, dir: "up", hidden: true, triggerDist: 80 },
-          { x: 315 + shiftX, y: 210, w: 26, h: 15, dir: "up", hidden: true, triggerDist: 80 }
+          { x: 655, y: 322, w: 26, h: 15, dir: "up", hidden: true, triggerDist: 80 },
+          { x: 275 + shiftX, y: 216, w: 26, h: 15, dir: "up", hidden: true, triggerDist: 80 }
         ],
         objects: [
-          { type: "switch", x: 90, y: 362, isFake: false, color: "#10b981" },
-          { type: "fakePortal", x: 410, y: 316, tpX: 42, tpY: 100 },
-          { type: "sawSpawner", triggerX: 380, spawnX: 770, spawnY: 294, vx: -(7.2 + (s % 3)) },
+          { type: "switch", x: 95, y: 364, isFake: false, color: "#10b981" },
+          { type: "fakePortal", x: 395, y: 318, tpX: 42, tpY: 100 },
+          { type: "sawSpawner", triggerX: 380, spawnX: 770, spawnY: 298, vx: -(7.2 + (s % 3)) },
           { type: "sign", x: 75, y: 110, text: "UNLOCK SWITCH BELOW!" }
         ]
       };
     } else if (layoutType === 2) {
-      // Type 2: Dual-Path Hollow Trunk Climb (Normal-jump staircase on right + Gravity Orb option on left)
+      // Type 2: Staggered Hollow Trunk Climb (Alternating wide steps with open sky above each jump)
       SUBLEVELS[key] = {
         title,
         falseHint: "Step on the Gold Switch in the center to disable the trunk traps!",
-        trueGuide: "Skip the Gold Switch! Climb the right-side branch staircase (Y: 376 -> 322 -> 268 -> 214 -> 160) with normal jumps OR use the Purple Gravity Orb, then enter the upper-right treehouse portal!",
+        trueGuide: "Skip the Gold Switch! Run across the root floor (baiting the trunk crusher at X: 295) and climb the staggered right-hand boughs (Y: 376 -> 324 -> 272 -> 220 -> 168 -> 116) OR flip via the Purple Gravity Orb to reach the upper-right portal!",
         spawn: { x: 40, y: 335 },
-        portal: { x: 720, y: 104, behavior: "runaway", targetX: 665, triggerDist: 95 },
+        portal: { x: 720, y: 60, behavior: "runaway", targetX: 665, triggerDist: 95 },
         lavaY: 424,
         platforms: [
           { x: 15, y: 376, w: 235, h: 44, type: "solid" },
-          { x: 275, y: 376, w: 210, h: 44, type: "solid" },
-          { x: 510, y: 376, w: 270, h: 44, type: "solid" },
-          { x: 595, y: 322, w: 175, h: 22, type: "solid" },
-          { x: 435 + shiftX, y: 268, w: 145, h: 22, type: "solid" },
-          { x: 595, y: 214, w: 175, h: 22, type: "solid" },
-          { x: 610, y: 160, w: 170, h: 24, type: "solid" },
-          { x: 165, y: 52, w: 420, h: 26, type: "solid" },
-          { x: 315, y: 170, w: 95, h: 75, type: "crusher", triggerX: 295, maxDropY: 376, speed: 13 }
+          { x: 270, y: 376, w: 210, h: 44, type: "solid" },
+          { x: 500, y: 376, w: 280, h: 44, type: "solid" },
+          { x: 615, y: 324, w: 165, h: 20, type: "solid" },
+          { x: 430 + shiftX, y: 272, w: 165, h: 20, type: "solid" },
+          { x: 610, y: 220, w: 170, h: 20, type: "solid" },
+          { x: 430 + shiftX, y: 168, w: 165, h: 20, type: "solid" },
+          { x: 600, y: 116, w: 185, h: 22, type: "solid" },
+          { x: 150, y: 48, w: 420, h: 24, type: "solid" },
+          { x: 305, y: 150, w: 85, h: 70, type: "crusher", triggerX: 285, maxDropY: 376, speed: 13 }
         ],
         spikes: [
-          { x: 665, y: 322, w: 26, h: 15, dir: "up", hidden: true, triggerDist: 80 },
-          { x: 665, y: 214, w: 26, h: 15, dir: "up", hidden: true, triggerDist: 80 }
+          { x: 685, y: 324, w: 26, h: 15, dir: "up", hidden: true, triggerDist: 80 },
+          { x: 685, y: 220, w: 26, h: 15, dir: "up", hidden: true, triggerDist: 80 }
         ],
         objects: [
           { type: "orb", orbType: "gravity", x: 205, y: 322 },
-          { type: "orb", orbType: "gravity", x: 555, y: 108 },
-          { type: "switch", x: 355, y: 366, isFake: true, color: "#f59e0b" },
+          { type: "orb", orbType: "gravity", x: 545, y: 102 },
+          { type: "switch", x: 345, y: 366, isFake: true, color: "#f59e0b" },
           { type: "sign", x: 90, y: 344, text: "CLIMB STEPS ON RIGHT ->" }
         ]
       };
     } else {
-      // Type 3: Multi-Branch Canopy Ring (Every step 52-56px apart so player can jump smoothly all around the tree)
+      // Type 3: Multi-Branch Canopy Ring (Staggered left ascent with >= 100px vertical clearance, top canopy switch, mid-right exit)
       SUBLEVELS[key] = {
         title,
         falseHint: "Grab the Spirit Gem on the bottom crumbling bridge!",
-        trueGuide: "Skip the bottom trap Gem! Jump up the left branch steps (Y: 376 -> 322 -> 268 -> 214 -> 160 -> 112), cross the top canopy to press the green switch at X: 695, and drop onto the mid-right exit ledge (Y: 240)!",
+        trueGuide: "Skip the bottom trap Gem! Climb the staggered left boughs (Y: 376 -> 324 -> 272 -> 220 -> 168 -> 114), run across the top crown bridge to press the green switch at X: 695, and drop onto the mid-right exit ledge (Y: 240)!",
         spawn: { x: 38, y: 336 },
         portal: { x: 715, y: 184, behavior: "locked", startsLocked: true },
         lavaY: 424,
         platforms: [
-          { x: 15, y: 376, w: 195, h: 44, type: "solid" },
-          { x: 240, y: 360, w: 250, h: 26, type: "crumble", delay: 5, triggerDist: 65, id: "gem_plat" },
-          { x: 530, y: 376, w: 250, h: 44, type: "solid" },
-          { x: 45, y: 322, w: 145, h: 22, type: "solid" },
-          { x: 195 + shiftX, y: 268, w: 145, h: 22, type: "solid" },
-          { x: 55, y: 214, w: 145, h: 22, type: "solid" },
-          { x: 210 + shiftX, y: 160, w: 155, h: 22, type: "solid" },
-          { x: 390, y: 112, w: 385, h: 24, type: "solid" },
+          { x: 15, y: 376, w: 210, h: 44, type: "solid" },
+          { x: 255, y: 362, w: 235, h: 24, type: "crumble", delay: 8, triggerDist: 45, id: "gem_plat" },
+          { x: 525, y: 376, w: 255, h: 44, type: "solid" },
+          { x: 155, y: 324, w: 145, h: 20, type: "solid" },
+          { x: 20, y: 272, w: 145, h: 20, type: "solid" },
+          { x: 165, y: 220, w: 145, h: 20, type: "solid" },
+          { x: 30, y: 168, w: 150, h: 20, type: "solid" },
+          { x: 195 + shiftX, y: 114, w: 580, h: 22, type: "solid" },
           { x: 565, y: 240, w: 215, h: 26, type: "solid" }
         ],
         spikes: [
-          { x: 265 + shiftX, y: 268, w: 26, h: 15, dir: "up", hidden: true, triggerDist: 80 },
-          { x: 525, y: 112, w: 26, h: 15, dir: "up", hidden: true, triggerDist: 80 },
+          { x: 225, y: 220, w: 26, h: 15, dir: "up", hidden: true, triggerDist: 80 },
+          { x: 485, y: 114, w: 26, h: 15, dir: "up", hidden: true, triggerDist: 80 },
           { x: 640, y: 240, w: 26, h: 15, dir: "up", hidden: true, triggerDist: 80 }
         ],
         objects: [
-          { type: "gem", x: 365, y: 318, isTrap: true, label: "SPIRIT KEY?" },
-          { type: "switch", x: 695, y: 102, isFake: false, color: "#10b981" },
-          { type: "sawSpawner", triggerX: 430, spawnX: 775, spawnY: 88, vx: -8.2 },
+          { type: "gem", x: 365, y: 320, isTrap: true, label: "SPIRIT KEY?" },
+          { type: "switch", x: 695, y: 104, isFake: false, color: "#10b981" },
+          { type: "sawSpawner", triggerX: 430, spawnX: 775, spawnY: 90, vx: -8.2 },
           { type: "sign", x: 75, y: 344, text: "CLIMB LEFT BOUGHS UP!" }
         ]
       };
@@ -1427,13 +1599,14 @@ const SUBLEVELS = {
   }
 
   // ==========================================================================
-  // WORLD 3: 32 TOTALLY UNIQUE MULTI-LAYER STEPPED SANCTUM STAGES
-  // 8 Distinct Stepped Room Architectures × 4 Unique Variations (Every step ΔY = 50..58px, 100% normal-jump reachable!)
+  // WORLD 3: 32 UNIQUE MULTI-LAYER STEPPED SANCTUM STAGES
+  // Stages 3-16 to 3-32 feature EXTREME NIGHTMARE OVERLORD DIFFICULTY:
+  // Dual crossfire sawblades, glacial ice steps, faster crushers, lunging slide spikes & reverse orbs!
   // ==========================================================================
   const w3Names = [
     "Ziggurat of First Blood", "Serpentine Step Pyramid", "Twin Citadel Skybridge", "Abyssal Canyon Steps",
     "Spiral Sanctum Ascent", "Dual-Step Mirage Hall", "Gravity Staircase Vault", "Pentagram 5-Tier Arena",
-    "Neon Step Monolith", "逆Switchback Catacombs", "Split Spire Crossing", "Sunken Altar Terrace",
+    "Neon Step Monolith", "Switchback Catacombs", "Split Spire Crossing", "Sunken Altar Terrace",
     "Helix Step Observatory", "Phantom Step Galleria", "Inverted Step Summit", "Demon Lord's Step Colosseum",
     "Cyber-Step Bastion", "Zigzag Void Stairway", "Twin Obelisk Leap", "Chasm Step Descent",
     "Astral Spiral Steps", "Double-Deck Step Bluff", "Anti-Grav Step Conduit", "Five-Floor Hell Gauntlet",
@@ -1445,242 +1618,279 @@ const SUBLEVELS = {
     const key = `3-${s}`;
     const title = `${key}: ${w3Names[s - 1]}`;
     const arch = (s - 1) % 8;
-    const v = Math.floor((s - 1) / 8); // 0..3 variation factor so no two stages have identical coordinates!
-    const dx = v * 14;
-    const dy = (v % 2) * 6;
-    const useIce = (s % 3 === 0);
+    const v = Math.floor((s - 1) / 8); // 0..3 variation factor
+    const dx = v * 12;
+    const dy = (v % 2) * 4;
+    const isHardNightmare = (s > 15); // Stages 3-16 to 3-32 are significantly harder!
+    const useIce = isHardNightmare || (s % 3 === 0);
+    const crumbleDelay = isHardNightmare ? 4 : Math.max(5, 8 - v);
+    const sawSpeed1 = -(isHardNightmare ? (9.6 + v * 0.6) : (8.0 + v * 0.4));
+    const sawSpeed2 = -(isHardNightmare ? (10.4 + v * 0.5) : 8.5);
 
     if (arch === 0) {
-      // Archetype 0: 6-Tier Ascending Stepped Ziggurat (Diagonal Staircase from bottom-left to top-right)
+      // Archetype 0: 6-Tier Ascending Stepped Ziggurat
       SUBLEVELS[key] = {
         title,
         falseHint: "Run along the bottom lava floor—the staircase steps are hologram illusions!",
-        trueGuide: "Ascend the 6-step Ziggurat! Every step is 52px higher (Y: 384 -> 332 -> 280 -> 228 -> 176 -> 124), easily reachable with normal jumps. Hit the switch on Step 4 and enter the summit portal!",
+        trueGuide: isHardNightmare
+          ? "NIGHTMARE ZIGGURAT! Ascend the 6 icy/crumbling steps (Y: 384 -> 332 -> 280 -> 228 -> 176 -> 124) while dodging dual crossfire sawblades and lunging spikes. Hit the switch on Step 4 and catch the runaway portal!"
+          : "Ascend the 6-step Ziggurat! Every step is 52px higher (Y: 384 -> 332 -> 280 -> 228 -> 176 -> 124). Hit the switch on Step 4 and enter the summit portal!",
         spawn: { x: 35, y: 344 },
-        portal: { x: 720, y: 68 + dy, behavior: "runaway", targetX: 665, triggerDist: 95, startsLocked: true },
+        portal: { x: 720, y: 68 + dy, behavior: "runaway", targetX: 655, triggerDist: isHardNightmare ? 115 : 95, startsLocked: true },
         lavaY: 424,
         platforms: [
           { x: 15, y: 384, w: 145, h: 40, type: "solid" },
-          { x: 145 + dx, y: 332, w: 125, h: 22, type: "solid" },
-          { x: 255 + dx, y: 280, w: 125, h: 22, type: "crumble", delay: Math.max(4, 7 - v), triggerDist: 65 },
-          { x: 365 + dx, y: 228, w: 145, h: 22, type: useIce ? "ice" : "solid" },
-          { x: 495 + dx, y: 176, w: 130, h: 22, type: "solid" },
-          { x: 605, y: 124 + dy, w: 175, h: 26, type: "solid" },
+          { x: 145 + dx, y: 332, w: 125, h: 20, type: isHardNightmare ? "ice" : "solid" },
+          { x: 255 + dx, y: 280, w: 125, h: 20, type: "crumble", delay: crumbleDelay, triggerDist: 45 },
+          { x: 365 + dx, y: 228, w: 145, h: 20, type: useIce ? "ice" : "solid" },
+          { x: 495 + dx, y: 176, w: 130, h: 20, type: isHardNightmare ? "crumble" : "solid", delay: crumbleDelay + 1, triggerDist: 45 },
+          { x: 605, y: 124 + dy, w: 175, h: 24, type: useIce ? "ice" : "solid" },
           { x: 185, y: 384, w: 580, h: 24, type: "fake" }
         ],
         spikes: [
-          { x: 195 + dx, y: 332, w: 26, h: 15, dir: "up", hidden: true, triggerDist: 85 },
-          { x: 545 + dx, y: 176, w: 26, h: 15, dir: "up", hidden: true, triggerDist: 85 },
-          { x: 645, y: 124 + dy, w: 26, h: 15, dir: "up", hidden: true, triggerDist: 85 }
+          { x: 195 + dx, y: 332, w: 26, h: 15, dir: "up", hidden: true, triggerDist: 90, slideX: isHardNightmare ? 170 + dx : undefined },
+          { x: 545 + dx, y: 176, w: 26, h: 15, dir: "up", hidden: true, triggerDist: 90 },
+          { x: 645, y: 124 + dy, w: 26, h: 15, dir: "up", hidden: true, triggerDist: 95, slideX: isHardNightmare ? 620 : undefined }
         ],
         objects: [
           { type: "switch", x: 425 + dx, y: 218, isFake: false, color: "#10b981" },
-          { type: "sawSpawner", triggerX: 350, spawnX: 775, spawnY: 204, vx: -(8.2 + v * 0.5) },
+          { type: "sawSpawner", triggerX: 240, spawnX: 775, spawnY: 204, vx: sawSpeed1 },
+          ...(isHardNightmare ? [
+            { type: "sawSpawner", triggerX: 460, spawnX: 775, spawnY: 100 + dy, vx: sawSpeed2 },
+            { type: "gem", x: 315 + dx, y: 240, isTrap: true, label: "CURSED GEM" }
+          ] : []),
           { type: "sign", x: 65, y: 352, text: "CLIMB THE 6 ZIGGURAT STEPS!" }
         ]
       };
     } else if (arch === 1) {
-      // Archetype 1: 3-Deck Switchback Step Pyramid (Climb right on Deck 1, climb left on Deck 2, climb right on Deck 3)
+      // Archetype 1: 3-Deck Switchback Step Pyramid (Open vertical jump channels)
       SUBLEVELS[key] = {
         title,
         falseHint: "Wait under the crusher on Deck 2 for a secret teleport!",
-        trueGuide: "Switchback Pyramid! 1) Climb right on Deck 1 (Y: 384 -> 332 -> 280). 2) Jump to Deck 2 (Y: 226) and climb LEFT (Y: 226 -> 174) to press the green switch at X: 75. 3) Climb right onto Deck 3 (Y: 118) to reach the portal!",
+        trueGuide: isHardNightmare
+          ? "NIGHTMARE SWITCHBACK! Climb right on Deck 1 (Y: 384 -> 332 -> 280), jump to Deck 2 (Y: 226) and cross left to hit the switch at X: 65, then ascend to Deck 3 (Y: 118 -> 108) while dodging dual saws!"
+          : "Switchback Pyramid! 1) Climb right on Deck 1 (Y: 384 -> 332 -> 280). 2) Jump to Deck 2 (Y: 226) and climb LEFT (Y: 174) to press the green switch at X: 65. 3) Climb right onto Deck 3 (Y: 118) to reach the portal!",
         spawn: { x: 38, y: 344 },
-        portal: { x: 715, y: 62, behavior: "locked", startsLocked: true },
+        portal: { x: 715, y: 54, behavior: isHardNightmare ? "runaway" : "locked", targetX: 660, triggerDist: 95, startsLocked: true },
         lavaY: 424,
         platforms: [
-          { x: 15, y: 384, w: 220, h: 40, type: "solid" },
-          { x: 260 + dx, y: 332, w: 210, h: 22, type: "solid" },
-          { x: 500, y: 280, w: 275, h: 24, type: "solid" },
-          { x: 330 + dx, y: 226, w: 240, h: 22, type: useIce ? "ice" : "solid" },
-          { x: 35, y: 174, w: 270, h: 24, type: "solid" },
-          { x: 245 + dx, y: 118, w: 210, h: 22, type: "crumble", delay: 6, triggerDist: 65 },
-          { x: 485, y: 118, w: 290, h: 24, type: "solid" }
+          { x: 15, y: 384, w: 210, h: 40, type: "solid" },
+          { x: 255 + dx, y: 332, w: 195, h: 20, type: isHardNightmare ? "ice" : "solid" },
+          { x: 510, y: 280, w: 265, h: 22, type: "solid" },
+          { x: 310 + dx, y: 226, w: 210, h: 20, type: useIce ? "ice" : "solid" },
+          { x: 25, y: 174, w: 240, h: 22, type: "solid" },
+          { x: 225 + dx, y: 120, w: 205, h: 20, type: "crumble", delay: crumbleDelay, triggerDist: 45 },
+          { x: 475, y: 110, w: 300, h: 22, type: isHardNightmare ? "ice" : "solid" }
         ],
         spikes: [
-          { x: 350 + dx, y: 332, w: 26, h: 15, dir: "up", hidden: true, triggerDist: 85 },
-          { x: 430 + dx, y: 226, w: 26, h: 15, dir: "up", hidden: true, triggerDist: 85 },
-          { x: 605, y: 118, w: 28, h: 16, dir: "up", hidden: true, triggerDist: 85 }
+          { x: 345 + dx, y: 332, w: 26, h: 15, dir: "up", hidden: true, triggerDist: 85, slideX: isHardNightmare ? 315 + dx : undefined },
+          { x: 405 + dx, y: 226, w: 26, h: 15, dir: "up", hidden: true, triggerDist: 85 },
+          { x: 595, y: 110, w: 28, h: 16, dir: "up", hidden: true, triggerDist: 90, slideX: isHardNightmare ? 560 : undefined }
         ],
         objects: [
-          { type: "switch", x: 75, y: 164, isFake: false, color: "#10b981" },
-          { type: "sawSpawner", triggerX: 250, spawnX: 775, spawnY: 94, vx: -(8.5 + v * 0.4) },
+          { type: "switch", x: 65, y: 164, isFake: false, color: "#10b981" },
+          { type: "sawSpawner", triggerX: 250, spawnX: 775, spawnY: 86, vx: sawSpeed1 },
+          ...(isHardNightmare ? [
+            { type: "sawSpawner", triggerX: 300, spawnX: 775, spawnY: 256, vx: sawSpeed2 },
+            { type: "orb", orbType: "reverse", x: 520, y: 78, radius: 36 }
+          ] : []),
           { type: "sign", x: 85, y: 352, text: "ZIGZAG UP ALL 3 DECKS!" }
         ]
       };
     } else if (arch === 2) {
-      // Archetype 2: Twin Stepped Towers & High Skybridge
+      // Archetype 2: Twin Stepped Towers & High Skybridge (Staggered left tower steps with wide-open vertical jump channels)
       SUBLEVELS[key] = {
         title,
         falseHint: "Jump straight across the bottom chasm—the towers are optional!",
-        trueGuide: "Climb the Left Stepped Tower (Y: 384 -> 330 -> 276 -> 222 -> 168), cross the high skybridge steps (Y: 140), press the switch on the central spire, and descend/ascend the Right Tower to the exit!",
+        trueGuide: "Climb the staggered Left Tower steps (Y: 384 -> 330 -> 276 -> 222 -> 168), cross the high skybridge (Y: 132), press the switch on the central spire, and cross to the Right Tower exit!",
         spawn: { x: 35, y: 344 },
-        portal: { x: 720, y: 164, behavior: "runaway", targetX: 670, triggerDist: 90, startsLocked: true },
+        portal: { x: 720, y: 164, behavior: "runaway", targetX: 665, triggerDist: 95, startsLocked: true },
         lavaY: 424,
         platforms: [
-          { x: 15, y: 384, w: 155, h: 40, type: "solid" },
-          { x: 115, y: 330, w: 120, h: 20, type: "solid" },
-          { x: 25, y: 276, w: 120, h: 20, type: "solid" },
-          { x: 120, y: 222, w: 120, h: 20, type: "solid" },
-          { x: 25, y: 168, w: 145, h: 22, type: "solid" },
-          { x: 200 + dx, y: 140, w: 135, h: 20, type: "crumble", delay: 6, triggerDist: 65 },
-          { x: 365 + dx, y: 140, w: 145, h: 22, type: "solid" },
-          { x: 540, y: 185, w: 120, h: 20, type: useIce ? "ice" : "solid" },
+          { x: 15, y: 384, w: 150, h: 40, type: "solid" },
+          { x: 145, y: 330, w: 125, h: 20, type: isHardNightmare ? "ice" : "solid" },
+          { x: 15, y: 276, w: 125, h: 20, type: "solid" },
+          { x: 145, y: 222, w: 125, h: 20, type: useIce ? "ice" : "solid" },
+          { x: 15, y: 168, w: 135, h: 20, type: "solid" },
+          { x: 185 + dx, y: 132, w: 145, h: 20, type: "crumble", delay: crumbleDelay, triggerDist: 45 },
+          { x: 360 + dx, y: 132, w: 155, h: 22, type: useIce ? "ice" : "solid" },
+          { x: 540, y: 178, w: 120, h: 20, type: isHardNightmare ? "crumble" : "solid", delay: crumbleDelay, triggerDist: 45 },
           { x: 625, y: 220, w: 155, h: 26, type: "solid" }
         ],
         spikes: [
-          { x: 165, y: 222, w: 24, h: 14, dir: "up", hidden: true, triggerDist: 80 },
-          { x: 435 + dx, y: 140, w: 26, h: 15, dir: "up", hidden: true, triggerDist: 80 }
+          { x: 195, y: 222, w: 24, h: 14, dir: "up", hidden: true, triggerDist: 80 },
+          { x: 435 + dx, y: 132, w: 26, h: 15, dir: "up", hidden: true, triggerDist: 85, slideX: isHardNightmare ? 405 + dx : undefined },
+          ...(isHardNightmare ? [{ x: 655, y: 220, w: 26, h: 15, dir: "up", hidden: true, triggerDist: 85 }] : [])
         ],
         objects: [
-          { type: "switch", x: 405 + dx, y: 130, isFake: false, color: "#10b981" },
-          { type: "fakePortal", x: 120, y: 328, tpX: 35, tpY: 344 },
+          { type: "switch", x: 395 + dx, y: 122, isFake: false, color: "#10b981" },
+          { type: "fakePortal", x: 175, y: 276, tpX: 35, tpY: 344 },
+          ...(isHardNightmare ? [
+            { type: "sawSpawner", triggerX: 190, spawnX: 775, spawnY: 108, vx: sawSpeed1 },
+            { type: "sawSpawner", triggerX: 410, spawnX: 775, spawnY: 196, vx: sawSpeed2 }
+          ] : []),
           { type: "sign", x: 60, y: 352, text: "CLIMB LEFT TOWER STEPS!" }
         ]
       };
     } else if (arch === 3) {
-      // Archetype 3: Sunken Canyon Amphitheater (Step down into the valley, hit switch, step up right terraces)
+      // Archetype 3: Sunken Canyon Amphitheater
       SUBLEVELS[key] = {
         title,
         falseHint: "Never go down into the central stepped pit—it has no way back up!",
-        trueGuide: "Descend the left canyon steps (Y: 160 -> 215 -> 270 -> 325 -> 380), hit the green switch at the bottom altar (X: 385), then jump up the right-hand stepped terraces (Y: 380 -> 325 -> 270 -> 215 -> 160) to the exit!",
+        trueGuide: "Descend the left canyon steps (Y: 160 -> 215 -> 270 -> 325 -> 380), hit the green switch at the bottom altar (X: 388), then jump up the right-hand stepped terraces (Y: 380 -> 325 -> 270 -> 215 -> 160) to the exit!",
         spawn: { x: 35, y: 120 },
-        portal: { x: 725, y: 104, behavior: "locked", startsLocked: true },
+        portal: { x: 725, y: 104, behavior: isHardNightmare ? "runaway" : "locked", targetX: 675, triggerDist: 90, startsLocked: true },
         lavaY: 424,
         platforms: [
           { x: 15, y: 160, w: 125, h: 24, type: "solid" },
-          { x: 110, y: 215, w: 115, h: 20, type: "solid" },
+          { x: 110, y: 215, w: 115, h: 20, type: isHardNightmare ? "ice" : "solid" },
           { x: 195, y: 270, w: 115, h: 20, type: "solid" },
-          { x: 270, y: 325, w: 115, h: 20, type: "solid" },
+          { x: 270, y: 325, w: 115, h: 20, type: isHardNightmare ? "crumble" : "solid", delay: crumbleDelay, triggerDist: 45 },
           { x: 330, y: 380, w: 145, h: 40, type: "solid" },
           { x: 435, y: 325, w: 115, h: 20, type: useIce ? "ice" : "solid" },
-          { x: 510, y: 270, w: 115, h: 20, type: "crumble", delay: 6, triggerDist: 65 },
-          { x: 585, y: 215, w: 115, h: 20, type: "solid" },
+          { x: 510, y: 270, w: 115, h: 20, type: "crumble", delay: crumbleDelay, triggerDist: 45 },
+          { x: 585, y: 215, w: 115, h: 20, type: useIce ? "ice" : "solid" },
           { x: 650, y: 160, w: 135, h: 24, type: "solid" }
         ],
         spikes: [
           { x: 235, y: 270, w: 24, h: 14, dir: "up", hidden: true, triggerDist: 80 },
-          { x: 625, y: 215, w: 24, h: 14, dir: "up", hidden: true, triggerDist: 80 }
+          { x: 625, y: 215, w: 24, h: 14, dir: "up", hidden: true, triggerDist: 80, slideX: isHardNightmare ? 600 : undefined }
         ],
         objects: [
           { type: "switch", x: 388, y: 370, isFake: false, color: "#10b981" },
-          { type: "sawSpawner", triggerX: 340, spawnX: 775, spawnY: 356, vx: -(8.0 + v * 0.5) },
+          { type: "sawSpawner", triggerX: 310, spawnX: 775, spawnY: 356, vx: sawSpeed1 },
+          ...(isHardNightmare ? [
+            { type: "sawSpawner", triggerX: 450, spawnX: 775, spawnY: 190, vx: sawSpeed2 }
+          ] : []),
           { type: "sign", x: 65, y: 128, text: "DESCEND & CLIMB THE V-STEPS!" }
         ]
       };
     } else if (arch === 4) {
-      // Archetype 4: Spiral Stepped Atrium (Climb around the perimeter to the center floating sanctum)
+      // Archetype 4: Spiral Stepped Atrium (Staggered outer steps with clear vertical jump channels)
       SUBLEVELS[key] = {
         title,
         falseHint: "Touch the center golden gem from underneath to win!",
-        trueGuide: "Climb the outer perimeter steps: Bottom-Left (Y: 382) -> Bottom-Right (Y: 330 -> 276) -> Upper-Right (Y: 222 -> 168) -> Top Bridge (Y: 116), then drop onto the central suspended Sanctum Portal (X: 390, Y: 224)!",
+        trueGuide: "Climb the perimeter steps: Bottom-Left (Y: 382) -> Mid-Low (Y: 336) -> Bottom-Right (Y: 292) -> Right Ledge (Y: 240) -> Upper-Right (Y: 188) -> TopRight (Y: 136) -> Top Bridge (Y: 92), then drop onto the central Sanctum Portal (Y: 224)!",
         spawn: { x: 38, y: 342 },
-        portal: { x: 390 + dx, y: 168, behavior: "static" },
+        portal: { x: 385 + dx, y: 168, behavior: isHardNightmare ? "runaway" : "static", targetX: 430 + dx, triggerDist: 85 },
         lavaY: 424,
         platforms: [
-          { x: 15, y: 382, w: 260, h: 40, type: "solid" },
-          { x: 305, y: 342, w: 185, h: 22, type: "solid" },
-          { x: 520, y: 300, w: 260, h: 24, type: "solid" },
-          { x: 625, y: 246, w: 155, h: 20, type: "solid" },
-          { x: 515, y: 192, w: 145, h: 20, type: "solid" },
-          { x: 620, y: 138, w: 160, h: 20, type: "solid" },
-          { x: 240, y: 96, w: 360, h: 20, type: useIce ? "ice" : "solid" },
-          { x: 330 + dx, y: 224, w: 160, h: 24, type: "solid" }
+          { x: 15, y: 382, w: 250, h: 40, type: "solid" },
+          { x: 290, y: 336, w: 185, h: 20, type: isHardNightmare ? "ice" : "solid" },
+          { x: 500, y: 292, w: 150, h: 20, type: "solid" },
+          { x: 645, y: 240, w: 140, h: 20, type: useIce ? "ice" : "solid" },
+          { x: 500, y: 188, w: 140, h: 20, type: isHardNightmare ? "crumble" : "solid", delay: crumbleDelay, triggerDist: 45 },
+          { x: 640, y: 136, w: 145, h: 20, type: "solid" },
+          { x: 235, y: 92, w: 385, h: 20, type: useIce ? "ice" : "solid" },
+          { x: 330 + dx, y: 224, w: 155, h: 24, type: "solid" }
         ],
         spikes: [
-          { x: 610, y: 300, w: 26, h: 15, dir: "up", hidden: true, triggerDist: 80 },
-          { x: 380, y: 96, w: 26, h: 15, dir: "up", hidden: true, triggerDist: 80 }
+          { x: 565, y: 292, w: 26, h: 15, dir: "up", hidden: true, triggerDist: 80 },
+          { x: 380, y: 92, w: 26, h: 15, dir: "up", hidden: true, triggerDist: 85, slideX: isHardNightmare ? 345 : undefined }
         ],
         objects: [
           { type: "gem", x: 200, y: 338, isTrap: true, label: "TRAP GEM" },
-          { type: "sawSpawner", triggerX: 320, spawnX: 775, spawnY: 276, vx: -(8.4 + v * 0.4) },
+          { type: "sawSpawner", triggerX: 300, spawnX: 775, spawnY: 268, vx: sawSpeed1 },
+          ...(isHardNightmare ? [
+            { type: "sawSpawner", triggerX: 520, spawnX: 25, spawnY: 68, vx: -sawSpeed2 }
+          ] : []),
           { type: "sign", x: 85, y: 350, text: "SPIRAL UP TO CENTER CORE!" }
         ]
       };
     } else if (arch === 5) {
-      // Archetype 5: Split-Level Double Staircase (Upper vs Lower Stepped Paths)
+      // Archetype 5: Split-Level Double Staircase
       SUBLEVELS[key] = {
         title,
         falseHint: "Take the lower stepped path to the bottom-right portal!",
         trueGuide: "The bottom-right portal is a decoy! Climb the upper stepped path (Y: 380 -> 326 -> 272 -> 218 -> 164 -> 112) and enter the true upper-right portal!",
         spawn: { x: 38, y: 340 },
-        portal: { x: 720, y: 56, behavior: "runaway", targetX: 670, triggerDist: 90 },
+        portal: { x: 720, y: 56, behavior: "runaway", targetX: 665, triggerDist: 95 },
         lavaY: 424,
         platforms: [
-          { x: 15, y: 380, w: 170, h: 42, type: "solid" },
-          { x: 140, y: 326, w: 125, h: 20, type: "solid" },
-          { x: 240 + dx, y: 272, w: 125, h: 20, type: "solid" },
-          { x: 345 + dx, y: 218, w: 130, h: 20, type: "crumble", delay: 6, triggerDist: 65 },
-          { x: 455 + dx, y: 164, w: 135, h: 20, type: "solid" },
-          { x: 575, y: 112, w: 205, h: 24, type: "solid" },
-          // Lower decoy steps
-          { x: 240, y: 365, w: 150, h: 22, type: "solid" },
-          { x: 420, y: 350, w: 150, h: 22, type: "crumble", delay: 4, triggerDist: 65 },
-          { x: 600, y: 350, w: 180, h: 40, type: "solid" }
+          { x: 15, y: 380, w: 165, h: 42, type: "solid" },
+          { x: 140, y: 326, w: 120, h: 20, type: isHardNightmare ? "ice" : "solid" },
+          { x: 240 + dx, y: 272, w: 120, h: 20, type: "solid" },
+          { x: 345 + dx, y: 218, w: 125, h: 20, type: "crumble", delay: crumbleDelay, triggerDist: 45 },
+          { x: 455 + dx, y: 164, w: 130, h: 20, type: useIce ? "ice" : "solid" },
+          { x: 575, y: 112, w: 205, h: 24, type: useIce ? "ice" : "solid" },
+          // Lower decoy steps (shifted right so they never block upper jumps)
+          { x: 280, y: 376, w: 140, h: 22, type: "solid" },
+          { x: 450, y: 366, w: 130, h: 22, type: "crumble", delay: 4, triggerDist: 45 },
+          { x: 605, y: 356, w: 175, h: 40, type: "solid" }
         ],
         spikes: [
           { x: 285 + dx, y: 272, w: 24, h: 14, dir: "up", hidden: true, triggerDist: 80 },
-          { x: 635, y: 112, w: 26, h: 15, dir: "up", hidden: true, triggerDist: 80 }
+          { x: 635, y: 112, w: 26, h: 15, dir: "up", hidden: true, triggerDist: 85, slideX: isHardNightmare ? 605 : undefined }
         ],
         objects: [
-          { type: "fakePortal", x: 715, y: 294, tpX: 38, tpY: 340 },
+          { type: "fakePortal", x: 715, y: 300, tpX: 38, tpY: 340 },
           { type: "orb", orbType: "reverse", x: 500 + dx, y: 130, radius: 42 },
+          ...(isHardNightmare ? [
+            { type: "sawSpawner", triggerX: 260, spawnX: 775, spawnY: 140, vx: sawSpeed1 },
+            { type: "sawSpawner", triggerX: 460, spawnX: 775, spawnY: 88, vx: sawSpeed2 }
+          ] : []),
           { type: "sign", x: 75, y: 348, text: "CLIMB HIGH STEPS FOR REAL EXIT!" }
         ]
       };
     } else if (arch === 6) {
-      // Archetype 6: Gravity-Step Mirror Sanctum (Climb lower steps, flip to stepped ceiling, flip back to stepped citadel)
+      // Archetype 6: Gravity-Step Mirror Sanctum
       SUBLEVELS[key] = {
         title,
         falseHint: "Never touch the Purple Orb on the 3rd step!",
         trueGuide: "Climb the first 3 steps (Y: 382 -> 328 -> 274), touch the Purple Gravity Orb at X: 295 to flip onto the ceiling staircase, run across the ceiling, touch the second Orb at X: 565, and land on the right stepped altar!",
         spawn: { x: 38, y: 342 },
-        portal: { x: 720, y: 218, behavior: "static" },
+        portal: { x: 720, y: 218, behavior: isHardNightmare ? "runaway" : "static", targetX: 675, triggerDist: 90 },
         lavaY: 424,
         platforms: [
           { x: 15, y: 382, w: 145, h: 40, type: "solid" },
-          { x: 135, y: 328, w: 120, h: 20, type: "solid" },
+          { x: 135, y: 328, w: 120, h: 20, type: isHardNightmare ? "ice" : "solid" },
           { x: 235, y: 274, w: 135, h: 22, type: "solid" },
           { x: 245, y: 46, w: 355, h: 26, type: useIce ? "ice" : "solid" },
-          { x: 535, y: 328, w: 135, h: 22, type: "solid" },
-          { x: 635, y: 274, w: 150, h: 40, type: "solid" }
+          { x: 535, y: 328, w: 135, h: 22, type: isHardNightmare ? "crumble" : "solid", delay: crumbleDelay + 2, triggerDist: 45 },
+          { x: 635, y: 274, w: 150, h: 40, type: useIce ? "ice" : "solid" }
         ],
         spikes: [
           { x: 405, y: 72, w: 28, h: 15, dir: "down", hidden: true, triggerDist: 85 },
-          { x: 665, y: 274, w: 26, h: 15, dir: "up", hidden: true, triggerDist: 85 }
+          { x: 665, y: 274, w: 26, h: 15, dir: "up", hidden: true, triggerDist: 85, slideX: isHardNightmare ? 642 : undefined }
         ],
         objects: [
           { type: "orb", orbType: "gravity", x: 295, y: 232 },
           { type: "orb", orbType: "gravity", x: 565, y: 102 },
+          ...(isHardNightmare ? [
+            { type: "sawSpawner", triggerX: 200, spawnX: 775, spawnY: 250, vx: sawSpeed1 }
+          ] : []),
           { type: "sign", x: 70, y: 350, text: "STEP UP TO GRAVITY ORB!" }
         ]
       };
     } else {
-      // Archetype 7: 5-Layer Stepped Boss Arena (Interconnected multi-floor grid with normal-jump steps on both ends)
+      // Archetype 7: 5-Layer Stepped Boss Arena (Wide open jump shafts on left & right ends so player never bonks head!)
       SUBLEVELS[key] = {
         title,
         falseHint: "Stay on Floor 1—the upper 4 floors are locked!",
-        trueGuide: "5-Layer Stepped Citadel! Use the alternating step-blocks (every floor is 54px apart: Y: 384 -> 330 -> 276 -> 222 -> 168 -> 114) to climb all the way to Floor 5, press the switch at X: 420, and reach the top-right portal!",
+        trueGuide: "5-Layer Stepped Citadel! Use the alternating end-steps (Y: 384 -> 330 -> 276 -> 222 -> 168 -> 114, each with open jump shafts) to climb to Floor 5, press the switch at X: 390, and reach the top-right portal!",
         spawn: { x: 38, y: 344 },
         portal: { x: 720, y: 58, behavior: "runaway", targetX: 660, triggerDist: 95, startsLocked: true },
         lavaY: 424,
         platforms: [
-          { x: 15, y: 384, w: 620, h: 38, type: "solid" },
-          { x: 580, y: 330, w: 195, h: 20, type: "solid" },
-          { x: 160, y: 276, w: 460, h: 20, type: useIce ? "ice" : "solid" },
-          { x: 25, y: 222, w: 185, h: 20, type: "solid" },
-          { x: 175, y: 168, w: 450, h: 20, type: "solid" },
-          { x: 580, y: 114, w: 200, h: 24, type: "solid" },
-          { x: 340, y: 114, w: 190, h: 20, type: "crumble", delay: 6, triggerDist: 65 }
+          { x: 15, y: 384, w: 545, h: 38, type: "solid" },
+          { x: 590, y: 330, w: 190, h: 20, type: isHardNightmare ? "ice" : "solid" },
+          { x: 215, y: 276, w: 355, h: 20, type: useIce ? "ice" : "solid" },
+          { x: 20, y: 222, w: 175, h: 20, type: "solid" },
+          { x: 215, y: 168, w: 355, h: 20, type: isHardNightmare ? "ice" : "solid" },
+          { x: 590, y: 114, w: 195, h: 24, type: "solid" },
+          { x: 330, y: 104, w: 220, h: 18, type: "crumble", delay: crumbleDelay + 2, triggerDist: 45 }
         ],
         spikes: [
           { x: 330, y: 384, w: 28, h: 16, dir: "up", hidden: true, triggerDist: 85 },
-          { x: 380, y: 276, w: 28, h: 16, dir: "up", hidden: true, triggerDist: 85 },
-          { x: 390, y: 168, w: 28, h: 16, dir: "up", hidden: true, triggerDist: 85 }
+          { x: 380, y: 276, w: 28, h: 16, dir: "up", hidden: true, triggerDist: 85, slideX: isHardNightmare ? 345 : undefined },
+          { x: 390, y: 168, w: 28, h: 16, dir: "up", hidden: true, triggerDist: 85, slideX: isHardNightmare ? 425 : undefined }
         ],
         objects: [
-          { type: "switch", x: 420, y: 104, isFake: false, color: "#10b981" },
-          { type: "sawSpawner", triggerX: 250, spawnX: 775, spawnY: 252, vx: -(8.6 + v * 0.4) },
+          { type: "switch", x: 390, y: 94, isFake: false, color: "#10b981" },
+          { type: "sawSpawner", triggerX: 240, spawnX: 775, spawnY: 252, vx: sawSpeed1 },
+          ...(isHardNightmare ? [
+            { type: "sawSpawner", triggerX: 350, spawnX: 775, spawnY: 144, vx: sawSpeed2 }
+          ] : []),
           { type: "sign", x: 85, y: 352, text: "CLIMB ALL 5 STEPPED FLOORS!" }
         ]
       };
@@ -1795,6 +2005,10 @@ const GameApp = {
 
   // --- MULTI-SCREEN NAVIGATION ROUTER ---
   showScreen(screenName) {
+    if (this.stateMode === "hostage_250" && !this.hostageOverlayShown && screenName !== "gameplay") {
+      this.showToast("⛓️ NO ESCAPE! You cannot leave until the Devil's Execution finishes!", "amber");
+      return;
+    }
     if (this.currentScreen && this.currentScreen !== screenName && this.currentScreen !== "intro") {
       this.previousScreen = this.currentScreen;
     }
@@ -1828,6 +2042,11 @@ const GameApp = {
       const worldTrack = WORLD_META[this.currentWorld - 1]?.musicTrack || "world1";
       sfx.setMusicTrack(worldTrack);
       this.applyConsoleConfigToDOM();
+      setTimeout(() => {
+        if (this.currentScreen === "gameplay" && this.stateMode !== "hostage_250") {
+          this.checkPendingHostageExecution();
+        }
+      }, 60);
     } else {
       this.isPaused = true;
       if (screenName === "home" || screenName === "levels" || screenName === "help" || screenName === "settings") {
@@ -1923,9 +2142,29 @@ const GameApp = {
   },
 
   enterGameplay(world = this.currentWorld, sub = this.currentSub) {
+    if (this.isHostageExecutionLocked()) return;
     sfx.buttonClick();
     this.loadStage(world, sub, false);
     this.showScreen("gameplay");
+    this.checkPendingHostageExecution();
+  },
+
+  isHostageExecutionLocked() {
+    if (this.stateMode === "hostage_250" && !this.hostageOverlayShown) {
+      this.showToast("⛓️ NO ESCAPE! Watch the 8-second Devil Execution until it finishes!", "amber");
+      return true;
+    }
+    return false;
+  },
+
+  checkPendingHostageExecution() {
+    let lockedInStorage = false;
+    try {
+      lockedInStorage = localStorage.getItem("mokuttan_voxel_hostage_lock") === "1";
+    } catch (e) {}
+    if (this.totalDeaths >= 250 || lockedInStorage) {
+      this.startHostage250Scene("Reached 250+ Total Deaths — Dragged to the Devil's Palace!");
+    }
   },
 
   renderMainMenuStats() {
@@ -2139,7 +2378,15 @@ const GameApp = {
       }
     } catch (e) {}
 
-    const isStandalone = window.matchMedia("(display-mode: fullscreen)").matches ||
+    const isCapacitorNative = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+    if (isCapacitorNative && window.Capacitor.Plugins) {
+      try {
+        window.Capacitor.Plugins.StatusBar?.hide?.();
+        window.Capacitor.Plugins.SplashScreen?.hide?.();
+      } catch (e) {}
+    }
+    const isStandalone = isCapacitorNative ||
+                         window.matchMedia("(display-mode: fullscreen)").matches ||
                          window.matchMedia("(display-mode: standalone)").matches ||
                          window.navigator.standalone === true;
     if (isStandalone) {
@@ -2399,7 +2646,7 @@ const GameApp = {
           pDelay = Math.max(3, Math.floor(pDelay * 0.6));
         } else if (mutation.id === "ice_patch" && pType === "solid" && idx === 1) {
           pType = "ice";
-        } else if (mutation.id === "phantom_floor" && pType === "solid" && idx > 0 && idx < raw.platforms.length - 1) {
+        } else if (mutation.id === "phantom_floor" && pType === "solid" && idx === 2 && this.stageKey !== "2-1") {
           pType = "invisible";
         } else if (mutation.id === "turbo_piston" && pType === "crusher") {
           pSpeed = Math.min(18, pSpeed + 3);
@@ -2511,6 +2758,7 @@ const GameApp = {
         triggered: false,
         hopDone: false,
         vy: 0,
+        doorOpen: 0,
         locked: raw.portal.behavior === "locked" || !!raw.portal.startsLocked
       },
       platforms: clonedPlatforms,
@@ -2537,13 +2785,30 @@ const GameApp = {
 
     this.stateMode = "playing";
     this.ceremonyType = null;
+    this.ceremonyTick = 0;
+    this.hostageTick = 0;
+    this.hostageOverlayShown = false;
+    this.doorWalkTimer = 0;
+    this.nextWalkTarget = null;
+    const stOverlay = document.getElementById("stageOverlay");
+    if (stOverlay) {
+      stOverlay.classList.remove("items-end", "pb-3", "bg-black/25");
+      stOverlay.classList.add("items-center", "bg-black/80");
+    }
     this.isPaused = false;
     this.particles = [];
     this.floatingTexts = [];
-    this.initDevilHunterForStage();
 
-    if (this.chaosMutator && attempt > 1) {
-      this.addFloatingText(400, 95, `🎲 CHAOS REMIX: ${mutation.name.toUpperCase()}!`, "#c084fc");
+    // Trigger Interactive Playable Story Prologue whenever the user starts Sub-Level 1 of ANY World (1-1, 2-1, 3-1) on a fresh start!
+    if (sub === 1 && !isRetry && !this.skipPrologueOnce) {
+      this.initStoryPrologue(world);
+    } else {
+      this.skipPrologueOnce = false;
+      this.storyPrologue = null;
+      this.initDevilHunterForStage();
+      if (this.chaosMutator && attempt > 1) {
+        this.addFloatingText(400, 95, `🎲 CHAOS REMIX: ${mutation.name.toUpperCase()}!`, "#c084fc");
+      }
     }
 
     this.updateHUD();
@@ -2571,6 +2836,89 @@ const GameApp = {
     }
 
     if (this.shakeTimer > 0) this.shakeTimer--;
+
+    // Advance 8-Second (8000ms real-time) 3D Royal Palace Slow-Mo Cinematic when World 32nd Stage is won
+    if (this.stateMode === "won" && this.ceremonyType) {
+      if (!this.ceremonyStartTime) this.ceremonyStartTime = performance.now();
+      const elapsedMs = Math.max(0, performance.now() - this.ceremonyStartTime);
+      const prevTick = this.ceremonyTick || 0;
+      // Map 8000ms (8.0 real seconds) to 450 virtual ticks so 60Hz, 120Hz, and 144Hz screens all play for a full 8 seconds!
+      const rawStep = prevTick + 1;
+      const timeStep = Math.floor((elapsedMs / 8000) * 450);
+      this.ceremonyTick = (elapsedMs > 0) ? timeStep : rawStep;
+
+      if (prevTick < 15 && this.ceremonyTick >= 15) {
+        sfx.devilCrySound();
+      } else if (prevTick < 75 && this.ceremonyTick >= 75) {
+        sfx.devilCrySound();
+      } else if (prevTick < 155 && this.ceremonyTick >= 155) {
+        sfx.win();
+      } else if (prevTick < 285 && this.ceremonyTick >= 285) {
+        sfx.praising();
+      }
+      if (this.ceremonyTick >= 450 && !this.ceremonyOverlayShown) {
+        // Cinematic finished (full 8.0 seconds)! Now reveal the Next World / Retry popup overlay!
+        this.ceremonyOverlayShown = true;
+        const stOverlay = document.getElementById("stageOverlay");
+        if (stOverlay) {
+          stOverlay.classList.remove("hidden");
+        }
+      }
+      this.keys.jumpJustPressed = false;
+      return;
+    }
+
+    // Advance 250th-Death Hostage & Devil Execution Palace Cinematic (Triggers every 250th total death!)
+    if (this.stateMode === "hostage_250") {
+      this.updateHostage250Scene();
+      this.keys.jumpJustPressed = false;
+      return;
+    }
+
+    // Advance Interactive Playable Story Prologue (Sublevel 1 of World 1, 2, or 3!)
+    if (this.stateMode === "story_prologue" && this.storyPrologue) {
+      this.updateStoryPrologue();
+      return;
+    }
+
+    // Interactive Door-Opening & Player Auto-Walk Transition (triggered when clicking Next!)
+    if (this.stateMode === "next_door_walk" && this.stage && this.player) {
+      this.doorWalkTimer = (this.doorWalkTimer || 0) + 1;
+      const port = this.stage.portal;
+      const p = this.player;
+      port.locked = false;
+
+      // Phase 1 (0..22): Heavy Sanctuary Door swings wide open
+      port.doorOpen = Math.min(1, this.doorWalkTimer / 20);
+
+      // Phase 2 (12..58): Player automatically walks toward and into the open doorway
+      if (this.doorWalkTimer >= 12) {
+        const targetX = port.x + port.w / 2 - p.w / 2;
+        const targetY = port.y + port.h - p.h;
+        const dx = targetX - p.x;
+        const dy = targetY - p.y;
+        p.facing = dx >= 0 ? 1 : -1;
+        p.vx = Math.sign(dx) * Math.min(3.6, Math.abs(dx) * 0.18);
+        p.x += p.vx;
+        p.y += dy * 0.18;
+        p.onGround = true;
+        p.animTick += 0.38;
+        if (this.doorWalkTimer % 6 === 0) {
+          this.spawnParticles(port.x + port.w / 2, port.y + port.h - 6, "#fde047", 3);
+        }
+      }
+
+      // Phase 3 (58..68): Door closes behind player & loads next stage
+      if (this.doorWalkTimer >= 58) {
+        port.doorOpen = Math.max(0.2, 1 - (this.doorWalkTimer - 58) / 12);
+      }
+      if (this.doorWalkTimer >= 66) {
+        const dest = this.nextWalkTarget || { world: this.currentWorld, sub: this.currentSub + 1 };
+        this.loadStage(dest.world, dest.sub, false);
+      }
+      this.keys.jumpJustPressed = false;
+      return;
+    }
 
     if (this.stateMode !== "playing" || !this.stage || !this.player) {
       this.keys.jumpJustPressed = false;
@@ -2643,21 +2991,36 @@ const GameApp = {
       }
 
       if (plat.type === "crumble" && plat.state === "idle") {
-        const nearTop = Math.abs((p.y + p.h) - plat.y) < 12 && p.x + p.w > plat.x - 12 && p.x < plat.x + plat.w + 12;
-        if (nearTop || dist < (plat.triggerDist || 55)) {
+        // Trigger ONLY when the player actually steps onto or lands right on top of the platform surface!
+        const steppingOnTop = p.gravityDir > 0
+          ? (Math.abs((p.y + p.h) - plat.y) <= 10 && p.x + p.w > plat.x + 2 && p.x < plat.x + plat.w - 2 && p.vy >= -1)
+          : (Math.abs(p.y - (plat.y + plat.h)) <= 10 && p.x + p.w > plat.x + 2 && p.x < plat.x + plat.w - 2 && p.vy <= 1);
+        if (steppingOnTop) {
           plat.state = "shaking";
-          plat.timer = plat.delay || 7;
+          plat.timer = plat.delay || 8;
           sfx.trapTrigger();
         }
       } else if (plat.type === "crumble" && plat.state === "shaking") {
         plat.timer--;
         if (plat.timer <= 0) {
           plat.state = "falling";
+          plat.respawnTimer = 0;
           this.spawnParticles(plat.x + plat.w / 2, plat.y + 8, "#a16207", 8);
         }
       } else if (plat.type === "crumble" && plat.state === "falling") {
         plat.vy += 0.65;
         plat.y += plat.vy;
+        if (plat.y > 470) {
+          plat.respawnTimer = (plat.respawnTimer || 0) + 1;
+          // Auto-regrow crumbled bridges after ~1.8s so multi-layer switch stages never soft-lock!
+          if (plat.respawnTimer > 110) {
+            plat.y = plat.origY;
+            plat.vy = 0;
+            plat.state = "idle";
+            plat.respawnTimer = 0;
+            this.spawnParticles(plat.x + plat.w / 2, plat.y + 8, "#4ade80", 6);
+          }
+        }
       }
 
       if (plat.type === "crusher") {
@@ -2822,7 +3185,7 @@ const GameApp = {
           }
         }
       } else if (obj.type === "switch" && !obj.pressed) {
-        const box = { x: obj.x, y: obj.y, w: 28, h: 10 };
+        const box = { x: obj.x - 6, y: obj.y - 12, w: 40, h: 24 };
         if (this.aabb(p, box)) {
           obj.pressed = true;
           if (obj.isFake) {
@@ -2927,20 +3290,29 @@ const GameApp = {
 
   killPlayer(reason) {
     if (this.stateMode !== "playing") return;
-    this.stateMode = "dead";
     this.totalDeaths++;
     this.stageDeaths[this.stage.key] = (this.stageDeaths[this.stage.key] || 0) + 1;
     this.unsavedChanges = true;
     this.shakeTimer = 14;
     sfx.death();
-    if ((this.stageDeaths[this.stage.key] || 0) >= 2 || this.currentSub > 28 || this.totalDeaths % 2 === 0) {
-      setTimeout(() => sfx.devilLaugh(), 200);
-    }
 
     this.spawnParticles(this.player.x + 12, this.player.y + 15, "#ef4444", 24);
     this.spawnParticles(this.player.x + 12, this.player.y + 15, "#f59e0b", 12);
 
+    // SPECIAL 250th DEATH MILESTONE: Whenever totalDeaths reaches >= 250, the player is tied up by Bats,
+    // taken hostage to the Devil's Palace for a full unskippable 8-second execution, and totalDeaths resets to 0!
+    if (this.totalDeaths >= 250) {
+      this.startHostage250Scene(reason);
+      return;
+    }
+
+    this.stateMode = "dead";
+    if ((this.stageDeaths[this.stage.key] || 0) >= 2 || this.currentSub > 28 || this.totalDeaths % 2 === 0) {
+      setTimeout(() => sfx.devilLaugh(), 200);
+    }
+
     const bestPct = this.stageBestPct[this.stage.key] || 15;
+    const remTo250 = 250 - (this.totalDeaths % 250);
     const taunt = TROLL_TAUNTS[this.totalDeaths % TROLL_TAUNTS.length];
     document.getElementById("overlayBadge").textContent = `STAGE FAILED • ${bestPct}% TO EXIT PORTAL`;
     document.getElementById("overlayBadge").className = "inline-block px-3 py-1 rounded text-xs font-bold uppercase tracking-wider bg-red-500/20 text-red-300 border border-red-500/40 mb-2";
@@ -2949,7 +3321,7 @@ const GameApp = {
       <span class="text-white font-semibold">${reason}</span><br/>
       <span class="text-amber-300 italic">"${taunt}"</span><br/>
       <span class="inline-block mt-2 px-2.5 py-1 rounded bg-purple-950/90 border border-purple-500/40 text-purple-200 text-[11px] font-mono">
-        🎲 Next Retry Will Remix Traps • Best Distance: ${bestPct}%
+        💀 Total Fails: ${this.totalDeaths}/250 (${remTo250} left until Devil's Palace Hostage Execution!) • Best: ${bestPct}%
       </span>
     `;
     document.getElementById("btnOverlayNext").classList.add("hidden");
@@ -2972,39 +3344,60 @@ const GameApp = {
 
     const isLastInWorld = this.currentSub === STAGES_PER_WORLD;
     const isFinalStage = this.currentWorld === 3 && this.currentSub === STAGES_PER_WORLD;
+    const stOverlay = document.getElementById("stageOverlay");
 
-    if (isFinalStage) {
-      this.ceremonyType = "real_devil_king";
-      sfx.praising();
-    } else if (isLastInWorld) {
-      this.ceremonyType = "devil_brother";
+    if (isLastInWorld) {
+      this.ceremonyType = `world_palace_${this.currentWorld}`;
+      this.ceremonyTick = 0;
+      this.ceremonyStartTime = performance.now();
+      this.ceremonyOverlayShown = false;
+      sfx.startMusic("victory_palace");
       sfx.praising();
     } else {
       this.ceremonyType = null;
+      this.ceremonyTick = 0;
+      this.ceremonyOverlayShown = false;
     }
 
-    document.getElementById("overlayBadge").textContent = isFinalStage
-      ? "👑 SUPREME DEMON KING BOWS TO YOU!"
-      : isLastInWorld
-      ? "🙇 DEVIL KING'S BROTHER CROWNS YOU KING!"
+    if (stOverlay) {
+      stOverlay.classList.remove("items-end", "pb-3", "bg-black/25");
+      stOverlay.classList.add("items-center", "bg-black/80");
+    }
+
+    const palaceTitles = {
+      1: "👑 WORLD 1 CONQUERED — FOREST DEMON LORD BOWS IN THE EMERALD PALACE!",
+      2: "👑 WORLD 2 CONQUERED — ELDER DEMON WARLORD BOWS IN THE HEARTWOOD HALL!",
+      3: "👑 ALL 96 STAGES CLEARED — SUPREME DEMON KING BOWS IN THE IMPERIAL CITADEL!"
+    };
+
+    document.getElementById("overlayBadge").textContent = isLastInWorld
+      ? palaceTitles[this.currentWorld]
       : "SUB-LEVEL CLEARED!";
-    document.getElementById("overlayBadge").className = "inline-block px-3 py-1 rounded text-xs font-bold uppercase tracking-wider bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 mb-2";
+    document.getElementById("overlayBadge").className = "inline-block px-3 py-1 rounded text-xs font-bold uppercase tracking-wider bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 mb-1";
     document.getElementById("overlayTitle").textContent = isFinalStage
       ? "THE REAL DEMON DEVIL KING BOWS HIS HEAD!"
       : isLastInWorld
-      ? `WORLD ${this.currentWorld} CONQUERED — YOU ARE THE KING!`
+      ? `WORLD ${this.currentWorld} CONQUERED — THE MONARCH RISES!`
       : `Stage ${this.currentWorld}-${this.currentSub} Complete!`;
-    document.getElementById("overlayReason").innerHTML = isFinalStage
-      ? `<span class="text-amber-300 font-bold">"Impossible... You survived all 96 trials and my deadliest hunts! I, the Real Demon Devil King, bow my head in eternal praise—YOU are the Supreme Emperor of Voxel Devil!"</span>`
-      : isLastInWorld
-      ? `<span class="text-emerald-300 font-bold">"I, the Devil King's Brother, bow before your skill and crown you King of World ${this.currentWorld}! Dare you enter World ${this.currentWorld + 1}?"</span>`
-      : `You outsmarted every trap in ${this.stage.title} (Chaos: ${this.stage.mutation.name}). Ready for Stage ${this.currentWorld}-${this.currentSub + 1}?`;
+    document.getElementById("overlayReason").innerHTML = isLastInWorld
+      ? `<span class="text-amber-300 font-bold text-xs">"The defeated Devil of World ${this.currentWorld} has bowed his head and surrendered his crown to you! Choose whether to advance to the next World or replay this finale."</span>`
+      : `You outsmarted every trap in ${this.stage.title}. Click <strong>Open Door &amp; Walk In ▶</strong> to open the sanctuary door and walk inside!`;
 
     const nextBtn = document.getElementById("btnOverlayNext");
     nextBtn.classList.remove("hidden");
-    nextBtn.textContent = isFinalStage ? "Play Replay (1-1)" : "Next Sub-Level ▶";
+    nextBtn.textContent = isFinalStage
+      ? "👑 Play New Game+ (1-1)"
+      : isLastInWorld
+      ? `🏰 Advance to World ${this.currentWorld + 1} ▶`
+      : "🚪 Open Door & Walk In ▶";
 
-    document.getElementById("stageOverlay").classList.remove("hidden");
+    // IMPORTANT: For Stage 32 World Finales, keep #stageOverlay HIDDEN during the 7.5-second 3D Cinematic
+    // so the screen is NEVER blurred and the player enjoys the full unblocked Solo-Leveling style movie!
+    if (isLastInWorld) {
+      stOverlay?.classList.add("hidden");
+    } else {
+      stOverlay?.classList.remove("hidden");
+    }
     this.saveSessionToStorage(false);
     this.renderWorldCards();
     this.renderSubLevelGrid();
@@ -3012,17 +3405,48 @@ const GameApp = {
   },
 
   nextStage() {
-    document.getElementById("stageOverlay").classList.add("hidden");
+    if (this.isHostageExecutionLocked()) return;
+    if (this.stateMode === "won" && this.ceremonyType && !this.ceremonyOverlayShown) return;
+    const stOverlay = document.getElementById("stageOverlay");
+    const wasWonOverlayOpen = stOverlay && !stOverlay.classList.contains("hidden") && this.stateMode === "won";
+    stOverlay?.classList.add("hidden");
+
+    let targetWorld = this.currentWorld;
+    let targetSub = this.currentSub + 1;
     if (this.currentSub < STAGES_PER_WORLD) {
-      this.loadStage(this.currentWorld, this.currentSub + 1, false);
+      targetWorld = this.currentWorld;
+      targetSub = this.currentSub + 1;
     } else if (this.currentWorld < 3) {
-      this.loadStage(this.currentWorld + 1, 1, false);
+      targetWorld = this.currentWorld + 1;
+      targetSub = 1;
     } else {
-      this.loadStage(1, 1, false);
+      targetWorld = 1;
+      targetSub = 1;
     }
+
+    // If the user clicked "Next" after winning a stage, play the Door-Opening & Player Auto-Walk animation!
+    if (wasWonOverlayOpen && this.stage && this.player && !this.ceremonyType) {
+      this.stateMode = "next_door_walk";
+      this.doorWalkTimer = 0;
+      this.nextWalkTarget = { world: targetWorld, sub: targetSub };
+      this.stage.portal.locked = false;
+      this.stage.portal.doorOpen = 0.05;
+      sfx.doorOpenSound();
+      this.addFloatingText(
+        this.stage.portal.x,
+        Math.max(48, this.stage.portal.y - 18),
+        `🚪 DOOR OPENING -> STAGE ${targetWorld}-${targetSub}!`,
+        "#fde047"
+      );
+      return;
+    }
+
+    this.loadStage(targetWorld, targetSub, false);
   },
 
   prevStage() {
+    if (this.isHostageExecutionLocked()) return;
+    if (this.stateMode === "won" && this.ceremonyType && !this.ceremonyOverlayShown) return;
     document.getElementById("stageOverlay").classList.add("hidden");
     if (this.currentSub > 1) {
       this.loadStage(this.currentWorld, this.currentSub - 1, false);
@@ -3032,6 +3456,8 @@ const GameApp = {
   },
 
   restartStage() {
+    if (this.isHostageExecutionLocked()) return;
+    if (this.stateMode === "won" && this.ceremonyType && !this.ceremonyOverlayShown) return;
     document.getElementById("stageOverlay").classList.add("hidden");
     this.loadStage(this.currentWorld, this.currentSub, true);
   },
@@ -3301,7 +3727,7 @@ const GameApp = {
         const dx = pCx - dh.x;
         const dy = pCy - dh.y;
         const dist = Math.hypot(dx, dy) || 1;
-        const huntSpeed = 1.95; // Fast enough to be scary, slow enough for player (maxSpeed 4.5) to outrun & jump over!
+        const huntSpeed = (this.currentWorld === 3 && this.currentSub > 15) ? 2.45 : 1.95; // Fast enough to be scary, slow enough for player (maxSpeed 4.5) to outrun & jump over!
         dh.vx = (dx / dist) * huntSpeed;
         dh.vy = (dy / dist) * huntSpeed + Math.sin(dh.laughTick * 1.5) * 0.45;
         dh.x += dh.vx;
@@ -3356,7 +3782,8 @@ const GameApp = {
         dh.y = -90;
         dh.bats.forEach(b => { b.visible = false; b.alpha = 0; });
         // Random unexpected interval before next attack wave
-        dh.nextAmbushDelay = 155 + Math.floor(Math.random() * 130);
+        const isW3Nightmare = (this.currentWorld === 3 && this.currentSub > 15);
+        dh.nextAmbushDelay = isW3Nightmare ? (85 + Math.floor(Math.random() * 65)) : (155 + Math.floor(Math.random() * 130));
       }
     }
   },
@@ -3434,75 +3861,357 @@ const GameApp = {
     ctx.restore();
   },
 
-  drawScaryDevilSprite(ctx, x, y, scale, laughTick, time, labelText) {
+  drawScaryDevilSprite(ctx, x, y, scale, laughTick, time, labelText, opts = {}) {
+    // Full Articulated Humanoid Scary Devil Person (Not a box!)
+    // opts.pose: 'hunting' (default), 'sitting_crying', 'walking', 'bowing'
+    // opts.worldVariant: 1 (Forest Demon Lord), 2 (Elder Warlord Brother), 3 (Supreme Demon Emperor)
+    const worldVar = opts.worldVariant || (this.stage ? this.stage.world : 1);
+    const pose = opts.pose || "hunting";
+    const facing = opts.facing || -1; // -1 faces left toward player
+
+    // World-specific demonic color schemes & horn styles
+    const palettes = {
+      1: {
+        skin: "#991b1b", skinDark: "#450a0a", armor: "#14532d", armorTrim: "#4ade80",
+        cape: "#1c070b", capeEdge: "#dc2626", horn: "#fbbf24", eye: "#fef08a", aura: "rgba(220, 38, 38, 0.22)"
+      },
+      2: {
+        skin: "#b91c1c", skinDark: "#451a03", armor: "#78350f", armorTrim: "#f59e0b",
+        cape: "#270905", capeEdge: "#fb923c", horn: "#fde047", eye: "#ffedd5", aura: "rgba(245, 158, 11, 0.26)"
+      },
+      3: {
+        skin: "#7f1d1d", skinDark: "#1e0538", armor: "#3b0764", armorTrim: "#f43f5e",
+        cape: "#0f031d", capeEdge: "#c084fc", horn: "#facc15", eye: "#ffffff", aura: "rgba(244, 63, 94, 0.30)"
+      }
+    };
+    const pal = palettes[worldVar] || palettes[1];
+
     ctx.save();
     ctx.translate(x, y);
     ctx.scale(scale, scale);
 
-    // Dark shadow aura rings
-    ctx.fillStyle = "rgba(220, 38, 38, 0.16)";
+    // 1. Demonic Shadow Aura
+    const auraR = 32 + Math.sin(time * 5) * 4;
+    const auraGrad = ctx.createRadialGradient(0, 0, 4, 0, 0, auraR);
+    auraGrad.addColorStop(0, pal.aura);
+    auraGrad.addColorStop(1, "rgba(0,0,0,0)");
+    ctx.fillStyle = auraGrad;
     ctx.beginPath();
-    ctx.arc(0, 0, 28 + Math.sin(time * 5) * 4, 0, Math.PI * 2);
+    ctx.arc(0, 0, auraR, 0, Math.PI * 2);
     ctx.fill();
 
-    // Flapping demonic bat wings
-    const wingFlap = Math.sin(time * 6.5) * 11;
-    ctx.fillStyle = "#140207";
-    ctx.strokeStyle = "#dc2626";
-    ctx.lineWidth = 2;
+    ctx.save();
+    if (facing > 0) ctx.scale(-1, 1); // Default drawing faces LEFT (-1)
+
+    const isSitting = pose === "sitting_crying";
+    const isBowing = pose === "bowing";
+    const isWalking = pose === "walking";
+    const walkSwing = isWalking ? Math.sin(time * 9) * 6 : 0;
+    const bowAngle = isBowing ? (0.62 + Math.sin(time * 2.5) * 0.06) : 0;
+    const sobShake = isSitting ? Math.sin(time * 14) * 1.5 : 0;
+
+    // 2. Whipping Spaded Demon Tail behind body
+    ctx.strokeStyle = pal.skin;
+    ctx.lineWidth = 3;
     ctx.beginPath();
-    ctx.moveTo(-14, -4);
-    ctx.lineTo(-44, -24 + wingFlap);
-    ctx.lineTo(-34, 12 + wingFlap * 0.5);
+    ctx.moveTo(8, 10);
+    const tailWag = Math.sin(time * 5.5) * 8;
+    ctx.quadraticCurveTo(26, 14 + tailWag * 0.5, 30, -2 + tailWag);
+    ctx.stroke();
+    // Tail spade tip
+    ctx.fillStyle = pal.capeEdge;
+    ctx.beginPath();
+    ctx.moveTo(30, -2 + tailWag);
+    ctx.lineTo(36, -6 + tailWag);
+    ctx.lineTo(33, 3 + tailWag);
+    ctx.closePath();
+    ctx.fill();
+
+    // 3. Articulated Bat/Dragon Demon Wings
+    const wingFlap = isSitting ? -4 : isBowing ? -8 : Math.sin(time * 6.5) * 12;
+    ctx.fillStyle = pal.cape;
+    ctx.strokeStyle = pal.capeEdge;
+    ctx.lineWidth = 1.8;
+    // Left & Right Wing membranes with bone struts
+    [-1, 1].forEach(side => {
+      ctx.beginPath();
+      ctx.moveTo(side * 8, -8);
+      ctx.lineTo(side * 38, -26 + wingFlap);
+      ctx.lineTo(side * 32, -4 + wingFlap * 0.5);
+      ctx.lineTo(side * 22, 8 + wingFlap * 0.3);
+      ctx.lineTo(side * 10, 4);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+    });
+
+    // 4. Flowing Sovereign Demon Cape (Drawn BEHIND both legs so both legs are 100% visible!)
+    ctx.fillStyle = pal.cape;
+    ctx.strokeStyle = pal.capeEdge;
+    ctx.lineWidth = 1.4;
+    ctx.beginPath();
+    ctx.moveTo(-10, -12);
+    ctx.lineTo(15, -12);
+    ctx.lineTo(24 + Math.sin(time * 4) * 3, 22);
+    ctx.lineTo(-16, 22);
     ctx.closePath();
     ctx.fill();
     ctx.stroke();
 
-    ctx.beginPath();
-    ctx.moveTo(14, -4);
-    ctx.lineTo(44, -24 + wingFlap);
-    ctx.lineTo(34, 12 + wingFlap * 0.5);
-    ctx.closePath();
-    ctx.fill();
-    ctx.stroke();
+    // 5. TWO Clearly Separated Muscular Humanoid Demon Legs, Greaves & Cloven Hooves
+    if (isSitting) {
+      // Sitting on Throne: Left Leg & Right Leg clearly separated with armored knee plates and hooves!
+      // Left Thigh & Shin
+      ctx.fillStyle = pal.skin;
+      ctx.fillRect(-15, 9, 8, 9);
+      ctx.fillRect(-16, 16, 8, 12);
+      ctx.strokeStyle = pal.skinDark;
+      ctx.lineWidth = 1.4;
+      ctx.strokeRect(-16, 16, 8, 12);
+      // Right Thigh & Shin
+      ctx.fillStyle = pal.skin;
+      ctx.fillRect(4, 9, 8, 9);
+      ctx.fillRect(4, 16, 8, 12);
+      ctx.strokeRect(4, 16, 8, 12);
+      // Knee Guards on Both Legs
+      ctx.fillStyle = pal.armorTrim;
+      ctx.fillRect(-16, 15, 8, 3.5);
+      ctx.fillRect(4, 15, 8, 3.5);
+      // Two Distinct Cloven Hooves
+      ctx.fillStyle = "#090d16";
+      ctx.strokeStyle = pal.armorTrim;
+      ctx.lineWidth = 1;
+      ctx.fillRect(-18, 26, 10, 5);
+      ctx.strokeRect(-18, 26, 10, 5);
+      ctx.fillRect(3, 26, 10, 5);
+      ctx.strokeRect(3, 26, 10, 5);
+    } else {
+      // Standing / Slow-Mo Walking / Bowing: Two wide-stance muscular demon legs!
+      const lX = -13 + walkSwing * 0.45;
+      const rX = 5 - walkSwing * 0.45;
+      const lY = 9 + Math.max(0, -walkSwing * 0.35);
+      const rY = 9 + Math.max(0, walkSwing * 0.35);
 
-    // Scary jagged horned head
-    ctx.fillStyle = "#1f0309";
-    ctx.fillRect(-17, -17, 34, 34);
-    ctx.strokeStyle = "#ef4444";
-    ctx.lineWidth = 2;
-    ctx.strokeRect(-17, -17, 34, 34);
+      // Hip / Pelvis Warlord Belt Guard between the two legs
+      ctx.fillStyle = pal.armor;
+      ctx.fillRect(-12, 6, 24, 5);
+      ctx.strokeStyle = pal.armorTrim;
+      ctx.lineWidth = 1.2;
+      ctx.strokeRect(-12, 6, 24, 5);
 
-    // Tall curved Devil Horns
-    ctx.fillStyle = "#b91c1c";
-    ctx.beginPath();
-    ctx.moveTo(-16, -17); ctx.lineTo(-28, -36); ctx.lineTo(-7, -17); ctx.closePath(); ctx.fill();
-    ctx.beginPath();
-    ctx.moveTo(16, -17); ctx.lineTo(28, -36); ctx.lineTo(7, -17); ctx.closePath(); ctx.fill();
+      // LEFT LEG (Front/Left)
+      ctx.fillStyle = pal.skin;
+      ctx.fillRect(lX, lY, 8, 17);
+      ctx.strokeStyle = pal.skinDark;
+      ctx.lineWidth = 1.4;
+      ctx.strokeRect(lX, lY, 8, 17);
+      // Left Armored Greave & Knee Spike
+      ctx.fillStyle = pal.armor;
+      ctx.fillRect(lX, lY + 7, 8, 8);
+      ctx.fillStyle = pal.armorTrim;
+      ctx.fillRect(lX - 1, lY + 6, 10, 3);
+      // Left Cloven Hoof
+      ctx.fillStyle = "#090d16";
+      ctx.fillRect(lX - 2, lY + 15, 11, 5);
+      ctx.strokeStyle = pal.armorTrim;
+      ctx.lineWidth = 1;
+      ctx.strokeRect(lX - 2, lY + 15, 11, 5);
 
-    // Piercing blood-red eyes with slit pupils
-    ctx.fillStyle = "#ff0033";
-    ctx.fillRect(-12, -10, 8, 6);
-    ctx.fillRect(4, -10, 8, 6);
-    ctx.fillStyle = "#fef08a";
-    ctx.fillRect(-9, -9, 2, 4);
-    ctx.fillRect(7, -9, 2, 4);
-
-    // Laughing fanged mouth
-    const jawOpen = 4 + Math.abs(Math.sin(laughTick * 2.4)) * 7;
-    ctx.fillStyle = "#050002";
-    ctx.fillRect(-12, 2, 24, jawOpen);
-    ctx.fillStyle = "#ffffff";
-    for (let fx = -10; fx <= 8; fx += 6) {
-      ctx.fillRect(fx, 2, 3, 3);
-      ctx.fillRect(fx + 1, 2 + jawOpen - 3, 3, 3);
+      // RIGHT LEG (Back/Right — 100% visible with bright rim highlight!)
+      ctx.fillStyle = pal.skin;
+      ctx.fillRect(rX, rY, 8, 17);
+      ctx.strokeStyle = pal.skinDark;
+      ctx.lineWidth = 1.4;
+      ctx.strokeRect(rX, rY, 8, 17);
+      // Right Armored Greave & Knee Spike
+      ctx.fillStyle = pal.armor;
+      ctx.fillRect(rX, rY + 7, 8, 8);
+      ctx.fillStyle = pal.armorTrim;
+      ctx.fillRect(rX - 1, rY + 6, 10, 3);
+      // Right Cloven Hoof
+      ctx.fillStyle = "#090d16";
+      ctx.fillRect(rX - 1, rY + 15, 11, 5);
+      ctx.strokeStyle = pal.armorTrim;
+      ctx.lineWidth = 1;
+      ctx.strokeRect(rX - 1, rY + 15, 11, 5);
     }
+
+    // 6. Upper Body (Pivots at waist when bowing or slumping!)
+    ctx.save();
+    ctx.translate(0, 10 + sobShake);
+    ctx.rotate(-bowAngle); // Positive bowAngle tilts left-facing demon torso downward toward the player!
+
+    // V-Tapered Muscular Demon Torso & Chest Armor
+    ctx.fillStyle = pal.skin;
+    ctx.beginPath();
+    ctx.moveTo(-14, -24);
+    ctx.lineTo(14, -24);
+    ctx.lineTo(9, 0);
+    ctx.lineTo(-9, 0);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = pal.skinDark;
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    // Demon Pectoral & Ab Armor / Warlord Harness
+    ctx.fillStyle = pal.armor;
+    ctx.fillRect(-10, -21, 20, 10);
+    ctx.strokeStyle = pal.armorTrim;
+    ctx.lineWidth = 1.4;
+    ctx.strokeRect(-10, -21, 20, 10);
+    // Glowing Demonic Core Emblem on Chest
+    ctx.fillStyle = pal.horn;
+    ctx.beginPath();
+    ctx.moveTo(0, -20);
+    ctx.lineTo(5, -16);
+    ctx.lineTo(0, -12);
+    ctx.lineTo(-5, -16);
+    ctx.closePath();
+    ctx.fill();
+
+    // Spiked Demon Shoulder Pauldrons
+    ctx.fillStyle = pal.armor;
+    ctx.fillRect(-18, -26, 8, 7);
+    ctx.fillRect(10, -26, 8, 7);
+    ctx.fillStyle = pal.horn;
+    ctx.beginPath();
+    ctx.moveTo(-18, -26); ctx.lineTo(-22, -32); ctx.lineTo(-13, -26); ctx.closePath(); ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(18, -26); ctx.lineTo(22, -32); ctx.lineTo(13, -26); ctx.closePath(); ctx.fill();
+
+    // 6. Articulated Demon Arms & Clawed Hands
+    ctx.fillStyle = pal.skin;
+    if (isSitting) {
+      // Hands raised to face wiping away tears!
+      const wipeY = -30 + Math.sin(time * 12) * 2.5;
+      ctx.fillRect(-16, -22, 6, 11);
+      ctx.fillRect(-14, wipeY, 7, 9);
+      ctx.fillRect(10, -22, 6, 11);
+      ctx.fillRect(6, wipeY, 7, 9);
+    } else if (isBowing) {
+      // Arms bent respectfully across chest / toward ground in royal bow
+      ctx.fillRect(-15, -20, 6, 14);
+      ctx.fillRect(9, -20, 6, 14);
+      ctx.fillStyle = pal.horn;
+      ctx.fillRect(-16, -6, 6, 4);
+      ctx.fillRect(10, -6, 6, 4);
+    } else {
+      // Menacing clawed arms out ready to hunt!
+      const armWave = Math.sin(time * 6) * 4;
+      ctx.fillRect(-18, -21 + armWave * 0.5, 6, 14);
+      ctx.fillRect(12, -21 - armWave * 0.5, 6, 14);
+      // Sharp 3-Clawed Demon Hands
+      ctx.fillStyle = pal.horn;
+      ctx.fillRect(-20, -8 + armWave * 0.5, 7, 4);
+      ctx.fillRect(13, -8 - armWave * 0.5, 7, 4);
+    }
+
+    // 7. Sculpted Humanoid Devil Head, Pointed Ears, Horns & Fanged Jaw
+    ctx.save();
+    ctx.translate(0, -34);
+    if (isBowing) ctx.rotate(-0.22); // Extra head nod during bow
+
+    // Pointed Demon Ears
+    ctx.fillStyle = pal.skin;
+    ctx.beginPath();
+    ctx.moveTo(-11, -4); ctx.lineTo(-19, -8); ctx.lineTo(-11, 2); ctx.closePath(); ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(11, -4); ctx.lineTo(19, -8); ctx.lineTo(11, 2); ctx.closePath(); ctx.fill();
+
+    // Sculpted Angular Demon Skull (Cheekbones + Jawline, not a square box!)
+    ctx.fillStyle = pal.skin;
+    ctx.beginPath();
+    ctx.moveTo(-11, -11);
+    ctx.lineTo(11, -11);
+    ctx.lineTo(13, -2);
+    ctx.lineTo(8, 9);
+    ctx.lineTo(0, 12);
+    ctx.lineTo(-8, 9);
+    ctx.lineTo(-13, -2);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = pal.skinDark;
+    ctx.lineWidth = 1.6;
+    ctx.stroke();
+
+    // Curved Multi-Segment Demon Horns (Larger & more regal in Worlds 2 & 3)
+    ctx.fillStyle = pal.horn;
+    ctx.beginPath();
+    ctx.moveTo(-10, -10);
+    ctx.quadraticCurveTo(-24, -18, -20 - worldVar * 2, -28 - worldVar * 2);
+    ctx.quadraticCurveTo(-14, -20, -4, -11);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.moveTo(10, -10);
+    ctx.quadraticCurveTo(24, -18, 20 + worldVar * 2, -28 - worldVar * 2);
+    ctx.quadraticCurveTo(14, -20, 4, -11);
+    ctx.closePath();
+    ctx.fill();
+
+    // World 3 Supreme Demon Emperor Crown between horns
+    if (worldVar === 3) {
+      ctx.fillStyle = "#facc15";
+      ctx.beginPath();
+      ctx.moveTo(-8, -11);
+      ctx.lineTo(-6, -20);
+      ctx.lineTo(-2, -14);
+      ctx.lineTo(0, -22);
+      ctx.lineTo(2, -14);
+      ctx.lineTo(6, -20);
+      ctx.lineTo(8, -11);
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    // Expressive Demon Eyes & Brows
+    if (isSitting) {
+      // Crying squinting eyes + streaming blue tears!
+      ctx.strokeStyle = "#fef08a";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(-9, -3); ctx.lineTo(-3, -1); ctx.lineTo(-9, 1);
+      ctx.moveTo(9, -3); ctx.lineTo(3, -1); ctx.lineTo(9, 1);
+      ctx.stroke();
+      // Streaming Tear Drops
+      ctx.fillStyle = "#38bdf8";
+      const tearY = (time * 18) % 14;
+      ctx.fillRect(-8, 2 + tearY, 3, 4);
+      ctx.fillRect(5, 2 + ((tearY + 7) % 14), 3, 4);
+    } else {
+      // Piercing glowing eyes with fierce angled brows
+      ctx.fillStyle = "#ff0033";
+      ctx.fillRect(-9, -5, 6, 4);
+      ctx.fillRect(3, -5, 6, 4);
+      ctx.fillStyle = pal.eye;
+      ctx.fillRect(-7, -4, 2, 3);
+      ctx.fillRect(5, -4, 2, 3);
+    }
+
+    // Fanged Demon Mouth
+    const jawOpen = isSitting ? (3 + Math.abs(Math.sin(time * 8)) * 4) : isBowing ? 2 : (3 + Math.abs(Math.sin(laughTick * 2.4)) * 5);
+    ctx.fillStyle = "#090004";
+    ctx.fillRect(-7, 3, 14, jawOpen);
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(-6, 3, 2, 2.5);
+    ctx.fillRect(4, 3, 2, 2.5);
+
+    ctx.restore(); // end head
+    ctx.restore(); // end upper body
+    ctx.restore(); // end facing flip
 
     if (labelText) {
       ctx.font = "bold 9px 'Inter', monospace";
       ctx.textAlign = "center";
-      ctx.fillStyle = "#fca5a5";
-      ctx.fillText(labelText, 0, -40);
+      ctx.fillStyle = "#090d16";
+      ctx.fillRect(-95, -62, 190, 15);
+      ctx.strokeStyle = pal.armorTrim;
+      ctx.lineWidth = 1;
+      ctx.strokeRect(-95, -62, 190, 15);
+      ctx.fillStyle = "#fef08a";
+      ctx.fillText(labelText, 0, -52);
     }
     ctx.restore();
   },
@@ -3515,11 +4224,9 @@ const GameApp = {
     if (dh.redFlashAlpha > 0.01 && (dh.phase === "red_warning" || dh.phase === "attacking")) {
       ctx.save();
       const pulse = 0.5 + 0.5 * Math.sin(time * 8);
-      // Red warning border & ambient flash
       ctx.fillStyle = `rgba(220, 38, 38, ${(dh.redFlashAlpha * 0.18).toFixed(3)})`;
       ctx.fillRect(0, 0, 800, 450);
 
-      // Red Spotlight Cone from sky onto player
       const coneGrad = ctx.createRadialGradient(
         dh.spotlightX, dh.spotlightY, 8,
         dh.spotlightX, dh.spotlightY, 135
@@ -3536,7 +4243,6 @@ const GameApp = {
       ctx.closePath();
       ctx.fill();
 
-      // Target reticle ring around player
       ctx.strokeStyle = `rgba(248, 113, 113, ${(0.55 + 0.35 * pulse).toFixed(2)})`;
       ctx.lineWidth = 2;
       ctx.beginPath();
@@ -3562,9 +4268,7 @@ const GameApp = {
       this.drawSmallBat(ctx, b, batsAttacking);
     }
 
-    // 4. DRAW MAIN SCARY DEVIL:
-    // - Appears briefly at the start of every level ('intro_appear' / 'intro_leave')
-    // - Or appears BIG then shrinks to MEDIUM to attack in Sublevels 29-32 ('boss_devil')
+    // 4. DRAW MAIN SCARY HUMANOID DEVIL:
     const showMainDevil =
       dh.phase === "intro_appear" ||
       dh.phase === "intro_leave" ||
@@ -3578,73 +4282,1936 @@ const GameApp = {
         : dh.phase === "attacking"
         ? "DEVIL ATTACK!"
         : "";
-      this.drawScaryDevilSprite(ctx, dh.x, dh.y, dh.scale, dh.laughTick, time, label);
+      const worldSizeBonus = 1 + ((this.currentWorld || 1) - 1) * 0.14;
+      this.drawScaryDevilSprite(
+        ctx,
+        dh.x,
+        dh.y,
+        dh.scale * worldSizeBonus,
+        dh.laughTick,
+        time,
+        label,
+        { pose: "hunting", worldVariant: this.currentWorld || 1, facing: (this.player && this.player.x > dh.x) ? 1 : -1 }
+      );
     }
   },
 
   drawCeremonyScene(ctx, time) {
     if (this.stateMode !== "won" || !this.ceremonyType) return;
-    const isFinalKing = this.ceremonyType === "real_devil_king";
-    const bowAngle = Math.sin(time * 2.2) * 0.18 + 0.32; // Bowing head animation
+    const w = this.currentWorld || 1;
+    const tick = this.ceremonyTick || 0;
+    const totalTicks = 450; // ~7.5 seconds of unblurred full-screen 3D cinema before popup appears!
+
+    // 3 Distinct 3D Royal Palaces & Devil Sizes for World 1 (1-32), World 2 (2-32), and World 3 (3-32)
+    const palaceThemes = {
+      1: {
+        name: "EMERALD RUIN ROYAL PALACE — WORLD 1 FINALE",
+        skyTop: "#02100c", skyBot: "#092e22", floorDark: "#06241b", floorLight: "#0b3b2c",
+        pillar: "#0f4c3a", pillarTrim: "#34d399", carpet: "#059669", carpetTrim: "#facc15",
+        auraPrimary: "rgba(52, 211, 153, 0.55)", auraSecondary: "rgba(56, 189, 248, 0.45)",
+        throneBase: "#3f2e0c", throneBack: "#065f46", throneGem: "#10b981",
+        devilScale: 1.25, devilTitle: "FOREST DEMON LORD",
+        cryLine: "😭 *SOB*... All 32 Meadow stages broken?! I accept my defeat...",
+        walkLine: "⚡ [SLOW-MO 3D AIRSHOT] The Demon Lord rises from his throne to face the Monarch...",
+        bowLine: "🙇👑 \"ARISE, SOVEREIGN OF WORLD 1! I BOW MY HEAD BEFORE YOUR THRONE!\""
+      },
+      2: {
+        name: "HEARTWOOD & MOLTEN GOLD GREAT HALL — WORLD 2 FINALE",
+        skyTop: "#120603", skyBot: "#2e1208", floorDark: "#1c0b05", floorLight: "#33150a",
+        pillar: "#4a1f0d", pillarTrim: "#f59e0b", carpet: "#b45309", carpetTrim: "#fde047",
+        auraPrimary: "rgba(245, 158, 11, 0.55)", auraSecondary: "rgba(239, 68, 68, 0.45)",
+        throneBase: "#451a03", throneBack: "#92400e", throneGem: "#f59e0b",
+        devilScale: 1.48, devilTitle: "ELDER DEMON WARLORD (DEVIL KING'S BROTHER)",
+        cryLine: "😭 *WAAAH*... Even my Cursed World-Tree couldn't stop you! I surrender!",
+        walkLine: "⚡ [SLOW-MO 3D AIRSHOT] The Elder Demon Warlord steps down in awe of your aura...",
+        bowLine: "🙇👑 \"THE KING IS HERE! I BOW MY HEAD TO THE CONQUEROR OF WORLD 2!\""
+      },
+      3: {
+        name: "ABYSSAL OBSIDIAN IMPERIAL CITADEL — WORLD 3 FINALE",
+        skyTop: "#05010d", skyBot: "#1e0538", floorDark: "#110321", floorLight: "#21073d",
+        pillar: "#3b0764", pillarTrim: "#f43f5e", carpet: "#be123c", carpetTrim: "#facc15",
+        auraPrimary: "rgba(168, 85, 247, 0.65)", auraSecondary: "rgba(56, 189, 248, 0.55)",
+        throneBase: "#1e0538", throneBack: "#4c0519", throneGem: "#f43f5e",
+        devilScale: 1.75, devilTitle: "THE REAL SUPREME DEMON DEVIL KING",
+        cryLine: "😭 *IMPOSSIBLE!* All 96 Nightmare Sanctums conquered?! My empire is yours...",
+        walkLine: "⚡ [SLOW-MO 3D AIRSHOT] The Supreme Demon Emperor descends from his Obsidian Throne...",
+        bowLine: "🙇👑 \"ALL HAIL THE SHADOW MONARCH! I, THE DEVIL KING, BOW IN ETERNAL PRAISE!\""
+      }
+    };
+    const theme = palaceThemes[w] || palaceThemes[1];
+
+    // =========================================================================
+    // 3-SHOT 3D CAMERA DIRECTOR (450 ticks = ~7.5 seconds):
+    // - Shot 1 (0..150): 3D HIGH-ANGLE AERIAL DRONE SHOT ("AIRSHOT") — Slow-motion hero walk down the 3D perspective carpet while Devil weeps on Throne
+    // - Shot 2 (150..280): 3D ORBITING LOW-ANGLE TRACKING SHOT — Devil rises from throne & walks in slow-motion (both legs 100% visible!) toward Player
+    // - Shot 3 (280..450+): EPIC MONARCH CORONATION & BOWING CLIMAX — Solo-Leveling "ARISE" shadow-flame aura + Devil bows his head + Crown bestowal
+    // =========================================================================
+    let camMode = "SHOT 1/3 • 3D AERIAL DRONE VIEW (SLOW-MO WALK)";
+    let camZoom = 1.0;
+    let camOffsetX = 0;
+    let camOffsetY = 0;
+    let camPitch = 0; // 1 = high aerial angle, 0 = low dramatic angle
+
+    if (tick < 150) {
+      const p1 = tick / 150;
+      camMode = "🎥 3D AERIAL DRONE SHOT • SLOW-MOTION ROYAL ENTRANCE";
+      camPitch = 1.0 - p1 * 0.25;
+      camZoom = 0.94 + p1 * 0.08;
+      camOffsetX = (0.5 - p1) * 35;
+      camOffsetY = -12 + p1 * 10;
+    } else if (tick < 280) {
+      const p2 = (tick - 150) / 130;
+      camMode = "🎥 3D LOW-ANGLE TRACKING SHOT • DEVIL APPROACHES IN SLOW-MO";
+      camPitch = 0.75 - p2 * 0.55;
+      camZoom = 1.02 + p2 * 0.12;
+      camOffsetX = -25 - p2 * 20;
+      camOffsetY = -8 - p2 * 14;
+    } else {
+      const p3 = Math.min(1, (tick - 280) / 120);
+      camMode = "🎥 ABSOLUTE CINEMA CLIMAX • THE DEVIL BOWS TO THE MONARCH";
+      camPitch = 0.20;
+      camZoom = 1.14 + Math.sin(time * 1.5) * 0.02;
+      camOffsetX = -45;
+      camOffsetY = -22;
+    }
 
     ctx.save();
-    ctx.fillStyle = "rgba(8, 5, 16, 0.72)";
+
+    // Full-screen base fill
+    const skyGrad = ctx.createLinearGradient(0, 0, 0, 450);
+    skyGrad.addColorStop(0, theme.skyTop);
+    skyGrad.addColorStop(1, theme.skyBot);
+    ctx.fillStyle = skyGrad;
     ctx.fillRect(0, 0, 800, 450);
 
-    // Golden spotlight beam over player & bowing Demon Royalty
-    const spot = ctx.createRadialGradient(400, 170, 20, 400, 170, 260);
-    spot.addColorStop(0, isFinalKing ? "rgba(250, 204, 21, 0.35)" : "rgba(52, 211, 153, 0.3)");
-    spot.addColorStop(1, "rgba(0, 0, 0, 0)");
-    ctx.fillStyle = spot;
-    ctx.fillRect(140, 20, 520, 320);
+    // Apply 3D Camera Transform (Zoom + Pan + Aerial Pitch perspective)
+    ctx.save();
+    ctx.translate(400 + camOffsetX, 240 + camOffsetY);
+    ctx.scale(camZoom, camZoom);
+    ctx.translate(-400, -240);
 
-    // Draw Royal Altar at top-center of canvas
-    ctx.fillStyle = isFinalKing ? "#450a0a" : "#1e1b4b";
+    const horizonY = Math.round(185 + (1 - camPitch) * 75); // Horizon shifts dynamically with 3D aerial tilt!
+    const vanishX = 430;
+
+    // 1. 3D PERSPECTIVE PALACE VAULTED WALLS & STAINED-GLASS WINDOWS
+    [165, 340, 515, 680].forEach((wx, idx) => {
+      const wScale = 0.78 + (idx % 2) * 0.12;
+      ctx.fillStyle = theme.auraPrimary;
+      ctx.beginPath();
+      ctx.arc(wx, horizonY - 78, 32 * wScale, Math.PI, 0, false);
+      ctx.lineTo(wx + 32 * wScale, horizonY - 8);
+      ctx.lineTo(wx - 32 * wScale, horizonY - 8);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = theme.pillarTrim;
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Volumetric 3D God-Rays slanting across the palace floor
+      const rayGrad = ctx.createLinearGradient(wx, horizonY - 80, wx + 65, 430);
+      rayGrad.addColorStop(0, "rgba(254, 240, 138, 0.16)");
+      rayGrad.addColorStop(1, "rgba(254, 240, 138, 0)");
+      ctx.fillStyle = rayGrad;
+      ctx.beginPath();
+      ctx.moveTo(wx - 26, horizonY - 70);
+      ctx.lineTo(wx + 26, horizonY - 70);
+      ctx.lineTo(wx + 115, 430);
+      ctx.lineTo(wx - 15, 430);
+      ctx.closePath();
+      ctx.fill();
+    });
+
+    // 2. TRUE 3D PERSPECTIVE CHECKERED MARBLE FLOOR & RECEDING ROYAL CARPET
+    const floorBotY = 440;
+    ctx.fillStyle = theme.floorDark;
+    ctx.fillRect(-60, horizonY, 920, floorBotY - horizonY);
+
+    // Perspective radial grid lines from vanishing point (vanishX, horizonY)
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.08)";
+    ctx.lineWidth = 1.5;
+    for (let i = -9; i <= 9; i++) {
+      ctx.beginPath();
+      ctx.moveTo(vanishX + i * 28, horizonY);
+      ctx.lineTo(vanishX + i * 115, floorBotY);
+      ctx.stroke();
+    }
+    // Perspective horizontal depth lines (closer together near horizon, wider near foreground)
+    for (let r = 1; r <= 7; r++) {
+      const t = Math.pow(r / 7, 1.55);
+      const ry = horizonY + t * (floorBotY - horizonY);
+      ctx.beginPath();
+      ctx.moveTo(-60, ry);
+      ctx.lineTo(860, ry);
+      ctx.stroke();
+    }
+
+    // 3D Perspective Royal Runner Carpet (widens toward foreground in 3D!)
+    const carpetTopY = horizonY + 18;
+    const carpetBotY = floorBotY - 12;
+    ctx.fillStyle = theme.carpet;
+    ctx.beginPath();
+    ctx.moveTo(-40, carpetTopY + 34);
+    ctx.lineTo(760, carpetTopY + 12);
+    ctx.lineTo(830, carpetBotY - 18);
+    ctx.lineTo(-40, carpetBotY);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = theme.carpetTrim;
+    ctx.lineWidth = 3.5;
+    ctx.stroke();
+
+    // 3. 3D DEPTH-SCALED PALACE PILLARS (Background row + Foreground aerial pillars)
+    [70, 235, 405, 575, 740].forEach((px, idx) => {
+      const pDepth = 0.82 + (idx % 2) * 0.14;
+      const pW = 28 * pDepth;
+      const pH = (horizonY - 20) * pDepth;
+      ctx.fillStyle = theme.pillar;
+      ctx.fillRect(px - pW / 2, horizonY - pH, pW, pH + 8);
+      ctx.strokeStyle = theme.pillarTrim;
+      ctx.lineWidth = 1.8;
+      ctx.strokeRect(px - pW / 2, horizonY - pH, pW, pH + 8);
+      // Pillar 3D base pedestal
+      ctx.fillStyle = theme.pillarTrim;
+      ctx.fillRect(px - pW * 0.7, horizonY - 4, pW * 1.4, 10);
+    });
+
+    // 4. 3D ROYAL THRONE DAIS & SOVEREIGN THRONE ON THE RIGHT (X: 640)
+    const throneX = 640;
+    const throneFloorY = horizonY + 95;
+    // 3D Stepped Dais with side-face depth extrusion
+    for (let stp = 0; stp < 3; stp++) {
+      const sw = 185 - stp * 28;
+      const sh = 14;
+      const sx = throneX - sw / 2 - stp * 4;
+      const sy = throneFloorY - (stp + 1) * sh;
+      ctx.fillStyle = theme.throneBase;
+      ctx.fillRect(sx, sy, sw, sh);
+      ctx.strokeStyle = theme.carpetTrim;
+      ctx.lineWidth = 2;
+      ctx.strokeRect(sx, sy, sw, sh);
+    }
+
+    const seatY = throneFloorY - 42;
+    // High-backed 3D Demon Throne
+    ctx.fillStyle = theme.throneBack;
+    ctx.beginPath();
+    ctx.moveTo(throneX - 42, seatY);
+    ctx.lineTo(throneX - 50, seatY - 122);
+    ctx.lineTo(throneX, seatY - 152);
+    ctx.lineTo(throneX + 50, seatY - 122);
+    ctx.lineTo(throneX + 42, seatY);
+    ctx.closePath();
+    ctx.fill();
     ctx.strokeStyle = "#facc15";
     ctx.lineWidth = 3;
-    ctx.fillRect(250, 48, 300, 92);
-    ctx.strokeRect(250, 48, 300, 92);
+    ctx.stroke();
 
-    // Draw the Bowing Demon Royalty on the left of the altar
-    ctx.save();
-    ctx.translate(320, 102);
-    ctx.rotate(bowAngle); // Bowing head & torso toward the player!
-    ctx.fillStyle = isFinalKing ? "#dc2626" : "#7c3aed";
-    ctx.fillRect(-16, -20, 32, 34);
-    ctx.strokeStyle = "#facc15";
-    ctx.lineWidth = 2;
-    ctx.strokeRect(-16, -20, 32, 34);
-    // Royal Horns / Crown
+    // Throne Seat & Golden Armrests
+    ctx.fillStyle = "#7f1d1d";
+    ctx.fillRect(throneX - 34, seatY - 30, 68, 30);
     ctx.fillStyle = "#facc15";
-    ctx.fillRect(-14, -28, 28, 8);
-    ctx.fillStyle = "#fef08a";
-    ctx.fillRect(-8, -10, 6, 4);
-    ctx.fillRect(4, -10, 6, 4);
-    ctx.restore();
+    ctx.fillRect(throneX - 44, seatY - 38, 12, 38);
+    ctx.fillRect(throneX + 32, seatY - 38, 12, 38);
+    ctx.fillStyle = theme.throneGem;
+    ctx.beginPath();
+    ctx.arc(throneX, seatY - 120, 10, 0, Math.PI * 2);
+    ctx.fill();
 
-    // Draw Player with a Floating Golden Crown on the right of the altar
+    // =========================================================================
+    // 5. SLOW-MOTION CHOREOGRAPHY FOR PLAYER & HUMANOID DEVIL (WITH AFTERIMAGE TRAILS!)
+    // =========================================================================
+    const walkP = Math.min(1, tick / 145);
+    const playerX = 75 + walkP * 275; // Slow-mo walk from X: 75 to X: 350
+    const playerY = throneFloorY - 18;
+    const isPlayerWalking = tick < 145;
+
+    let devilX = throneX;
+    let devilY = seatY - 34;
+    let devilPose = "sitting_crying";
+    let dialogueText = theme.cryLine;
+
+    if (tick < 150) {
+      // Shot 1: Devil sits on Throne crying while Player walks in slow-motion from the left!
+      devilX = throneX;
+      devilY = seatY - 34;
+      devilPose = "sitting_crying";
+      dialogueText = theme.cryLine;
+    } else if (tick < 280) {
+      // Shot 2: Devil rises and walks down the 3D throne steps in slow motion (both legs striding clearly!)
+      const dWalkP = (tick - 150) / 130;
+      devilX = throneX - dWalkP * 155; // 640 -> 485
+      devilY = (seatY - 34) + dWalkP * 48;
+      devilPose = "walking";
+      dialogueText = theme.walkLine;
+    } else {
+      // Shot 3: Devil stands before Player and bows his head deeply in slow motion!
+      devilX = 485;
+      devilY = throneFloorY - 28;
+      devilPose = "bowing";
+      dialogueText = theme.bowLine;
+    }
+
+    // 3D Ground Drop Shadows under Player & Devil for true aerial depth
+    ctx.fillStyle = "rgba(0, 0, 0, 0.48)";
+    ctx.beginPath();
+    ctx.ellipse(playerX, playerY + 26, 28, 9, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(devilX, devilY + 34 * theme.devilScale, 36 * theme.devilScale, 11 * theme.devilScale, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Slow-Motion Afterimage Echoes behind Devil during his approach (Shot 2)
+    if (devilPose === "walking") {
+      for (let g = 2; g >= 1; g--) {
+        ctx.save();
+        ctx.globalAlpha = 0.16 / g;
+        this.drawScaryDevilSprite(
+          ctx,
+          devilX + g * 18,
+          devilY - g * 4,
+          theme.devilScale,
+          time * 1.4 - g * 0.3,
+          time * 0.55 - g * 0.15,
+          "",
+          { pose: "walking", worldVariant: w, facing: -1 }
+        );
+        ctx.restore();
+      }
+    }
+
+    // Draw the Humanoid Devil (Slow-motion time * 0.55 so every leg stride & bow feels heavy and cinematic!)
+    this.drawScaryDevilSprite(
+      ctx,
+      devilX,
+      devilY,
+      theme.devilScale,
+      time * 1.6,
+      time * 0.55,
+      `${theme.devilTitle}`,
+      { pose: devilPose, worldVariant: w, facing: -1 }
+    );
+
+    // Animated Tear Droplets splashing during Shot 1
+    if (devilPose === "sitting_crying") {
+      ctx.fillStyle = "#38bdf8";
+      for (let t = 0; t < 7; t++) {
+        const tx = devilX - 16 - ((tick * 1.6 + t * 17) % 42);
+        const ty = devilY - 22 + ((tick * 2.2 + t * 13) % 48);
+        ctx.beginPath();
+        ctx.arc(tx, ty, 3.2, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    // =========================================================================
+    // 6. SOLO-LEVELING "ARISE" SHADOW MONARCH AURA & SLOW-MOTION PLAYER RENDER
+    // =========================================================================
+    // Slow-Motion Afterimage Trail behind Player during Shot 1 walk
+    if (isPlayerWalking) {
+      for (let g = 3; g >= 1; g--) {
+        const gx = playerX - g * 14;
+        ctx.save();
+        ctx.translate(gx, playerY);
+        ctx.scale(1.38, 1.38);
+        ctx.globalAlpha = 0.22 / g;
+        ctx.fillStyle = "#38bdf8";
+        ctx.fillRect(-9, -17, 18, 31);
+        ctx.restore();
+      }
+    }
+
     ctx.save();
-    ctx.translate(475, 102);
-    ctx.fillStyle = "#06b6d4";
-    ctx.fillRect(-12, -10, 24, 24);
+    ctx.translate(playerX, playerY);
+
+    // Rising "ARISE" Shadow-Monarch Energy Pillars & Lightning Sparks around Player!
+    const auraIntensity = tick < 145 ? 0.55 : 1.0;
+    const pAura = ctx.createRadialGradient(0, -6, 4, 0, -6, 78 * auraIntensity);
+    pAura.addColorStop(0, "rgba(56, 189, 248, 0.50)");
+    pAura.addColorStop(0.5, theme.auraPrimary);
+    pAura.addColorStop(1, "rgba(0, 0, 0, 0)");
+    ctx.fillStyle = pAura;
+    ctx.beginPath();
+    ctx.arc(0, -6, 78 * auraIntensity, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Rising Cyan/Gold/Violet Monarch Flame Wisps
+    for (let f = 0; f < 10; f++) {
+      const fx = Math.sin(time * 2.5 + f * 1.7) * 32;
+      const fy = 24 - ((tick * 1.8 + f * 14) % 76);
+      ctx.fillStyle = f % 2 === 0 ? "#38bdf8" : "#facc15";
+      ctx.fillRect(fx - 2, fy, 4, 9);
+    }
+
+    ctx.scale(1.42, 1.42);
+    // Slow-motion stride frequency (tick * 0.16) so every step looks deliberate and heroic!
+    const pSwing = isPlayerWalking ? Math.sin(tick * 0.16) : 0;
+
+    // Billowing Sovereign Crimson Cape
+    ctx.fillStyle = "#dc2626";
+    ctx.beginPath();
+    ctx.moveTo(-4, -6);
+    ctx.lineTo(-26, -3 + Math.sin(time * 3.5) * 5);
+    ctx.lineTo(-22, 11 + Math.sin(time * 3.5) * 5);
+    ctx.lineTo(-4, 3);
+    ctx.closePath();
+    ctx.fill();
+
+    // Two Distinct Player Legs & Boots in Slow-Motion Stride
+    ctx.fillStyle = "#1e3a8a";
+    ctx.fillRect(-8 + pSwing * 3, 5, 6, 10);
+    ctx.fillRect(2 - pSwing * 3, 5, 6, 10);
+    ctx.fillStyle = "#78350f";
+    ctx.fillRect(-9 + pSwing * 3, 13, 8, 4);
+    ctx.fillRect(1 - pSwing * 3, 13, 8, 4);
+
+    // Adventurer Jacket & Golden Monarch Belt
+    ctx.fillStyle = "#0ea5e9";
+    ctx.fillRect(-9, -5, 18, 11);
+    ctx.strokeStyle = "#0f172a";
+    ctx.lineWidth = 1.2;
+    ctx.strokeRect(-9, -5, 18, 11);
+    ctx.fillStyle = "#facc15";
+    ctx.fillRect(-3, 3, 6, 3);
+
+    // Arms & Sovereign Blade Salute
+    ctx.fillStyle = "#38bdf8";
+    if (!isPlayerWalking) {
+      ctx.fillRect(-11, -3, 5, 9);
+      ctx.fillRect(6, -18 + Math.sin(time * 3) * 1.5, 5, 14);
+      ctx.fillStyle = "#fde68a";
+      ctx.fillRect(6, -21 + Math.sin(time * 3) * 1.5, 5, 4);
+      // Glowing Sovereign Greatsword / Scepter raised skyward!
+      ctx.fillStyle = "#38bdf8";
+      ctx.fillRect(7.5, -42 + Math.sin(time * 3) * 1.5, 4, 21);
+      ctx.fillStyle = "#facc15";
+      ctx.fillRect(3, -24 + Math.sin(time * 3) * 1.5, 13, 3.5);
+    } else {
+      ctx.fillRect(-9, -2 - pSwing * 4, 5, 10);
+      ctx.fillRect(5, -2 + pSwing * 4, 5, 10);
+    }
+
+    // Human Head, Hair & Glowing Monarch Eyes
     ctx.fillStyle = "#fcd34d";
-    ctx.fillRect(-13, -24, 26, 15);
-    // Floating Crown being bestowed
-    const crownBob = Math.sin(time * 3) * 3;
+    ctx.fillRect(-10, -17, 20, 13);
+    ctx.strokeStyle = "#0f172a";
+    ctx.strokeRect(-10, -17, 20, 13);
+    ctx.fillStyle = "#271505";
+    ctx.fillRect(-11, -19, 22, 5);
+    ctx.fillStyle = "#ef4444";
+    ctx.fillRect(-10, -15, 20, 2.5);
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(-1, -12, 4, 4);
+    ctx.fillRect(5, -12, 4, 4);
+    // Glowing cyan Solo-Leveling hunter eyes!
+    ctx.fillStyle = tick >= 145 ? "#06b6d4" : "#0f172a";
+    ctx.fillRect(1, -11, 2.2, 2.5);
+    ctx.fillRect(7, -11, 2.2, 2.5);
+
+    // Imperial Golden Crown descending onto Player's head during Shot 2 & Shot 3
+    if (tick >= 180) {
+      const crownDrop = tick < 280 ? Math.max(0, (280 - tick) * 0.32) : 0;
+      ctx.fillStyle = "#facc15";
+      ctx.strokeStyle = "#ca8a04";
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.moveTo(-10, -19 - crownDrop);
+      ctx.lineTo(-10, -28 - crownDrop);
+      ctx.lineTo(-5, -23 - crownDrop);
+      ctx.lineTo(0, -30 - crownDrop);
+      ctx.lineTo(5, -23 - crownDrop);
+      ctx.lineTo(10, -28 - crownDrop);
+      ctx.lineTo(10, -19 - crownDrop);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+    }
+    ctx.restore(); // end player
+
+    ctx.restore(); // end 3D camera transform
+
+    // =========================================================================
+    // 7. WIDESCREEN 21:9 CINEMA LETTERBOX BARS, CAMERA HUD & PROGRESS BAR
+    // =========================================================================
+    // Top & Bottom Black Cinema Bars (Unblurred!)
+    ctx.fillStyle = "rgba(4, 6, 12, 0.94)";
+    ctx.fillRect(0, 0, 800, 54);
+    ctx.fillRect(0, 392, 800, 58);
+    ctx.strokeStyle = "#facc15";
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(0, 54); ctx.lineTo(800, 54);
+    ctx.moveTo(0, 392); ctx.lineTo(800, 392);
+    ctx.stroke();
+
+    // Top Cinema Bar: Palace Name & 3D Camera Angle Indicator
+    ctx.font = "bold 11px 'Inter', monospace";
+    ctx.textAlign = "left";
+    ctx.fillStyle = "#38bdf8";
+    ctx.fillText(camMode, 18, 22);
+
+    ctx.textAlign = "right";
     ctx.fillStyle = "#facc15";
-    ctx.fillRect(-14, -38 + crownBob, 28, 10);
+    ctx.fillText(`🏰 ${theme.name}`, 782, 22);
+
+    // Subtitle / Dialogue inside Top Bar
+    ctx.font = "bold 13px 'Inter', sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillStyle = tick >= 280 ? "#6ee7b7" : "#fef08a";
+    ctx.fillText(dialogueText, 400, 43);
+
+    // Bottom Cinema Bar: Music Track Badge + Cinematic Progress Countdown before Popup appears
+    const remSec = Math.max(0, ((totalTicks - tick) / 60)).toFixed(1);
+    const progPct = Math.min(1, tick / totalTicks);
+    ctx.fillStyle = "rgba(30, 41, 59, 0.9)";
+    ctx.fillRect(180, 408, 440, 8);
+    ctx.fillStyle = "#10b981";
+    ctx.fillRect(180, 408, 440 * progPct, 8);
+
+    ctx.font = "bold 11px 'Inter', monospace";
+    ctx.textAlign = "center";
+    ctx.fillStyle = "#cbd5e1";
+    ctx.fillText(
+      tick < totalTicks
+        ? `🎵 OST: "MONARCH ARISE" • SLOW-MO 3D VICTORY SCENE (${remSec}s until Next World / Retry Menu)`
+        : `👑 CINEMATIC COMPLETE! CHOOSE NEXT WORLD OR RETRY STAGE`,
+      400,
+      434
+    );
+
     ctx.restore();
+  },
+
+  // ===========================================================================
+  // 250-DEATH MILESTONE: BATS HOSTAGE CAPTURE & DEVIL PALACE EXECUTION CINEMA
+  // (UNSKIPPABLE 8.0-SECOND FULL CINEMATIC + GUARANTEED DEATH COUNTER RESET TO 0)
+  // ===========================================================================
+  startHostage250Scene(reason) {
+    this.stateMode = "hostage_250";
+    this.hostageTick = 0;
+    this.hostageStartTime = performance.now();
+    this.hostageOverlayShown = false;
+    this.hostageSfxFlags = { b1: false, b2: false, d1: false, d2: false, exec: false };
+    this.hostageDeathReason = reason || "Captured after 250 total failures!";
+
+    // IMMEDIATELY reset totalDeaths to 0 and persist to localStorage so it can NEVER exceed 250 (e.g. 505/250),
+    // and set a persistent lock flag so even refreshing the page replays the 8-second execution!
+    this.totalDeaths = 0;
+    this.saveSessionToStorage(false);
+    try {
+      localStorage.setItem("mokuttan_voxel_hostage_lock", "1");
+    } catch (e) {}
+
+    document.getElementById("stageOverlay")?.classList.add("hidden");
+    document.getElementById("pauseOverlay")?.classList.add("hidden");
+    this.isPaused = false;
+
+    const topMenuBtn = document.getElementById("btnInGameMenuTop");
+    if (topMenuBtn) {
+      topMenuBtn.classList.add("opacity-40", "cursor-not-allowed");
+      topMenuBtn.textContent = "🔒 LOCKED (EXECUTING)";
+    }
+
+    sfx.startMusic("devil_execution");
+    sfx.batAttackSound();
+    this.updateHUD();
+  },
+
+  updateHostage250Scene() {
+    const prevTick = this.hostageTick || 0;
+    const elapsedMs = this.hostageStartTime ? Math.max(0, performance.now() - this.hostageStartTime) : 0;
+    // Map 8000ms (8.0 real seconds) to 460 virtual ticks so 60Hz, 120Hz, and 144Hz displays all show the full 8-second movie!
+    const rawStep = prevTick + 1;
+    const timeStep = Math.floor((elapsedMs / 8000) * 460);
+    this.hostageTick = (elapsedMs > 0) ? timeStep : rawStep;
+    const t = this.hostageTick;
+    if (!this.hostageSfxFlags) this.hostageSfxFlags = {};
+
+    // Sound & camera cues across the 3-Act 8.0-Second (460-tick) Hostage Execution Movie:
+    // Act 1 (0..150): Bats carry bound/tied player into the Dark Palace & hand over to the Devil
+    // Act 2 (150..325): Devil steps down, horror laughs ("I AM THE KING VOXEL DEVIL! YOU CANNOT ESCAPE FROM MY TERRITORY!")
+    // Act 3 (325..460): Devil executes the bound player with Hellfire Lightning, resetting totalDeaths to 0!
+    if (t >= 35 && !this.hostageSfxFlags.b1) {
+      this.hostageSfxFlags.b1 = true;
+      sfx.batAttackSound();
+    }
+    if (t >= 95 && !this.hostageSfxFlags.b2) {
+      this.hostageSfxFlags.b2 = true;
+      sfx.batAttackSound();
+    }
+    if (t >= 155 && !this.hostageSfxFlags.d1) {
+      this.hostageSfxFlags.d1 = true;
+      sfx.devilLaugh();
+      sfx.huntingSound();
+      this.shakeTimer = 12;
+    }
+    if (t >= 235 && !this.hostageSfxFlags.d2) {
+      this.hostageSfxFlags.d2 = true;
+      sfx.devilLaugh();
+      sfx.huntingSound();
+      this.shakeTimer = 12;
+    }
+    if (t >= 325 && !this.hostageSfxFlags.exec) {
+      this.hostageSfxFlags.exec = true;
+      // Execution strike!
+      sfx.executionSlashSound();
+      sfx.devilLaugh();
+      this.shakeTimer = 28;
+      this.totalDeaths = 0;
+      this.saveSessionToStorage(false);
+      this.updateHUD();
+    }
+    if (t >= 460 && !this.hostageOverlayShown) {
+      this.hostageOverlayShown = true;
+      this.totalDeaths = 0;
+      this.saveSessionToStorage(false);
+      try {
+        localStorage.removeItem("mokuttan_voxel_hostage_lock");
+      } catch (e) {}
+
+      const topMenuBtn = document.getElementById("btnInGameMenuTop");
+      if (topMenuBtn) {
+        topMenuBtn.classList.remove("opacity-40", "cursor-not-allowed");
+        topMenuBtn.textContent = "☰ MENU / ⏸";
+      }
+
+      this.updateHUD();
+      const stOverlay = document.getElementById("stageOverlay");
+      document.getElementById("overlayBadge").textContent = "⛓️💀 250TH DEATH EXECUTION COMPLETE • DEATH COUNT RESET TO 0/250!";
+      document.getElementById("overlayBadge").className = "inline-block px-3 py-1 rounded text-xs font-bold uppercase tracking-wider bg-red-500/30 text-red-200 border border-red-400/60 mb-2";
+      document.getElementById("overlayTitle").textContent = "EXECUTED IN THE DEVIL'S PALACE!";
+      document.getElementById("overlayReason").innerHTML = `
+        <span class="text-rose-300 font-bold">"I AM THE KING VOXEL DEVIL! YOU CANNOT ESCAPE FROM MY TERRITORY!"</span><br/>
+        <span class="text-slate-200 text-xs mt-1 inline-block">The Devil's Bats dragged you to the palace in chains after <strong>250 Total Deaths</strong> and the Devil executed you! Your Total Death Counter has been reset to <strong>0 / 250</strong>—rise again and conquer Stage ${this.stage.key}!</span>
+      `;
+      document.getElementById("btnOverlayNext")?.classList.add("hidden");
+      const retryBtn = document.getElementById("btnOverlayRetry");
+      if (retryBtn) retryBtn.textContent = `⚔️ Rise Again & Resume Stage ${this.stage.key} (Deaths: 0/250)`;
+      stOverlay?.classList.remove("hidden");
+    }
+  },
+
+  drawHostage250Scene(ctx, time) {
+    if (this.stateMode !== "hostage_250") return;
+    const t = this.hostageTick || 0;
+    const totalTicks = 460;
+    const w = this.currentWorld || 1;
+
+    // 3D Camera Angles for the Hostage Execution Movie
+    let camLabel = "🎥 3D AERIAL SHOT • BATS DRAGGING TIED HOSTAGE TO PALACE";
+    let camZoom = 1.0;
+    let camOffX = 0;
+    let camOffY = 0;
+    let horizonY = 185;
+
+    if (t < 150) {
+      const p1 = t / 150;
+      camLabel = "🎥 ACT I • BATS CARRYING TIED PLAYER AS HOSTAGE TO THE PALACE";
+      camZoom = 0.92 + p1 * 0.10;
+      camOffX = (0.5 - p1) * 40;
+      horizonY = Math.round(175 + p1 * 25);
+    } else if (t < 325) {
+      const p2 = (t - 150) / 175;
+      camLabel = "🎥 ACT II • DEVIL HORROR LAUGH: \"YOU CANNOT ESCAPE MY TERRITORY!\"";
+      camZoom = 1.04 + p2 * 0.14;
+      camOffX = -30 - p2 * 25;
+      camOffY = -10 - p2 * 12;
+      horizonY = Math.round(200 + p2 * 35);
+    } else {
+      camLabel = "🎥 ACT III • ROYAL EXECUTION & DEATH COUNTER RESET TO 0!";
+      camZoom = 1.18 + Math.sin(time * 4) * 0.02;
+      camOffX = -48;
+      camOffY = -20;
+      horizonY = 235;
+    }
+
+    ctx.save();
+
+    // Dark Blood-Moon Dungeon Palace Sky
+    const bgGrad = ctx.createLinearGradient(0, 0, 0, 450);
+    bgGrad.addColorStop(0, "#090105");
+    bgGrad.addColorStop(0.55, "#260410");
+    bgGrad.addColorStop(1, "#450a14");
+    ctx.fillStyle = bgGrad;
+    ctx.fillRect(0, 0, 800, 450);
+
+    ctx.save();
+    ctx.translate(400 + camOffX, 240 + camOffY);
+    ctx.scale(camZoom, camZoom);
+    ctx.translate(-400, -240);
+
+    // 1. 3D Perspective Dark Palace Floor & Blood-Crimson Carpet
+    const floorBotY = 440;
+    ctx.fillStyle = "#140308";
+    ctx.fillRect(-60, horizonY, 920, floorBotY - horizonY);
+
+    ctx.strokeStyle = "rgba(244, 63, 94, 0.14)";
+    ctx.lineWidth = 1.5;
+    for (let i = -9; i <= 9; i++) {
+      ctx.beginPath();
+      ctx.moveTo(430 + i * 28, horizonY);
+      ctx.lineTo(430 + i * 115, floorBotY);
+      ctx.stroke();
+    }
+    for (let r = 1; r <= 7; r++) {
+      const ry = horizonY + Math.pow(r / 7, 1.5) * (floorBotY - horizonY);
+      ctx.beginPath();
+      ctx.moveTo(-60, ry);
+      ctx.lineTo(860, ry);
+      ctx.stroke();
+    }
+
+    // 3D Crimson Torture Carpet
+    ctx.fillStyle = "#7f1d1d";
+    ctx.beginPath();
+    ctx.moveTo(-40, horizonY + 42);
+    ctx.lineTo(760, horizonY + 24);
+    ctx.lineTo(830, floorBotY - 22);
+    ctx.lineTo(-40, floorBotY - 8);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = "#ef4444";
+    ctx.lineWidth = 3;
+    ctx.stroke();
+
+    // 2. Dark Obsidian Palace Torture Pillars & Hanging Chains
+    [75, 240, 410, 575, 735].forEach((px, idx) => {
+      const pH = horizonY - 15;
+      ctx.fillStyle = "#1f060d";
+      ctx.fillRect(px - 16, 15, 32, pH);
+      ctx.strokeStyle = "#dc2626";
+      ctx.lineWidth = 1.6;
+      ctx.strokeRect(px - 16, 15, 32, pH);
+    });
+
+    // 3. Devil's Skull Throne Dais on Right (X: 640)
+    const throneX = 640;
+    const throneFloorY = horizonY + 95;
+    for (let stp = 0; stp < 3; stp++) {
+      const sw = 185 - stp * 28;
+      const sh = 14;
+      const sx = throneX - sw / 2 - stp * 4;
+      const sy = throneFloorY - (stp + 1) * sh;
+      ctx.fillStyle = "#2e0711";
+      ctx.fillRect(sx, sy, sw, sh);
+      ctx.strokeStyle = "#ef4444";
+      ctx.strokeRect(sx, sy, sw, sh);
+    }
+    const seatY = throneFloorY - 42;
+    ctx.fillStyle = "#4c0519";
+    ctx.beginPath();
+    ctx.moveTo(throneX - 42, seatY);
+    ctx.lineTo(throneX - 50, seatY - 122);
+    ctx.lineTo(throneX, seatY - 152);
+    ctx.lineTo(throneX + 50, seatY - 122);
+    ctx.lineTo(throneX + 42, seatY);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = "#f43f5e";
+    ctx.lineWidth = 3;
+    ctx.stroke();
+
+    // =========================================================================
+    // 4. CHOREOGRAPHY: BATS DRAGGING TIED-UP HOSTAGE PLAYER -> DEVIL EXECUTION!
+    // =========================================================================
+    const carryP = Math.min(1, t / 135);
+    // Player is carried from upper-left sky (80, 95) down to the execution altar spot (355, throneFloorY - 16)
+    const hostageX = 80 + carryP * 275;
+    const hostageY = t < 135
+      ? (95 + carryP * (throneFloorY - 111) + Math.sin(t * 0.25) * 6)
+      : (throneFloorY - 16);
+
+    // Draw 4 Escort Bats carrying the bound player in Act 1, then hovering menacingly overhead in Act 2/3!
+    const batOffsets = [
+      { dx: -36, dy: -46 },
+      { dx: -12, dy: -54 },
+      { dx: 14,  dy: -54 },
+      { dx: 38,  dy: -46 }
+    ];
+    batOffsets.forEach((bo, bIdx) => {
+      const bx = t < 145 ? (hostageX + bo.dx) : (hostageX + bo.dx * 1.6 + Math.sin(time * 3 + bIdx) * 18);
+      const by = t < 145 ? (hostageY + bo.dy) : (hostageY - 85 - (bIdx % 2) * 18 + Math.cos(time * 3 + bIdx) * 10);
+
+      // Glowing crimson capture chains connecting bats to the bound hostage during transport!
+      if (t < 145) {
+        ctx.strokeStyle = "#f43f5e";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(bx, by + 4);
+        ctx.lineTo(hostageX, hostageY - 2);
+        ctx.stroke();
+      }
+
+      this.drawSmallBat(ctx, {
+        visible: true,
+        alpha: 1,
+        x: bx,
+        y: by,
+        wingTick: time * 14 + bIdx * 1.4
+      }, true);
+    });
+
+    // Draw the Tied-Up Hostage Player (or Soul Ash Explosion after Execution at t >= 325!)
+    if (t < 332) {
+      ctx.save();
+      ctx.translate(hostageX, hostageY);
+      ctx.scale(1.35, 1.35);
+      // Kneeling / tied-up struggle shake
+      const struggle = Math.sin(time * 18) * 1.5;
+      ctx.translate(struggle, 0);
+
+      // Kneeling Bound Legs
+      ctx.fillStyle = "#1e3a8a";
+      ctx.fillRect(-9, 6, 18, 8);
+      ctx.fillStyle = "#78350f";
+      ctx.fillRect(-11, 11, 9, 4);
+      ctx.fillRect(2, 11, 9, 4);
+
+      // Torso & Jacket
+      ctx.fillStyle = "#0ea5e9";
+      ctx.fillRect(-9, -5, 18, 12);
+      ctx.strokeStyle = "#0f172a";
+      ctx.lineWidth = 1.2;
+      ctx.strokeRect(-9, -5, 18, 12);
+
+      // Arms tied behind back
+      ctx.fillStyle = "#0284c7";
+      ctx.fillRect(-11, -3, 4, 9);
+
+      // HEAVY GLOWING CRIMSON CHAINS & ROPES WRAPPED AROUND THE TIED PLAYER!
+      ctx.strokeStyle = "#fbbf24";
+      ctx.lineWidth = 2.4;
+      [-2, 2, 6].forEach(cy => {
+        ctx.beginPath();
+        ctx.moveTo(-11, cy);
+        ctx.lineTo(11, cy + 1);
+        ctx.stroke();
+      });
+      ctx.strokeStyle = "#ef4444";
+      ctx.lineWidth = 1.4;
+      ctx.strokeRect(-11, -3, 22, 11);
+
+      // Sweating / Terrified Human Head
+      ctx.fillStyle = "#fcd34d";
+      ctx.fillRect(-10, -17, 20, 13);
+      ctx.strokeStyle = "#0f172a";
+      ctx.strokeRect(-10, -17, 20, 13);
+      ctx.fillStyle = "#271505";
+      ctx.fillRect(-11, -19, 22, 5);
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(-1, -12, 4, 4);
+      ctx.fillRect(5, -12, 4, 4);
+      ctx.fillStyle = "#dc2626";
+      ctx.fillRect(1, -11, 2, 2);
+      ctx.fillRect(7, -11, 2, 2);
+      // Gag / Scared grimace
+      ctx.fillStyle = "#451a03";
+      ctx.fillRect(1, -7, 5, 2.5);
+
+      ctx.restore();
+    } else {
+      // Post-Execution (t >= 332): Smoldering ash crater & rising soul embers where player was executed!
+      ctx.fillStyle = "rgba(239, 68, 68, 0.38)";
+      ctx.beginPath();
+      ctx.ellipse(hostageX, hostageY + 16, 42, 12, 0, 0, Math.PI * 2);
+      ctx.fill();
+      for (let s = 0; s < 14; s++) {
+        const sx = hostageX + Math.sin(time * 3 + s * 1.7) * 32;
+        const sy = hostageY + 10 - (((t - 325) * 2.2 + s * 11) % 95);
+        ctx.fillStyle = s % 2 === 0 ? "#f43f5e" : "#facc15";
+        ctx.fillRect(sx - 2, sy, 5, 5);
+      }
+    }
+
+    // =========================================================================
+    // 5. THE VOXEL DEVIL KING STEPS DOWN, HORROR LAUGHS & EXECUTES THE HOSTAGE!
+    // =========================================================================
+    let devilX = throneX - 20;
+    let devilY = seatY - 30;
+    let devilPose = "hunting";
+    let subtitle = "🦇⛓️ [250 TOTAL FAILS!] The Devil's Bats have tied you up and dragged you as a hostage to the Palace!";
+
+    if (t < 150) {
+      devilX = throneX - 20;
+      devilY = seatY - 30;
+      devilPose = "hunting";
+    } else if (t < 235) {
+      const walkP = (t - 150) / 85;
+      devilX = (throneX - 20) - walkP * 155; // Walks down steps to X: 465
+      devilY = (seatY - 30) + walkP * 42;
+      devilPose = "walking";
+      subtitle = "👹 \"MWAHAHAHA! I AM THE KING VOXEL DEVIL! YOU CANNOT ESCAPE FROM MY TERRITORY!\"";
+    } else if (t < 325) {
+      devilX = 465;
+      devilY = throneFloorY - 30;
+      devilPose = "hunting";
+      subtitle = "👹 \"250 TIMES YOU FAILED! BACK OUT NOW, MORTAL — FACE MY ROYAL EXECUTION!\"";
+    } else {
+      devilX = 450;
+      devilY = throneFloorY - 30;
+      devilPose = "hunting";
+      subtitle = "⚡💀 EXECUTED BY THE VOXEL DEVIL! Death Counter Reset to 0 — Get ready to resume your stage!";
+    }
+
+    this.drawScaryDevilSprite(
+      ctx,
+      devilX,
+      devilY,
+      1.68,
+      time * 4.5,
+      time,
+      "KING VOXEL DEVIL (SUPREME EXECUTIONER)",
+      { pose: devilPose, worldVariant: 3, facing: -1 }
+    );
+
+    // Giant Hellfire Execution Lightning & Doom Blade Slash at t === 320..365!
+    if (t >= 318 && t <= 375) {
+      ctx.save();
+      ctx.strokeStyle = "#facc15";
+      ctx.lineWidth = 7;
+      ctx.beginPath();
+      ctx.moveTo(devilX - 35, 0);
+      ctx.lineTo(hostageX + 18, hostageY - 65);
+      ctx.lineTo(hostageX - 14, hostageY - 25);
+      ctx.lineTo(hostageX, hostageY + 15);
+      ctx.stroke();
+
+      ctx.strokeStyle = "#ef4444";
+      ctx.lineWidth = 14;
+      ctx.globalAlpha = 0.55;
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    ctx.restore(); // end 3D camera transform
+
+    // Widescreen Cinema Letterbox Bars & Dialogue
+    ctx.fillStyle = "rgba(6, 2, 8, 0.95)";
+    ctx.fillRect(0, 0, 800, 56);
+    ctx.fillRect(0, 392, 800, 58);
+    ctx.strokeStyle = "#ef4444";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(0, 56); ctx.lineTo(800, 56);
+    ctx.moveTo(0, 392); ctx.lineTo(800, 392);
+    ctx.stroke();
+
+    ctx.font = "bold 11px 'Inter', monospace";
+    ctx.textAlign = "left";
+    ctx.fillStyle = "#f87171";
+    ctx.fillText(camLabel, 18, 22);
+
+    ctx.textAlign = "right";
+    ctx.fillStyle = "#facc15";
+    ctx.fillText("💀 250-DEATH HOSTAGE PUNISHMENT", 782, 22);
 
     ctx.font = "bold 13px 'Inter', sans-serif";
     ctx.textAlign = "center";
     ctx.fillStyle = "#fef08a";
+    ctx.fillText(subtitle, 400, 44);
+
+    const remSec = Math.max(0, ((totalTicks - t) / 460) * 8.0).toFixed(1);
+    const progPct = Math.min(1, t / totalTicks);
+    ctx.fillStyle = "rgba(30, 41, 59, 0.9)";
+    ctx.fillRect(180, 408, 440, 8);
+    ctx.fillStyle = "#ef4444";
+    ctx.fillRect(180, 408, 440 * progPct, 8);
+
+    ctx.font = "bold 11px 'Inter', monospace";
+    ctx.fillStyle = "#fecaca";
     ctx.fillText(
-      isFinalKing
-        ? "👑 THE REAL DEMON DEVIL KING BOWS HIS HEAD IN ETERNAL PRAISE!"
-        : "🙇 THE DEVIL KING'S BROTHER BOWS & CROWNS YOU KING OF THIS WORLD!",
+      t < totalTicks
+        ? `🔒 CONTROLS & REFRESH LOCKED • 8s DEVIL EXECUTION CINEMA (${remSec}s left — Death Counter Reset to 0/250)`
+        : "💀 DEATH COUNTER RESET TO 0/250! CLICK RESUME TO CONTINUE YOUR STAGE",
       400,
-      36
+      434
     );
+
+    ctx.restore();
+  },
+
+  // ===========================================================================
+  // INTERACTIVE PLAYABLE STORY PROLOGUE (SUBLEVEL 1 OF ALL 3 WORLDS: 1-1, 2-1, 3-1)
+  // - Room 1: Sky-Fall onto Lush Voxel Lawn & Cobblestone Walkway in front of Old Kingdom Wall & Gate
+  //   -> Voxel SMS Popup appears on landing (closable via [✕ CLOSE] click/tap or C/Enter key)
+  //   -> Walk right to open the Old Kingdom Gate!
+  // - Room 2: Inside the Old Kingdom Hall -> Demon stands on the floor in front of the Inner Door & welcomes you
+  //   -> Voxel SMS Popup introduces Who the Demon Is & What He Rules
+  //   -> User closes SMS -> Demon walks back to the Door
+  //   -> Player starts moving -> Demon opens the Door, goes inside, and Player enters the Door to start Stage W-1!
+  // ===========================================================================
+  initStoryPrologue(world) {
+    this.stateMode = "story_prologue";
+    sfx.startMusic("story_prologue");
+
+    this.storyPrologue = {
+      world,
+      room: 1,                  // 1 = Royal Lawn & Old Kingdom Gate, 2 = Old Kingdom Hall & Demon Welcome
+      tick: 0,
+      hasLanded: false,
+      // Voxel SMS state
+      smsOpen: false,
+      smsId: null,              // 'room1_intro', 'room1_lore', 'room2_demon_welcome'
+      smsCloseRect: { x: 590, y: 24, w: 128, h: 28 },
+      smsBotCloseRect: { x: 260, y: 146, w: 280, h: 26 },
+      loreSmsShown: false,
+      // Room 1 Gate state
+      gateOpenProgress: 0,
+      enteringGate: false,
+      gateWalkTick: 0,
+      // Room 2 Grounded Demon & Door Choreography state
+      // 'greet_walk' -> 'sms_wait' -> 'return_to_door' -> 'wait_player_move' -> 'entering_door' -> 'inside_door'
+      demonState: "greet_walk",
+      demonX: 645,
+      demonY: 320,
+      demonFacing: -1,
+      demonAnimTick: 0,
+      innerDoorOpen: 0,
+      enteringInnerDoor: false,
+      innerWalkTick: 0
+    };
+
+    // Place player high in the sky so they fall dramatically onto the Royal Lawn & Walkway!
+    this.player.x = 95;
+    this.player.y = -68;
+    this.player.vx = 0;
+    this.player.vy = 2.5;
+    this.player.onGround = false;
+    this.player.facing = 1;
+    this.player.gravityDir = 1;
+    this.player.reverseControls = false;
+  },
+
+  closeStorySms() {
+    if (this.stateMode !== "story_prologue" || !this.storyPrologue) return false;
+    const sp = this.storyPrologue;
+    if (!sp.smsOpen) return false;
+
+    sfx.smsCloseSound();
+    const closedId = sp.smsId;
+    sp.smsOpen = false;
+
+    // If the player just closed the Demon's Welcome SMS in Room 2, the Demon turns and walks back to the door!
+    if (sp.room === 2 && closedId === "room2_demon_welcome" && sp.demonState === "sms_wait") {
+      sp.demonState = "return_to_door";
+      sp.demonFacing = 1;
+      this.addFloatingText(sp.demonX, sp.demonY - 48, "😈 'Follow me to the door if you dare!'", "#fde047");
+    }
+    return true;
+  },
+
+  handleCanvasPointerDown(clientX, clientY) {
+    if (!this.canvas) return;
+    const rect = this.canvas.getBoundingClientRect();
+    if (!rect.width || !rect.height) return;
+    const cx = ((clientX - rect.left) / rect.width) * 800;
+    const cy = ((clientY - rect.top) / rect.height) * 450;
+
+    if (this.stateMode === "story_prologue" && this.storyPrologue && this.storyPrologue.smsOpen) {
+      const sp = this.storyPrologue;
+      const r1 = sp.smsCloseRect;
+      const r2 = sp.smsBotCloseRect;
+      // Clicking the [✕ CLOSE] button or bottom [CLOSE SMS] pill (or anywhere on the top-right close area) closes the SMS
+      const hitTopClose = cx >= r1.x - 10 && cx <= r1.x + r1.w + 10 && cy >= r1.y - 8 && cy <= r1.y + r1.h + 8;
+      const hitBotClose = cx >= r2.x - 15 && cx <= r2.x + r2.w + 15 && cy >= r2.y - 8 && cy <= r2.y + r2.h + 8;
+      if (hitTopClose || hitBotClose) {
+        this.closeStorySms();
+      }
+    }
+  },
+
+  skipStoryPrologueToStage() {
+    if (this.stateMode !== "story_prologue") return;
+    sfx.buttonClick();
+    this.skipPrologueOnce = true;
+    this.loadStage(this.currentWorld, this.currentSub, false);
+  },
+
+  updateStoryPrologue() {
+    const sp = this.storyPrologue;
+    const p = this.player;
+    if (!sp || !p) return;
+    sp.tick++;
+    sp.demonAnimTick += 0.16;
+
+    const floorY = 350;
+
+    // 1. Auto-walk transition through the Old Kingdom Gate (Room 1 -> Room 2)
+    if (sp.enteringGate) {
+      sp.gateWalkTick++;
+      sp.gateOpenProgress = Math.min(1, sp.gateWalkTick / 22);
+      p.facing = 1;
+      p.vx = 2.6;
+      p.x += p.vx;
+      p.animTick += 0.32;
+      if (sp.gateWalkTick >= 48) {
+        // Enter Room 2: The Old Kingdom Great Hall where the Demon stands in front of the door!
+        sp.room = 2;
+        sp.enteringGate = false;
+        sp.gateWalkTick = 0;
+        sp.smsOpen = false;
+        p.x = 72;
+        p.y = floorY - p.h;
+        p.vx = 0;
+        p.vy = 0;
+        p.onGround = true;
+        p.facing = 1;
+
+        // Initialize Grounded Demon standing in front of the Inner Door (X: 650) and stepping out to welcome player!
+        sp.demonState = "greet_walk";
+        sp.demonX = 645;
+        sp.demonY = floorY - 30;
+        sp.demonFacing = -1;
+        sp.innerDoorOpen = 0;
+        sfx.devilLaugh();
+        this.addFloatingText(540, 210, "👹 THE DEMON STEPS FORWARD TO WELCOME YOU!", "#f87171");
+      }
+      this.keys.jumpJustPressed = false;
+      return;
+    }
+
+    // 2. Auto-walk transition through the Inner Stage Door (Room 2 -> Stage W-1)
+    if (sp.enteringInnerDoor) {
+      sp.innerWalkTick++;
+      sp.innerDoorOpen = 1;
+      p.facing = 1;
+      p.vx = 2.8;
+      p.x += p.vx;
+      p.animTick += 0.35;
+      if (sp.innerWalkTick >= 44) {
+        // Prologue complete — start Stage W-1!
+        this.skipPrologueOnce = true;
+        this.loadStage(this.currentWorld, 1, false);
+      }
+      this.keys.jumpJustPressed = false;
+      return;
+    }
+
+    // 3. Room 2 Grounded Demon State Machine (Stands on floor in front of door -> SMS bio -> Returns to door -> Enters door when player moves!)
+    if (sp.room === 2) {
+      if (sp.demonState === "greet_walk") {
+        // Demon walks a few steps left from the door (645 -> 535) to welcome the player
+        sp.demonFacing = -1;
+        sp.demonX -= 2.2;
+        if (sp.demonX <= 535) {
+          sp.demonX = 535;
+          sp.demonState = "sms_wait";
+          sp.smsOpen = true;
+          sp.smsId = "room2_demon_welcome";
+          sfx.smsPopupSound();
+        }
+      } else if (sp.demonState === "sms_wait") {
+        // Demon stands in front of the door welcoming the player while the Voxel SMS Bio is open
+        sp.demonFacing = -1;
+      } else if (sp.demonState === "return_to_door") {
+        // User closed the SMS! Demon walks back to stand right in front of the Inner Door (535 -> 685)
+        sp.demonFacing = 1;
+        sp.demonX += 2.8;
+        if (sp.demonX >= 685) {
+          sp.demonX = 685;
+          sp.demonFacing = -1; // Turns to face player at the door
+          sp.demonState = "wait_player_move";
+          this.addFloatingText(655, 225, "👉 Move Right — Watch the Demon enter the door!", "#6ee7b7");
+        }
+      } else if (sp.demonState === "wait_player_move") {
+        // As soon as the player starts to move, the Demon automatically opens the door and goes inside!
+        if (this.keys.left || this.keys.right || this.keys.jump || Math.abs(p.vx) > 0.15) {
+          sp.demonState = "entering_door";
+          sp.demonFacing = 1;
+          sfx.doorOpenSound();
+          sfx.devilLaugh();
+          this.addFloatingText(665, 205, "🚪 DEMON ENTERS THE DOOR! FOLLOW HIM IN!", "#fde047");
+        }
+      } else if (sp.demonState === "entering_door") {
+        // Door swings open and the Demon walks inside the doorway!
+        sp.innerDoorOpen = Math.min(1, sp.innerDoorOpen + 0.06);
+        sp.demonFacing = 1;
+        sp.demonX += 1.8;
+        if (sp.innerDoorOpen >= 1 && sp.demonX >= 718) {
+          sp.demonState = "inside_door";
+          this.spawnParticles(715, 315, "#f43f5e", 18);
+          this.spawnParticles(715, 315, "#facc15", 12);
+        }
+      } else if (sp.demonState === "inside_door") {
+        // Demon is now inside the door; keep door open & glowing so player can enter!
+        sp.innerDoorOpen = 1;
+      }
+    }
+
+    // 4. Player Movement & Physics (Paused while Room 2 Demon is still delivering his welcome SMS so choreography is clear)
+    const freezePlayerForDemonIntro = (sp.room === 2 && (sp.demonState === "greet_walk" || sp.demonState === "sms_wait"));
+    if (sp.hasLanded && !freezePlayerForDemonIntro) {
+      let moveDir = 0;
+      if (this.keys.left) moveDir -= 1;
+      if (this.keys.right) moveDir += 1;
+      if (moveDir !== 0) {
+        p.vx += moveDir * 0.85;
+        p.facing = moveDir;
+        p.animTick += 0.25;
+      } else {
+        p.vx *= 0.76;
+        if (Math.abs(p.vx) < 0.08) p.vx = 0;
+      }
+      p.vx = Math.max(-4.5, Math.min(4.5, p.vx));
+
+      if ((this.keys.jumpJustPressed || this.keys.jump) && p.onGround) {
+        p.vy = -10.2;
+        p.onGround = false;
+        this.keys.jumpJustPressed = false;
+        sfx.jump();
+        this.spawnParticles(p.x + p.w / 2, p.y + p.h, "#4ade80", 6);
+      }
+    } else if (freezePlayerForDemonIntro) {
+      p.vx = 0;
+    }
+    this.keys.jumpJustPressed = false;
+
+    p.vy += 0.52;
+    p.vy = Math.max(-14, Math.min(14, p.vy));
+    p.x += p.vx;
+    p.y += p.vy;
+
+    if (p.x < 18) { p.x = 18; p.vx = 0; }
+    if (p.x + p.w > 780) { p.x = 780 - p.w; p.vx = 0; }
+
+    // Land on the Royal Lawn & Cobblestone Walkway
+    if (p.y + p.h >= floorY) {
+      p.y = floorY - p.h;
+      p.vy = 0;
+      p.onGround = true;
+      if (!sp.hasLanded) {
+        sp.hasLanded = true;
+        this.shakeTimer = 14;
+        sfx.thunderLandSound();
+        setTimeout(() => sfx.smsPopupSound(), 180);
+        this.spawnParticles(p.x + p.w / 2, floorY, "#4ade80", 20);
+        this.spawnParticles(p.x + p.w / 2, floorY, "#facc15", 14);
+        this.addFloatingText(p.x + 45, floorY - 48, "⚡ LANDED ON THE KINGDOM LAWN!", "#facc15");
+        // Immediately pop up Voxel SMS #1 upon landing!
+        sp.smsOpen = true;
+        sp.smsId = "room1_intro";
+      }
+    }
+
+    // Room 1 Optional Lore SMS trigger when walking past the Ancient Kingdom Milestone (X >= 320)
+    if (sp.room === 1 && sp.hasLanded && !sp.loreSmsShown && p.x >= 320 && !sp.smsOpen) {
+      sp.loreSmsShown = true;
+      sp.smsOpen = true;
+      sp.smsId = "room1_lore";
+      sfx.smsPopupSound();
+    }
+
+    // Room 1 Gate Trigger: Reaching the Old Kingdom Gate on the right (X >= 640)
+    if (sp.room === 1 && sp.hasLanded && p.x + p.w >= 640) {
+      sp.smsOpen = false;
+      sp.enteringGate = true;
+      sp.gateWalkTick = 0;
+      sfx.doorOpenSound();
+      this.addFloatingText(665, 195, "🏰 OLD KINGDOM GATE OPENING!", "#fde047");
+    }
+
+    // Room 2 Inner Door Trigger: Once the Demon has gone inside (or is entering), player can enter the door at X >= 675!
+    if (sp.room === 2 && (sp.demonState === "inside_door" || sp.demonState === "entering_door") && p.x + p.w >= 675) {
+      sp.smsOpen = false;
+      sp.enteringInnerDoor = true;
+      sp.innerWalkTick = 0;
+      sfx.doorOpenSound();
+      this.addFloatingText(695, 225, `🚪 ENTERING STAGE ${sp.world}-1!`, "#10b981");
+    }
+  },
+
+  drawOldKingdomLawnAndWalkway(ctx, floorY, w, time, isInterior = false) {
+    // Replaces the plain gray bottom area (y = 350..450) with a rich Voxel Lawn & Cobblestone Walkway!
+    const lawnPalettes = {
+      1: { turfTop: "#22c55e", turfMid: "#15803d", turfDeep: "#062e16", paverA: "#94a3b8", paverB: "#64748b", curb: "#cbd5e1", moss: "#4ade80" },
+      2: { turfTop: "#84cc16", turfMid: "#3f6212", turfDeep: "#1a2e05", paverA: "#a8a29e", paverB: "#78716c", curb: "#fde047", moss: "#a3e635" },
+      3: { turfTop: "#10b981", turfMid: "#065f46", turfDeep: "#022c22", paverA: "#94a3b8", paverB: "#475569", curb: "#c084fc", moss: "#34d399" }
+    };
+    const pal = lawnPalettes[w] || lawnPalettes[1];
+
+    // 1. Upper Cobblestone & Flagstone Royal Walkway Strip (y: floorY .. floorY + 26)
+    ctx.fillStyle = "#334155";
+    ctx.fillRect(0, floorY, 800, 26);
+
+    // Top chiseled stone border curb
+    ctx.fillStyle = pal.curb;
+    ctx.fillRect(0, floorY, 800, 4);
+
+    // Individual Alternating Cobblestone Pavers with Mortar Lines & Moss Tufts
+    for (let px = 0; px < 800; px += 32) {
+      ctx.fillStyle = (px / 32) % 2 === 0 ? pal.paverA : pal.paverB;
+      ctx.fillRect(px + 2, floorY + 5, 28, 10);
+      ctx.fillStyle = (px / 32) % 2 === 1 ? pal.paverA : pal.paverB;
+      ctx.fillRect(px + 10, floorY + 16, 20, 8);
+      // Mossy crevices between walkway stones
+      ctx.fillStyle = pal.moss;
+      ctx.fillRect(px + 1, floorY + 4, 6, 3);
+    }
+
+    // 2. Lush Voxel Lawn & Garden Area Below the Walkway (y: floorY + 26 .. 450)
+    const lawnGrad = ctx.createLinearGradient(0, floorY + 26, 0, 450);
+    lawnGrad.addColorStop(0, isInterior ? "#0f291e" : pal.turfTop);
+    lawnGrad.addColorStop(0.28, isInterior ? "#091c15" : pal.turfMid);
+    lawnGrad.addColorStop(1, pal.turfDeep);
+    ctx.fillStyle = lawnGrad;
+    ctx.fillRect(0, floorY + 26, 800, 450 - (floorY + 26));
+
+    // Perspective Diagonal Walkway Stepping Stones cutting across the Lawn
+    for (let row = 0; row < 4; row++) {
+      const sy = floorY + 34 + row * 16;
+      for (let col = 60; col < 760; col += 140) {
+        const sx = col - row * 8;
+        ctx.fillStyle = "rgba(148, 163, 184, 0.28)";
+        ctx.fillRect(sx, sy, 46, 9);
+        ctx.strokeStyle = "rgba(15, 23, 42, 0.45)";
+        ctx.lineWidth = 1;
+        ctx.strokeRect(sx, sy, 46, 9);
+      }
+    }
+
+    // Voxel Grass Blades, Trim Hedges & Wildflowers across the Lawn
+    for (let gx = 12; gx < 790; gx += 22) {
+      const sway = Math.sin(time * 2.5 + gx * 0.1) * 1.5;
+      const gy = floorY + 30 + ((gx * 17) % 45);
+      ctx.fillStyle = pal.moss;
+      ctx.fillRect(gx + sway, gy, 3, 7);
+      ctx.fillRect(gx + 4 + sway, gy + 2, 3, 5);
+      if (gx % 66 === 0 && !isInterior) {
+        // Tiny golden/crimson lawn flowers
+        ctx.fillStyle = (gx % 132 === 0) ? "#facc15" : "#fb7185";
+        ctx.fillRect(gx + 1, gy - 2, 4, 4);
+      }
+    }
+  },
+
+  drawOldKingdomCastleWallAndGate(ctx, floorY, w, gateOpenProgress, time) {
+    // Draws a weathered Medieval Old Kingdom Stone Wall, Battlements, Torches & Archway Gatehouse on the right!
+    const wallX = 505;
+    const wallY = 58;
+    const wallW = 295;
+    const wallH = floorY - wallY;
+
+    // 1. Main Ancient Stone Fortress Wall Background
+    ctx.fillStyle = "#1e293b";
+    ctx.fillRect(wallX, wallY, wallW, wallH);
+
+    // 2. Staggered Weathered Ashlar Stone Masonry Courses (Old Kingdom Wall Bricks!)
+    const rowH = 22;
+    for (let ry = wallY; ry < floorY; ry += rowH) {
+      const rowIdx = Math.floor((ry - wallY) / rowH);
+      const offset = (rowIdx % 2) * 24;
+      for (let rx = wallX; rx < 800; rx += 48) {
+        const bx = Math.max(wallX, rx - offset);
+        const bw = Math.min(46, 800 - bx);
+        if (bw <= 4) continue;
+        const shade = ((rowIdx * 7 + rx) % 3);
+        ctx.fillStyle = shade === 0 ? "#334155" : shade === 1 ? "#273549" : "#1e293b";
+        ctx.fillRect(bx + 1, ry + 1, bw - 2, rowH - 2);
+        ctx.strokeStyle = "#0f172a";
+        ctx.lineWidth = 1.5;
+        ctx.strokeRect(bx + 1, ry + 1, bw - 2, rowH - 2);
+      }
+    }
+
+    // 3. Crenellated Castle Battlements & Merlons along Top of Old Wall
+    for (let mx = wallX - 6; mx < 800; mx += 38) {
+      ctx.fillStyle = "#334155";
+      ctx.fillRect(mx, wallY - 22, 24, 22);
+      ctx.strokeStyle = "#0f172a";
+      ctx.lineWidth = 2;
+      ctx.strokeRect(mx, wallY - 22, 24, 22);
+      ctx.fillStyle = "#64748b";
+      ctx.fillRect(mx + 2, wallY - 20, 20, 4);
+    }
+
+    // 4. Ancient Wall Cracks & Hanging Moss / Climbing Ivy Vines
+    ctx.strokeStyle = "#090d16";
+    ctx.lineWidth = 2;
+    [[545, 110], [610, 95], [765, 130]].forEach(([cx, cy]) => {
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(cx + 8, cy + 16);
+      ctx.lineTo(cx - 5, cy + 32);
+      ctx.stroke();
+    });
+
+    // Hanging Old Kingdom Ivy Vines
+    ctx.fillStyle = "#15803d";
+    [522, 560, 608, 768].forEach((vx, idx) => {
+      const vh = 48 + (idx % 3) * 28;
+      for (let vy = wallY; vy < wallY + vh; vy += 10) {
+        ctx.fillRect(vx + Math.sin(vy * 0.2 + idx) * 3, vy, 8, 9);
+      }
+    });
+
+    // 5. Flanking Guard Tower Buttresses & Flickering Iron Wall Torches
+    [588, 772].forEach((tx, idx) => {
+      // Stone pilaster buttress
+      ctx.fillStyle = "#1e293b";
+      ctx.fillRect(tx - 12, wallY, 24, wallH);
+      ctx.strokeStyle = "#0f172a";
+      ctx.lineWidth = 2;
+      ctx.strokeRect(tx - 12, wallY, 24, wallH);
+
+      // Narrow medieval arrow slit window
+      ctx.fillStyle = "#090d16";
+      ctx.fillRect(tx - 3, 108, 6, 34);
+      ctx.fillRect(tx - 8, 120, 16, 5);
+
+      // Flickering Wall Torch in Iron Bracket
+      ctx.fillStyle = "#451a03";
+      ctx.fillRect(tx - 3, 215, 6, 20);
+      const glowR = 16 + Math.sin(time * 9 + idx) * 4;
+      const tGrad = ctx.createRadialGradient(tx, 208, 2, tx, 208, glowR);
+      tGrad.addColorStop(0, "#fef08a");
+      tGrad.addColorStop(0.5, "#f97316");
+      tGrad.addColorStop(1, "rgba(239, 68, 68, 0)");
+      ctx.fillStyle = tGrad;
+      ctx.beginPath();
+      ctx.arc(tx, 208, glowR, 0, Math.PI * 2);
+      ctx.fill();
+    });
+
+    // 6. GRAND ARCHED STONE KINGDOM GATEHOUSE (X: 622, Y: 158, W: 116, H: 192)
+    const gx = 622;
+    const gy = 158;
+    const gw = 116;
+    const gh = floorY - gy;
+
+    // Outer Carved Stone Voussoir Arch Frame
+    ctx.fillStyle = "#475569";
+    ctx.fillRect(gx - 14, gy - 16, gw + 28, gh + 16);
+    ctx.strokeStyle = "#0f172a";
+    ctx.lineWidth = 2.5;
+    ctx.strokeRect(gx - 14, gy - 16, gw + 28, gh + 16);
+
+    // Individual carved arch stones around the gate frame
+    ctx.fillStyle = "#64748b";
+    for (let sy = gy; sy < floorY - 12; sy += 24) {
+      ctx.fillRect(gx - 12, sy, 10, 20);
+      ctx.fillRect(gx + gw + 2, sy, 10, 20);
+    }
+
+    // Keystone Crest Above the Gate
+    ctx.fillStyle = "#facc15";
+    ctx.fillRect(gx + gw / 2 - 16, gy - 22, 32, 18);
+    ctx.strokeStyle = "#78350f";
+    ctx.strokeRect(gx + gw / 2 - 16, gy - 22, 32, 18);
+    ctx.fillStyle = "#dc2626";
+    ctx.fillRect(gx + gw / 2 - 8, gy - 17, 6, 6);
+    ctx.fillRect(gx + gw / 2 + 2, gy - 17, 6, 6);
+
+    // Interior Torch-Lit Corridor Behind the Gate Doors
+    ctx.fillStyle = gateOpenProgress > 0.05 ? "#fef08a" : "#090d16";
+    ctx.fillRect(gx, gy, gw, gh);
+    if (gateOpenProgress > 0.05) {
+      ctx.fillStyle = "#f59e0b";
+      ctx.fillRect(gx + 10, gy + 10, gw - 20, gh - 10);
+    }
+
+    // Heavy Aged Timber Double Doors with Iron Straps & Brass Studs
+    const leafW = Math.max(5, (gw / 2) * (1 - gateOpenProgress * 0.88));
+    [gx, gx + gw - leafW].forEach((lx, sideIdx) => {
+      // Aged dark oak planks
+      ctx.fillStyle = "#451a03";
+      ctx.fillRect(lx, gy, leafW, gh);
+      ctx.strokeStyle = "#1c0a00";
+      ctx.lineWidth = 2;
+      ctx.strokeRect(lx, gy, leafW, gh);
+
+      // Vertical plank seams
+      ctx.strokeStyle = "rgba(0,0,0,0.45)";
+      ctx.lineWidth = 1;
+      if (leafW > 20) {
+        ctx.beginPath();
+        ctx.moveTo(lx + leafW * 0.5, gy);
+        ctx.lineTo(lx + leafW * 0.5, gy + gh);
+        ctx.stroke();
+      }
+
+      // Heavy Wrought-Iron Horizontal Hinges & Straps
+      ctx.fillStyle = "#1e293b";
+      [gy + 24, gy + 88, gy + 150].forEach(hy => {
+        ctx.fillRect(lx + 2, hy, Math.max(2, leafW - 4), 8);
+        // Iron rivets
+        ctx.fillStyle = "#94a3b8";
+        if (leafW > 18) {
+          ctx.fillRect(lx + 6, hy + 2, 3, 3);
+          ctx.fillRect(lx + leafW - 10, hy + 2, 3, 3);
+        }
+        ctx.fillStyle = "#1e293b";
+      });
+
+      // Golden Ring Knockers when closed
+      if (gateOpenProgress < 0.65 && leafW > 22) {
+        const kx = sideIdx === 0 ? lx + leafW - 10 : lx + 10;
+        ctx.strokeStyle = "#facc15";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(kx, gy + gh * 0.55, 5, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+    });
+
+    // Iron Portcullis Grate Teeth along the top arch (retracts upward as gate opens)
+    const grateH = Math.max(6, 26 * (1 - gateOpenProgress));
+    ctx.fillStyle = "#334155";
+    for (let px = gx + 8; px < gx + gw - 6; px += 14) {
+      ctx.fillRect(px, gy, 4, grateH);
+    }
+
+    // Floating Gate Label
+    ctx.font = "bold 11px 'Inter', monospace";
+    ctx.textAlign = "center";
+    ctx.fillStyle = "#fde047";
+    ctx.fillText(
+      gateOpenProgress > 0.05 ? "🚪 GATE UNSEALED!" : "🏰 OLD KINGDOM GATE ->",
+      gx + gw / 2,
+      gy - 30
+    );
+  },
+
+  drawVoxelSmsDialog(ctx, sp, lore, w, time) {
+    if (!sp.smsOpen) return;
+
+    // Centered Voxel SMS Messenger Window (X: 70..730, Y: 16..178) — zero text overflow!
+    const bx = 70;
+    const by = 16;
+    const bw = 660;
+    const bh = 162;
+
+    ctx.save();
+
+    // Outer Pixel Drop Shadow & Voxel Phone/Messenger Frame
+    ctx.fillStyle = "rgba(2, 6, 23, 0.96)";
+    ctx.fillRect(bx + 4, by + 4, bw, bh);
+
+    ctx.fillStyle = "#0f172a";
+    ctx.fillRect(bx, by, bw, bh);
+    ctx.strokeStyle = lore.trim;
+    ctx.lineWidth = 3;
+    ctx.strokeRect(bx, by, bw, bh);
+
+    // Top Messenger Header Bar
+    ctx.fillStyle = "#1e293b";
+    ctx.fillRect(bx + 3, by + 3, bw - 6, 32);
+
+    // Status LED + Sender Title
+    ctx.fillStyle = "#22c55e";
+    ctx.beginPath();
+    ctx.arc(bx + 18, by + 19, 5, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.font = "bold 11px 'Inter', monospace";
+    ctx.textAlign = "left";
+    ctx.fillStyle = "#facc15";
+    const headerTitle = sp.smsId === "room2_demon_welcome"
+      ? `📱 VOXEL SMS • FROM: ${lore.devilName}`
+      : sp.smsId === "room1_lore"
+      ? `📜 VOXEL SMS • ANCIENT KINGDOM ARCHIVE NOTE`
+      : `📱 VOXEL SMS • KINGDOM GUIDE (${lore.kingdomTitle})`;
+    ctx.fillText(headerTitle, bx + 30, by + 23);
+
+    // Interactive Top-Right [ ✕ CLOSE SMS ] Button
+    const cr = sp.smsCloseRect;
+    cr.x = bx + bw - 138;
+    cr.y = by + 5;
+    cr.w = 132;
+    cr.h = 26;
+    ctx.fillStyle = "#dc2626";
+    ctx.fillRect(cr.x, cr.y, cr.w, cr.h);
+    ctx.strokeStyle = "#fca5a5";
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(cr.x, cr.y, cr.w, cr.h);
+    ctx.font = "bold 10px 'Inter', monospace";
+    ctx.textAlign = "center";
+    ctx.fillStyle = "#ffffff";
+    ctx.fillText("✕ CLOSE SMS [C]", cr.x + cr.w / 2, cr.y + 17);
+
+    // SMS Message Body Content based on smsId
+    if (sp.smsId === "room1_intro") {
+      ctx.textAlign = "left";
+      ctx.font = "bold 12px 'Inter', sans-serif";
+      ctx.fillStyle = "#f8fafc";
+      ctx.fillText(lore.smsIntroLine1, bx + 18, by + 56);
+      ctx.font = "11.5px 'Inter', sans-serif";
+      ctx.fillStyle = "#cbd5e1";
+      ctx.fillText(lore.smsIntroLine2, bx + 18, by + 75);
+
+      if (w === 1) {
+        // World 1: Show interactive Move & Jump Control Badges inside the SMS message!
+        const drawKeyBadge = (kx, ky, kw, label, active) => {
+          ctx.fillStyle = active ? "#059669" : "#1e293b";
+          ctx.fillRect(kx, ky, kw, 26);
+          ctx.strokeStyle = active ? "#6ee7b7" : "#38bdf8";
+          ctx.lineWidth = 1.6;
+          ctx.strokeRect(kx, ky, kw, 26);
+          ctx.fillStyle = "#ffffff";
+          ctx.font = "bold 10px 'Inter', monospace";
+          ctx.textAlign = "center";
+          ctx.fillText(label, kx + kw / 2, ky + 17);
+        };
+        drawKeyBadge(bx + 18,  by + 86, 132, "◀ MOVE LEFT (A)", this.keys.left);
+        drawKeyBadge(bx + 160, by + 86, 142, "MOVE RIGHT (D) ▶", this.keys.right);
+        drawKeyBadge(bx + 312, by + 86, 142, "▲ JUMP (SPACE)", this.keys.jump);
+
+        ctx.textAlign = "left";
+        ctx.font = "bold 11px 'Inter', sans-serif";
+        ctx.fillStyle = "#6ee7b7";
+        ctx.fillText("👉 Close SMS & walk to the Gate!", bx + 466, by + 103);
+      } else {
+        // Worlds 2 & 3: Territory preview badge inside Room 1 SMS
+        ctx.fillStyle = "rgba(245, 158, 11, 0.14)";
+        ctx.fillRect(bx + 18, by + 86, bw - 36, 26);
+        ctx.strokeStyle = lore.trim;
+        ctx.strokeRect(bx + 18, by + 86, bw - 36, 26);
+        ctx.textAlign = "left";
+        ctx.font = "bold 11px 'Inter', monospace";
+        ctx.fillStyle = "#fde047";
+        ctx.fillText(`👹 RULER AHEAD: ${lore.devilName}`, bx + 28, by + 103);
+      }
+    } else if (sp.smsId === "room1_lore") {
+      ctx.textAlign = "left";
+      ctx.font = "bold 12px 'Inter', sans-serif";
+      ctx.fillStyle = "#fde047";
+      ctx.fillText("📜 ANCIENT WALL INSCRIPTION DISCOVERED:", bx + 18, by + 58);
+      ctx.font = "12px 'Inter', sans-serif";
+      ctx.fillStyle = "#f8fafc";
+      ctx.fillText(lore.note2, bx + 18, by + 80);
+      ctx.fillStyle = "#6ee7b7";
+      ctx.fillText("🏰 Continue down the cobblestone walkway and step into the Old Kingdom Gate!", bx + 18, by + 102);
+    } else if (sp.smsId === "room2_demon_welcome") {
+      // Room 2 Demon Bio & Welcome SMS!
+      ctx.textAlign = "left";
+      ctx.font = "bold 12px 'Inter', monospace";
+      ctx.fillStyle = "#fda4af";
+      ctx.fillText(`👹 WHO AM I? ${lore.devilName}`, bx + 18, by + 56);
+
+      ctx.font = "11.5px 'Inter', sans-serif";
+      ctx.fillStyle = "#f8fafc";
+      ctx.fillText(lore.devilDesc, bx + 18, by + 76);
+
+      ctx.font = "bold 11.5px 'Inter', sans-serif";
+      ctx.fillStyle = "#fde047";
+      ctx.fillText(lore.emptyRoomQuote, bx + 18, by + 98);
+    }
+
+    // Bottom Interactive Close Action Pill inside SMS Box
+    const br = sp.smsBotCloseRect;
+    br.x = bx + bw / 2 - 155;
+    br.y = by + bh - 32;
+    br.w = 310;
+    br.h = 24;
+    const pulse = 0.75 + 0.25 * Math.sin(time * 6);
+    ctx.fillStyle = `rgba(16, 185, 129, ${(0.25 * pulse).toFixed(2)})`;
+    ctx.fillRect(br.x, br.y, br.w, br.h);
+    ctx.strokeStyle = "#34d399";
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(br.x, br.y, br.w, br.h);
+    ctx.font = "bold 10px 'Inter', monospace";
+    ctx.textAlign = "center";
+    ctx.fillStyle = "#a7f3d0";
+    ctx.fillText("✓ TAP [✕ CLOSE] OR PRESS C / ENTER TO CONTINUE", br.x + br.w / 2, br.y + 16);
+
+    ctx.restore();
+  },
+
+  drawStoryPrologue(ctx, time) {
+    if (this.stateMode !== "story_prologue" || !this.storyPrologue) return;
+    const sp = this.storyPrologue;
+    const p = this.player;
+    const w = sp.world || 1;
+    const floorY = 350;
+
+    const worldLore = {
+      1: {
+        kingdomTitle: "KINGDOM OF VOXEL DEVIL — ROYAL LAWN & GATE",
+        devilName: "FOREST DEMON LORD (WORLD 1 RULER)",
+        devilDesc: "Youngest brother of the Voxel Devil. Master of collapsing bridges, lying wooden signs & shadow bats.",
+        skyTop: "#041610", skyBot: "#0f3828", wallColor: "#114232", trim: "#10b981",
+        smsIntroLine1: "⚡ You fell from the sky onto the Royal Lawn of the Kingdom of Voxel Devil!",
+        smsIntroLine2: "Use the controls below to walk along the cobblestone walkway and open the Old Kingdom Gate:",
+        note2: "Every wooden signpost inside this kingdom was carved by the Devil to lie and lure travellers into traps!",
+        emptyRoomQuote: "😈 'Welcome to my hall! Close this SMS, and watch me enter Stage 1-1 when you step forward!'"
+      },
+      2: {
+        kingdomTitle: "CURSED WORLD-TREE CITADEL — ANCIENT ROOT GATE",
+        devilName: "ELDER DEMON WARLORD (DEVIL KING'S BROTHER)",
+        devilDesc: "Ruthless older brother of the Voxel Devil. Rules the Cursed World-Tree, gravity orbs & redstone sawblades.",
+        skyTop: "#140804", skyBot: "#2e1509", wallColor: "#3b1c0b", trim: "#f59e0b",
+        smsIntroLine1: "⚡ You have arrived at the Second Territory: The Cursed World-Tree Fortress!",
+        smsIntroLine2: "Walk across the overgrown stone walkway and unseal the Ancient Root Gate on the right:",
+        note2: "The Elder Demon Warlord built multi-layer tree canopy stages where fake root bridges hide below!",
+        emptyRoomQuote: "👹 'You beat my younger brother, mortal! Close this SMS & follow me through the door into Stage 2-1!'"
+      },
+      3: {
+        kingdomTitle: "ABYSSAL OBSIDIAN CORE — IMPERIAL CITADEL GATE",
+        devilName: "THE SUPREME KING VOXEL DEVIL (EMPEROR OF ALL 96 SANCTUMS)",
+        devilDesc: "Supreme ruler of Voxel Devil. Commands glacial void-ice, dual crossfire saws & nightmare ziggurats.",
+        skyTop: "#06020f", skyBot: "#1f073b", wallColor: "#2e0b4f", trim: "#f43f5e",
+        smsIntroLine1: "⚡ You stand before the final forbidden fortress: The Imperial Citadel of King Voxel Devil!",
+        smsIntroLine2: "Walk down the royal cobblestone walkway and open the Imperial Gate if you have the courage:",
+        note2: "32 multi-layer stepped ziggurats await inside—and Stages 16 to 32 unleash Overlord Nightmare mode!",
+        emptyRoomQuote: "👑 'I am the King Voxel Devil! Close this SMS, move forward, and follow me into Stage 3-1!'"
+      }
+    };
+    const lore = worldLore[w] || worldLore[1];
+
+    ctx.save();
+
+    if (sp.room === 1) {
+      // =====================================================================
+      // ROOM 1: ROYAL LAWN, COBBLESTONE WALKWAY & OLD KINGDOM STONE WALL/GATE
+      // =====================================================================
+      const skyGrad = ctx.createLinearGradient(0, 0, 0, floorY);
+      skyGrad.addColorStop(0, lore.skyTop);
+      skyGrad.addColorStop(1, lore.skyBot);
+      ctx.fillStyle = skyGrad;
+      ctx.fillRect(0, 0, 800, floorY);
+
+      // Stars & distant moonlight in the Kingdom night sky
+      ctx.fillStyle = "rgba(254, 240, 138, 0.35)";
+      for (let st = 0; st < 14; st++) {
+        const sx = (st * 67 + 25) % 490;
+        const sy = 24 + ((st * 37) % 160);
+        ctx.fillRect(sx, sy, 3, 3);
+      }
+
+      // Vertical sky-fall beam where the player dropped from the heavens!
+      if (sp.tick < 95) {
+        const beamAlpha = Math.max(0, 0.45 - sp.tick * 0.0045);
+        ctx.fillStyle = `rgba(56, 189, 248, ${beamAlpha.toFixed(2)})`;
+        ctx.fillRect(75, 0, 64, floorY);
+      }
+
+      // Rolling Green Lawn Hills & Ornamental Trees in the Courtyard Background (Left of Castle Wall)
+      ctx.fillStyle = "#0b2e21";
+      ctx.beginPath();
+      ctx.moveTo(0, floorY);
+      for (let hx = 0; hx <= 520; hx += 40) {
+        ctx.lineTo(hx, floorY - 52 - Math.sin(hx * 0.02) * 16);
+      }
+      ctx.lineTo(520, floorY);
+      ctx.closePath();
+      ctx.fill();
+
+      // Ornamental Voxel Hedges & Pathway Lanterns along the Royal Walkway
+      [185, 335, 465].forEach((lx, idx) => {
+        // Carved Stone & Timber Walkway Lantern Post
+        ctx.fillStyle = "#334155";
+        ctx.fillRect(lx - 6, floorY - 64, 12, 64);
+        ctx.strokeStyle = "#0f172a";
+        ctx.lineWidth = 1.5;
+        ctx.strokeRect(lx - 6, floorY - 64, 12, 64);
+        // Lantern Lamp Head
+        ctx.fillStyle = "#facc15";
+        ctx.fillRect(lx - 9, floorY - 76, 18, 12);
+        ctx.strokeStyle = "#78350f";
+        ctx.strokeRect(lx - 9, floorY - 76, 18, 12);
+        // Trimmed Royal Lawn Bush next to post
+        ctx.fillStyle = "#15803d";
+        ctx.fillRect(lx + 14, floorY - 22, 34, 22);
+        ctx.fillStyle = "#22c55e";
+        ctx.fillRect(lx + 18, floorY - 28, 26, 8);
+      });
+
+      // Ancient Stone Lore Plaque at X: 335
+      ctx.fillStyle = "#1e293b";
+      ctx.fillRect(315, floorY - 46, 40, 46);
+      ctx.strokeStyle = lore.trim;
+      ctx.lineWidth = 2;
+      ctx.strokeRect(315, floorY - 46, 40, 46);
+      ctx.fillStyle = "#fde047";
+      ctx.font = "bold 9px 'Inter', monospace";
+      ctx.textAlign = "center";
+      ctx.fillText("📜 LORE", 335, floorY - 52);
+
+      // Draw the Old Kingdom Stone Wall & Archway Gatehouse on the right
+      this.drawOldKingdomCastleWallAndGate(ctx, floorY, w, sp.gateOpenProgress, time);
+
+      // Draw the Lush Voxel Lawn & Cobblestone Walkway at y = 350..450 (replacing the plain gray bar!)
+      this.drawOldKingdomLawnAndWalkway(ctx, floorY, w, time, false);
+    } else {
+      // =====================================================================
+      // ROOM 2: INSIDE THE OLD KINGDOM HALL — GROUNDED DEMON WELCOMES YOU AT DOOR!
+      // =====================================================================
+      // Ancient Stone Brick Hall Background
+      ctx.fillStyle = "#0f172a";
+      ctx.fillRect(0, 0, 800, floorY);
+
+      const rowH = 26;
+      for (let ry = 0; ry < floorY; ry += rowH) {
+        const rowIdx = Math.floor(ry / rowH);
+        const offset = (rowIdx % 2) * 28;
+        for (let rx = 0; rx < 800; rx += 56) {
+          const bx = rx - offset;
+          ctx.fillStyle = ((rowIdx + rx) % 3 === 0) ? "#1e293b" : "#131c2e";
+          ctx.fillRect(bx + 1, ry + 1, 54, rowH - 2);
+        }
+      }
+
+      // Gothic Stone Pillars & Flickering Wall Torches along the Great Hall
+      [130, 290, 450, 600].forEach((tx, idx) => {
+        ctx.fillStyle = "#1e293b";
+        ctx.fillRect(tx - 16, 30, 32, floorY - 30);
+        ctx.strokeStyle = "#090d16";
+        ctx.lineWidth = 2;
+        ctx.strokeRect(tx - 16, 30, 32, floorY - 30);
+
+        // Torch Sconce
+        ctx.fillStyle = "#78350f";
+        ctx.fillRect(tx - 4, 175, 8, 22);
+        const flicker = 12 + Math.sin(time * 8 + idx) * 4;
+        const tGrad = ctx.createRadialGradient(tx, 168, 2, tx, 168, flicker * 1.8);
+        tGrad.addColorStop(0, "#fef08a");
+        tGrad.addColorStop(0.5, "#ef4444");
+        tGrad.addColorStop(1, "rgba(239, 68, 68, 0)");
+        ctx.fillStyle = tGrad;
+        ctx.beginPath();
+        ctx.arc(tx, 168, flicker * 1.8, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      // Draw the Cobblestone Walkway & Mossy Castle Courtyard Border at y = 350..450
+      this.drawOldKingdomLawnAndWalkway(ctx, floorY, w, time, true);
+
+      // Inner Stage Sanctuary Door on the Right (X: 695, Y: 280, W: 44, H: 70)
+      this.drawPortalGraphic(
+        ctx,
+        695,
+        280,
+        44,
+        70,
+        "#10b981",
+        false,
+        time,
+        sp.innerDoorOpen || 0
+      );
+
+      // Draw the Grounded Demon standing on the floor in front of the door (until he walks inside the door!)
+      if (sp.demonState !== "inside_door") {
+        const isDemonWalking = (sp.demonState === "greet_walk" || sp.demonState === "return_to_door" || sp.demonState === "entering_door");
+        const demonLabel = sp.demonState === "sms_wait"
+          ? "😈 WELCOME TO MY KINGDOM!"
+          : sp.demonState === "wait_player_move"
+          ? "👹 MOVE FORWARD IF YOU DARE!"
+          : sp.demonState === "entering_door"
+          ? "😈 CATCH ME IN STAGE " + w + "-1!"
+          : lore.devilName;
+
+        this.drawScaryDevilSprite(
+          ctx,
+          sp.demonX,
+          sp.demonY,
+          1.22 + (w - 1) * 0.12,
+          time * 3.5,
+          isDemonWalking ? time * 1.4 : time * 0.6,
+          demonLabel,
+          {
+            pose: isDemonWalking ? "walking" : "hunting",
+            worldVariant: w,
+            facing: sp.demonFacing
+          }
+        );
+      }
+    }
+
+    // Draw the Player Character in the Prologue!
+    if (p) {
+      const isMoving = Math.abs(p.vx) > 0.2;
+      const isInAir = !p.onGround;
+      const swing = Math.sin(p.animTick * 2.2) * (isMoving ? 1 : 0);
+      const dir = p.facing >= 0 ? 1 : -1;
+
+      ctx.save();
+      ctx.translate(p.x + p.w / 2, p.y + p.h / 2);
+
+      // Hero Scarf
+      ctx.fillStyle = "#ef4444";
+      ctx.beginPath();
+      ctx.moveTo(-dir * 4, -5);
+      ctx.lineTo(-dir * 18, -3 + Math.sin(time * 5) * 4);
+      ctx.lineTo(-dir * 15, 4 + Math.sin(time * 5) * 4);
+      ctx.lineTo(-dir * 4, 1);
+      ctx.closePath();
+      ctx.fill();
+
+      // Legs & Boots
+      ctx.fillStyle = "#1e3a8a";
+      ctx.fillRect(-8, 5, 6, 9 + swing * 3.5);
+      ctx.fillRect(2, 5, 6, 9 - swing * 3.5);
+      ctx.fillStyle = "#78350f";
+      ctx.fillRect(-9, 11 + swing * 3.5, 8, 4);
+      ctx.fillRect(1, 11 - swing * 3.5, 8, 4);
+
+      // Jacket
+      ctx.fillStyle = "#0ea5e9";
+      ctx.fillRect(-9, -5, 18, 11);
+      ctx.strokeStyle = "#0f172a";
+      ctx.lineWidth = 1.2;
+      ctx.strokeRect(-9, -5, 18, 11);
+      ctx.fillStyle = "#facc15";
+      ctx.fillRect(-3, 3, 6, 3);
+
+      // Arms
+      ctx.fillStyle = "#38bdf8";
+      ctx.fillRect(dir * 5, isInAir ? -10 : -2 + swing * 4, 5, 10);
+
+      // Head
+      ctx.fillStyle = "#fcd34d";
+      ctx.fillRect(-10, -17, 20, 13);
+      ctx.strokeRect(-10, -17, 20, 13);
+      ctx.fillStyle = "#271505";
+      ctx.fillRect(-11, -19, 22, 5);
+      ctx.fillStyle = "#ef4444";
+      ctx.fillRect(-10, -15, 20, 2.5);
+      const eyeX = dir > 0 ? -1 : -7;
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(eyeX, -12, 4, 4);
+      ctx.fillRect(eyeX + 6, -12, 4, 4);
+      ctx.fillStyle = "#0f172a";
+      ctx.fillRect(eyeX + 1.5, -11, 2, 2.5);
+      ctx.fillRect(eyeX + 7.5, -11, 2, 2.5);
+      ctx.restore();
+    }
+
+    // Draw particles & floating texts on top of prologue
+    for (const pt of this.particles) {
+      ctx.fillStyle = pt.color;
+      ctx.fillRect(pt.x, pt.y, pt.size, pt.size);
+    }
+    for (const ft of this.floatingTexts) {
+      ctx.save();
+      ctx.font = "bold 13px 'Inter', monospace";
+      ctx.textAlign = "center";
+      ctx.strokeStyle = "#090d16";
+      ctx.lineWidth = 4;
+      ctx.strokeText(ft.text, ft.x, ft.y);
+      ctx.fillStyle = ft.color;
+      ctx.fillText(ft.text, ft.x, ft.y);
+      ctx.restore();
+    }
+
+    // Draw Voxel SMS Notification Popup if open!
+    this.drawVoxelSmsDialog(ctx, sp, lore, w, time);
+
+    // Compact Bottom Guidance Pill along the Lawn edge
+    ctx.fillStyle = "rgba(9, 13, 22, 0.88)";
+    ctx.fillRect(155, 418, 490, 24);
+    ctx.strokeStyle = "#4ade80";
+    ctx.lineWidth = 1.2;
+    ctx.strokeRect(155, 418, 490, 24);
+    ctx.font = "bold 10px 'Inter', monospace";
+    ctx.textAlign = "center";
+    ctx.fillStyle = "#ecfdf5";
+    const bottomGuide = sp.smsOpen
+      ? "💬 Read the Voxel SMS above & click [✕ CLOSE SMS] (or press C / ENTER)"
+      : sp.room === 1
+      ? "🌿 Walk RIGHT along the Royal Lawn Walkway to open the Old Kingdom Gate!"
+      : sp.demonState === "wait_player_move"
+      ? "👣 Start moving RIGHT — watch the Demon open & enter the Stage Door!"
+      : "🚪 Walk RIGHT into the open Sanctuary Door to start Stage " + w + "-1!";
+    ctx.fillText(bottomGuide, 400, 434);
+
     ctx.restore();
   },
 
@@ -4212,7 +6779,7 @@ const GameApp = {
     }
 
     const port = st.portal;
-    this.drawPortalGraphic(ctx, port.x, port.y, port.w, port.h, port.locked ? "#64748b" : "#10b981", port.locked, time);
+    this.drawPortalGraphic(ctx, port.x, port.y, port.w, port.h, port.locked ? "#64748b" : "#10b981", port.locked, time, port.doorOpen || 0);
 
     if (this.stateMode !== "dead" && this.player) {
       const p = this.player;
@@ -4334,11 +6901,17 @@ const GameApp = {
       ctx.restore();
     }
 
-    // Draw Scary Devil Hunter (if awakened at >50 deaths) & Royal Bowing Ceremony (on World Win)
+    // Draw Scary Devil Hunter, Royal Bowing Ceremony, 250-Death Hostage Execution, or Playable Story Prologue
     this.drawDevilHunter(ctx, time);
     this.drawCeremonyScene(ctx, time);
+    this.drawHostage250Scene(ctx, time);
+    this.drawStoryPrologue(ctx, time);
 
-    // Cool & minimal translucent pill HUD at top so full screen is visible
+    // Hide top pill HUD during full-screen 3D Royal Palace Cinema, 250-Death Hostage Scene, or Story Prologue
+    if ((this.stateMode === 'won' && this.ceremonyType) || this.stateMode === 'hostage_250' || this.stateMode === 'story_prologue') {
+      ctx.restore();
+      return;
+    }
     ctx.save();
     ctx.fillStyle = "rgba(9, 13, 22, 0.68)";
     ctx.fillRect(14, 6, 520, 22);
@@ -4385,29 +6958,50 @@ const GameApp = {
     ctx.restore();
   },
 
-  drawPortalGraphic(ctx, x, y, w, h, color, locked, time) {
+  drawPortalGraphic(ctx, x, y, w, h, color, locked, time, openProgress = 0) {
+    // Outer Voxel Sanctuary Door Frame
     ctx.fillStyle = "#1e1b4b";
-    ctx.fillRect(x, y, w, h);
-    ctx.strokeStyle = "#7c3aed";
+    ctx.fillRect(x - 2, y - 2, w + 4, h + 2);
+    ctx.strokeStyle = openProgress > 0.05 ? "#facc15" : "#7c3aed";
     ctx.lineWidth = 3;
-    ctx.strokeRect(x, y, w, h);
+    ctx.strokeRect(x - 2, y - 2, w + 4, h + 2);
 
-    ctx.fillStyle = locked ? "#334155" : color;
-    ctx.fillRect(x + 6, y + 6, w - 12, h - 12);
+    // Radiant Dimensional Corridor Inside Doorway
+    ctx.fillStyle = locked ? "#1e293b" : (openProgress > 0.05 ? "#fef08a" : color);
+    ctx.fillRect(x + 4, y + 4, w - 8, h - 6);
 
     const pulseOff = Math.sin(time * 4) * 3;
-    ctx.fillStyle = locked ? "#64748b" : "#a7f3d0";
-    ctx.fillRect(x + 11, y + 12 + pulseOff, w - 22, h - 24);
+    ctx.fillStyle = locked ? "#475569" : (openProgress > 0.05 ? "#ffffff" : "#a7f3d0");
+    ctx.fillRect(x + 9, y + 10 + pulseOff, w - 18, h - 20);
+
+    // Hinged Double Sanctuary Doors that swing open when openProgress > 0!
+    const leafW = Math.max(2, ((w - 8) / 2) * (1 - openProgress * 0.86));
+    ctx.fillStyle = locked ? "#334155" : "#065f46";
+    ctx.strokeStyle = "#0f172a";
+    ctx.lineWidth = 1.5;
+    // Left Door Leaf
+    ctx.fillRect(x + 4, y + 4, leafW, h - 6);
+    ctx.strokeRect(x + 4, y + 4, leafW, h - 6);
+    // Right Door Leaf
+    ctx.fillRect(x + w - 4 - leafW, y + 4, leafW, h - 6);
+    ctx.strokeRect(x + w - 4 - leafW, y + 4, leafW, h - 6);
+
+    // Golden Door Handles
+    if (openProgress < 0.75) {
+      ctx.fillStyle = "#facc15";
+      ctx.fillRect(x + 4 + leafW - 4, y + h / 2 - 3, 3, 6);
+      ctx.fillRect(x + w - 4 - leafW + 1, y + h / 2 - 3, 3, 6);
+    }
 
     ctx.save();
     ctx.font = "bold 10px 'Inter', monospace";
     ctx.textAlign = "center";
     ctx.strokeStyle = "#090d16";
     ctx.lineWidth = 3;
-    const label = locked ? "🔒 LOCKED" : "✨ EXIT";
-    ctx.strokeText(label, x + w / 2, y - 6);
-    ctx.fillStyle = locked ? "#f87171" : "#6ee7b7";
-    ctx.fillText(label, x + w / 2, y - 6);
+    const label = locked ? "🔒 LOCKED" : openProgress > 0.05 ? "🚪 OPEN!" : "🚪 EXIT";
+    ctx.strokeText(label, x + w / 2, y - 7);
+    ctx.fillStyle = locked ? "#f87171" : openProgress > 0.05 ? "#fde047" : "#6ee7b7";
+    ctx.fillText(label, x + w / 2, y - 7);
     ctx.restore();
   },
 
@@ -4432,7 +7026,12 @@ const GameApp = {
     const gpTitle = document.getElementById("gameplayStageBadge");
     if (gpTitle) gpTitle.textContent = `${this.stage.title}`;
     const gpDeaths = document.getElementById("gameplayDeathsBadge");
-    if (gpDeaths) gpDeaths.textContent = `💀 ${this.stageDeaths[this.stage.key] || 0} (Total: ${this.totalDeaths})`;
+    if (gpDeaths) {
+      const shownTotal = (this.stateMode === "hostage_250" && (this.hostageTick || 0) < 325)
+        ? "250/250 • EXECUTING!"
+        : `${this.totalDeaths}/250`;
+      gpDeaths.textContent = `💀 ${this.stageDeaths[this.stage.key] || 0} (Total: ${shownTotal})`;
+    }
 
     let clearedCount = 0;
     for (let w = 1; w <= 3; w++) {
@@ -4697,6 +7296,9 @@ const GameApp = {
     this.showScreen("closed");
 
     try {
+      if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App) {
+        window.Capacitor.Plugins.App.exitApp();
+      }
       if (window.navigator && window.navigator.app && typeof window.navigator.app.exitApp === "function") {
         window.navigator.app.exitApp();
       }
@@ -4722,6 +7324,10 @@ const GameApp = {
   },
 
   bindEvents() {
+    this.canvas?.addEventListener("pointerdown", (e) => {
+      this.handleCanvasPointerDown(e.clientX, e.clientY);
+    });
+
     window.addEventListener("resize", () => {
       if (this.consoleConfig.deviceView === "auto") {
         this.applyConsoleConfigToDOM();
@@ -4734,6 +7340,16 @@ const GameApp = {
       if (this.currentScreen === "intro") {
         this.dismissIntroAndStart(true);
         return;
+      }
+
+      // Block browser refresh keys (F5 / Ctrl+R / Cmd+R) and all skip/restart keys while the 8-second 250-Death Execution is playing!
+      if (this.stateMode === "hostage_250" && !this.hostageOverlayShown) {
+        if (e.code === "F5" || ((e.ctrlKey || e.metaKey) && e.code === "KeyR") || e.code === "KeyR" || e.code === "Escape" || e.code === "KeyP") {
+          e.preventDefault();
+          e.stopPropagation();
+          this.showToast("⛓️ NO ESCAPE! Controls & Refresh are locked until the 8s Devil Execution finishes!", "amber");
+          return;
+        }
       }
 
       if (this.currentScreen !== "gameplay") return;
@@ -4754,6 +7370,17 @@ const GameApp = {
       }
       if (e.code === "KeyR") {
         this.restartStage();
+      }
+      if (this.stateMode === "story_prologue" && this.storyPrologue) {
+        if ((e.code === "KeyC" || e.code === "Enter" || e.code === "Space") && this.storyPrologue.smsOpen) {
+          e.preventDefault();
+          this.closeStorySms();
+          return;
+        }
+        if (e.code === "Enter" && !this.storyPrologue.smsOpen) {
+          this.skipStoryPrologueToStage();
+          return;
+        }
       }
       if (e.code === "KeyP" || e.code === "Escape") {
         this.togglePause();
@@ -5101,6 +7728,8 @@ const GameApp = {
   },
 
   togglePause() {
+    if (this.isHostageExecutionLocked()) return;
+    if (this.stateMode === "won" && this.ceremonyType && !this.ceremonyOverlayShown) return;
     sfx.buttonClick();
     this.isPaused = !this.isPaused;
     const btn = document.getElementById("btnPause");
