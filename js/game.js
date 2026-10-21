@@ -1,5 +1,5 @@
 // ============================================================================
-// VOXEL DEVIL: CRAFT OF TRAPS (v3.9 — UNSKIPPABLE 8-SECOND 250-DEATH HOSTAGE EXECUTION LOCK & AUTO-RESET)
+// VOXEL DEVIL: CRAFT OF TRAPS (v4.2 — NO-OVERLAP DEVIL LAUGH, DOOR BAT-RELEASE & RETURN, FIRST-2-LEVELS POPUP & TOP-ONLY +2s BATS)
 // Built by Mokuttan Labs (https://sreekuttan28.github.io/Mokuttan-Lab/)
 // Creator: Sreehari N P (@sreekuttan28)
 // ============================================================================
@@ -8,11 +8,18 @@
 class VoxelAudio {
   constructor() {
     this.ctx = null;
+    this.musicGain = null;
+    this.sfxGain = null;
+    this.laughGain = null;
+    this.laughTimeouts = [];
+    this.pendingDeathLaughTimer = null;
+    this.noiseBuffer = null;
     this.sfxMuted = false;
     this.musicMuted = false;
     this.musicVolume = 0.85;
     this.sfxVolume = 0.90;
     this.currentTrack = "menu";
+    this.gameplayTrackOverride = "auto"; // 'auto', 'world1', 'world2', 'world3', 'victory_palace', 'story_prologue', 'menu'
     this.isMusicPlaying = false;
     this.stepIndex = 0;
     this.sequencerTimer = null;
@@ -21,9 +28,17 @@ class VoxelAudio {
     try {
       const savedAudio = JSON.parse(localStorage.getItem("mokuttan_voxel_audio") || "{}");
       if (typeof savedAudio.sfxMuted === "boolean") this.sfxMuted = savedAudio.sfxMuted;
-      if (typeof savedAudio.musicMuted === "boolean") this.musicMuted = savedAudio.musicMuted;
-      if (typeof savedAudio.musicVolume === "number") this.musicVolume = savedAudio.musicVolume;
-      if (typeof savedAudio.sfxVolume === "number") this.sfxVolume = savedAudio.sfxVolume;
+      if (typeof savedAudio.musicVolume === "number" && savedAudio.musicVolume > 0.05) {
+        this.musicVolume = Math.max(0.1, Math.min(1, savedAudio.musicVolume));
+      }
+      if (typeof savedAudio.sfxVolume === "number" && savedAudio.sfxVolume > 0.05) {
+        this.sfxVolume = Math.max(0.1, Math.min(1, savedAudio.sfxVolume));
+      }
+      if (typeof savedAudio.gameplayTrackOverride === "string") {
+        this.gameplayTrackOverride = savedAudio.gameplayTrackOverride;
+      }
+      // Always start with music unmuted when the app opens so starting music is never silent!
+      this.musicMuted = false;
     } catch (e) {}
   }
 
@@ -33,9 +48,46 @@ class VoxelAudio {
         sfxMuted: this.sfxMuted,
         musicMuted: this.musicMuted,
         musicVolume: this.musicVolume,
-        sfxVolume: this.sfxVolume
+        sfxVolume: this.sfxVolume,
+        gameplayTrackOverride: this.gameplayTrackOverride
       }));
     } catch (e) {}
+  }
+
+  ensureMasterGains() {
+    if (!this.ctx) return;
+    if (!this.musicGain) {
+      this.musicGain = this.ctx.createGain();
+      this.musicGain.gain.setValueAtTime(this.musicMuted ? 0 : this.musicVolume, this.ctx.currentTime);
+      this.musicGain.connect(this.ctx.destination);
+    }
+    if (!this.sfxGain) {
+      this.sfxGain = this.ctx.createGain();
+      this.sfxGain.gain.setValueAtTime(this.sfxMuted ? 0 : this.sfxVolume, this.ctx.currentTime);
+      this.sfxGain.connect(this.ctx.destination);
+    }
+  }
+
+  updateMasterGainValues() {
+    if (!this.ctx) return;
+    this.ensureMasterGains();
+    const now = this.ctx.currentTime;
+    if (this.musicGain) {
+      const targetM = (this.musicMuted || this.musicVolume <= 0) ? 0.0001 : this.musicVolume;
+      try {
+        this.musicGain.gain.setTargetAtTime(targetM, now, 0.015);
+      } catch (e) {
+        this.musicGain.gain.value = targetM;
+      }
+    }
+    if (this.sfxGain) {
+      const targetS = (this.sfxMuted || this.sfxVolume <= 0) ? 0.0001 : this.sfxVolume;
+      try {
+        this.sfxGain.gain.setTargetAtTime(targetS, now, 0.015);
+      } catch (e) {
+        this.sfxGain.gain.value = targetS;
+      }
+    }
   }
 
   init() {
@@ -45,16 +97,21 @@ class VoxelAudio {
         this.ctx = new AudioCtx();
       }
     }
-    if (this.ctx && this.ctx.state === "suspended") {
-      this.ctx.resume().then(() => {
+    if (this.ctx) {
+      this.ensureMasterGains();
+      if (this.ctx.state === "suspended") {
+        this.ctx.resume().then(() => {
+          this.unlocked = true;
+          this.updateMasterGainValues();
+          if (!this.musicMuted) {
+            this.startMusic(this.currentTrack);
+          }
+          this.syncAudioUI();
+        }).catch(() => {});
+      } else if (this.ctx.state === "running") {
         this.unlocked = true;
-        if (!this.musicMuted && !this.isMusicPlaying) {
-          this.startMusic(this.currentTrack);
-        }
-        this.syncAudioUI();
-      }).catch(() => {});
-    } else if (this.ctx && this.ctx.state === "running") {
-      this.unlocked = true;
+        this.updateMasterGainValues();
+      }
     }
   }
 
@@ -65,6 +122,7 @@ class VoxelAudio {
     if (this.ctx.state === "suspended") {
       this.ctx.resume().then(() => {
         this.unlocked = true;
+        this.updateMasterGainValues();
         if (!this.musicMuted) {
           this.startMusic(this.currentTrack);
         }
@@ -72,36 +130,72 @@ class VoxelAudio {
       }).catch(() => {});
     } else {
       this.unlocked = true;
-      if (!this.musicMuted && !this.isMusicPlaying) {
+      this.updateMasterGainValues();
+      if (!this.musicMuted && (!this.isMusicPlaying || !this.sequencerTimer)) {
         this.startMusic(this.currentTrack);
       }
       this.syncAudioUI();
     }
   }
 
+  resolveGameplayTrack(worldDefaultTrack = "world1") {
+    if (this.gameplayTrackOverride && this.gameplayTrackOverride !== "auto") {
+      return this.gameplayTrackOverride;
+    }
+    return worldDefaultTrack || "world1";
+  }
+
+  setGameplayTrackOverride(mode) {
+    this.gameplayTrackOverride = mode || "auto";
+    this.savePrefs();
+    const worldNum = (window.GameApp && window.GameApp.currentWorld) ? window.GameApp.currentWorld : 1;
+    const defTrack = WORLD_META[worldNum - 1]?.musicTrack || "world1";
+    const resolved = this.resolveGameplayTrack(defTrack);
+    this.musicMuted = false;
+    if (this.musicVolume <= 0.05) this.musicVolume = 0.85;
+    this.updateMasterGainValues();
+    this.startMusic(resolved);
+    this.syncAudioUI();
+  }
+
   setMusicVolume(val) {
-    this.musicVolume = Math.max(0, Math.min(1, parseFloat(val) || 0));
-    if (this.musicVolume === 0) {
+    let raw = parseFloat(val);
+    if (isNaN(raw)) raw = 0;
+    // Automatically support both 0..1 and 0..100 slider ranges!
+    const norm = raw > 1.001 ? (raw / 100) : raw;
+    this.musicVolume = Math.max(0, Math.min(1, norm));
+    if (this.musicVolume <= 0.005) {
+      this.musicVolume = 0;
       this.musicMuted = true;
+      this.updateMasterGainValues();
       this.stopMusic();
-    } else if (this.musicMuted) {
+    } else {
+      const wasMuted = this.musicMuted;
       this.musicMuted = false;
-      this.unlockAndStart(this.currentTrack);
+      this.updateMasterGainValues();
+      if (wasMuted || !this.isMusicPlaying || !this.sequencerTimer) {
+        this.unlockAndStart(this.currentTrack);
+      }
     }
     this.savePrefs();
     this.syncAudioUI();
   }
 
   setSfxVolume(val) {
-    this.sfxVolume = Math.max(0, Math.min(1, parseFloat(val) || 0));
-    this.sfxMuted = (this.sfxVolume === 0);
+    let raw = parseFloat(val);
+    if (isNaN(raw)) raw = 0;
+    const norm = raw > 1.001 ? (raw / 100) : raw;
+    this.sfxVolume = Math.max(0, Math.min(1, norm));
+    this.sfxMuted = (this.sfxVolume <= 0.005);
+    this.updateMasterGainValues();
     this.savePrefs();
     this.syncAudioUI();
   }
 
   toggleSfxMute() {
     this.sfxMuted = !this.sfxMuted;
-    if (!this.sfxMuted && this.sfxVolume === 0) this.sfxVolume = 0.8;
+    if (!this.sfxMuted && this.sfxVolume <= 0.05) this.sfxVolume = 0.85;
+    this.updateMasterGainValues();
     this.savePrefs();
     this.syncAudioUI();
     return this.sfxMuted;
@@ -109,7 +203,8 @@ class VoxelAudio {
 
   toggleMusicMute() {
     this.musicMuted = !this.musicMuted;
-    if (!this.musicMuted && this.musicVolume === 0) this.musicVolume = 0.8;
+    if (!this.musicMuted && this.musicVolume <= 0.05) this.musicVolume = 0.85;
+    this.updateMasterGainValues();
     this.savePrefs();
     if (this.musicMuted) {
       this.stopMusic();
@@ -128,7 +223,7 @@ class VoxelAudio {
     const changed = this.currentTrack !== trackName;
     this.currentTrack = trackName;
     if (this.musicMuted) return;
-    if (!this.isMusicPlaying || changed) {
+    if (!this.isMusicPlaying || !this.sequencerTimer || changed) {
       this.startMusic(trackName);
     }
   }
@@ -263,7 +358,13 @@ class VoxelAudio {
 
     const playStep = () => {
       if (this.musicMuted || this.musicVolume <= 0 || !this.ctx) return;
-      if (this.ctx.state === "suspended") return;
+      if (this.ctx.state === "suspended") {
+        this.ctx.resume().catch(() => {});
+        return;
+      }
+      this.ensureMasterGains();
+      const dest = this.musicGain || this.ctx.destination;
+      const volScale = this.musicGain ? 1.0 : this.musicVolume;
       const idx = this.stepIndex % cfg.lead.length;
       this.stepIndex++;
       const now = this.ctx.currentTime;
@@ -277,7 +378,7 @@ class VoxelAudio {
           osc.type = cfg.leadType;
           osc.frequency.setValueAtTime(lFreq, now);
           const noteDur = cfg.isEpicAnthem ? dur * 1.45 : dur;
-          gain.gain.setValueAtTime(cfg.leadVol * this.musicVolume, now);
+          gain.gain.setValueAtTime(cfg.leadVol * volScale, now);
           gain.gain.exponentialRampToValueAtTime(0.0008, now + noteDur);
 
           if (cfg.isEpicAnthem) {
@@ -293,14 +394,14 @@ class VoxelAudio {
             osc2.frequency.setValueAtTime(lFreq * 1.004, now);
             osc2.connect(flt);
             flt.connect(gain);
-            gain.connect(this.ctx.destination);
+            gain.connect(dest);
             osc.start(now);
             osc2.start(now);
             osc.stop(now + noteDur);
             osc2.stop(now + noteDur);
           } else {
             osc.connect(gain);
-            gain.connect(this.ctx.destination);
+            gain.connect(dest);
             osc.start(now);
             osc.stop(now + noteDur);
           }
@@ -314,10 +415,10 @@ class VoxelAudio {
           const hGain = this.ctx.createGain();
           hOsc.type = "sine";
           hOsc.frequency.setValueAtTime(hFreq, now);
-          hGain.gain.setValueAtTime(0.036 * this.musicVolume, now);
+          hGain.gain.setValueAtTime(0.036 * volScale, now);
           hGain.gain.exponentialRampToValueAtTime(0.0008, now + dur * 1.6);
           hOsc.connect(hGain);
-          hGain.connect(this.ctx.destination);
+          hGain.connect(dest);
           hOsc.start(now);
           hOsc.stop(now + dur * 1.6);
         } catch (e) {}
@@ -331,10 +432,10 @@ class VoxelAudio {
           kOsc.type = "sine";
           kOsc.frequency.setValueAtTime(115, now);
           kOsc.frequency.exponentialRampToValueAtTime(32, now + 0.16);
-          kGain.gain.setValueAtTime(0.075 * this.musicVolume, now);
+          kGain.gain.setValueAtTime(0.075 * volScale, now);
           kGain.gain.exponentialRampToValueAtTime(0.001, now + 0.17);
           kOsc.connect(kGain);
-          kGain.connect(this.ctx.destination);
+          kGain.connect(dest);
           kOsc.start(now);
           kOsc.stop(now + 0.17);
         } catch (e) {}
@@ -347,10 +448,10 @@ class VoxelAudio {
           const bGain = this.ctx.createGain();
           bOsc.type = "triangle";
           bOsc.frequency.setValueAtTime(bFreq, now);
-          bGain.gain.setValueAtTime(cfg.bassVol * this.musicVolume, now);
+          bGain.gain.setValueAtTime(cfg.bassVol * volScale, now);
           bGain.gain.exponentialRampToValueAtTime(0.0008, now + dur * 0.9);
           bOsc.connect(bGain);
-          bGain.connect(this.ctx.destination);
+          bGain.connect(dest);
           bOsc.start(now);
           bOsc.stop(now + dur * 0.9);
         } catch (e) {}
@@ -405,6 +506,16 @@ class VoxelAudio {
     const sPct = this.sfxMuted ? 0 : Math.round(this.sfxVolume * 100);
     if (sVolSlider && document.activeElement !== sVolSlider) sVolSlider.value = sPct;
     if (sVolLabel) sVolLabel.textContent = `${sPct}%`;
+
+    ["auto", "world1", "world2", "world3", "victory_palace", "story_prologue"].forEach(tr => {
+      const btn = document.getElementById(`btnMusicTrack_${tr}`);
+      if (btn) {
+        const active = (this.gameplayTrackOverride || "auto") === tr;
+        btn.className = active
+          ? "voxel-btn bg-emerald-600 text-white border-emerald-300 px-2.5 py-1.5 rounded-lg text-[11px] font-extrabold"
+          : "voxel-btn bg-slate-800 text-slate-300 hover:bg-slate-700 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold";
+      }
+    });
   }
 
   playTone(freq, type, duration, vol = 0.12, slideFreq = null) {
@@ -465,57 +576,221 @@ class VoxelAudio {
     this.devilLaugh();
   }
 
+  getBreathNoiseBuffer() {
+    if (!this.ctx) return null;
+    if (this.noiseBuffer) return this.noiseBuffer;
+    try {
+      const sr = this.ctx.sampleRate || 44100;
+      const len = Math.floor(sr * 0.35);
+      const buf = this.ctx.createBuffer(1, len, sr);
+      const data = buf.getChannelData(0);
+      for (let i = 0; i < len; i++) {
+        data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (sr * 0.12));
+      }
+      this.noiseBuffer = buf;
+      return buf;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  stopLaugh() {
+    if (this.pendingDeathLaughTimer) {
+      clearTimeout(this.pendingDeathLaughTimer);
+      this.pendingDeathLaughTimer = null;
+    }
+    if (this.laughTimeouts && this.laughTimeouts.length) {
+      this.laughTimeouts.forEach(tid => clearTimeout(tid));
+      this.laughTimeouts = [];
+    }
+    if (this.laughGain && this.ctx) {
+      try {
+        const now = this.ctx.currentTime;
+        this.laughGain.gain.cancelScheduledValues(now);
+        this.laughGain.gain.setValueAtTime(0.0001, now);
+        const oldGain = this.laughGain;
+        setTimeout(() => {
+          try { oldGain.disconnect(); } catch (e) {}
+        }, 15);
+      } catch (e) {
+        try { this.laughGain.disconnect(); } catch (e2) {}
+      }
+      this.laughGain = null;
+    }
+  }
+
   devilLaugh() {
-    // Human-like vocal formant Devil Laugh ("MWA - HA - HA - HA - HA!")
+    // SCARY HUMAN-LIKE DEMON VOICE ("MWA - HA - HA - HA - HA - HAAA!")
+    // Always stop any previous or ongoing laugh first so two laughs NEVER overlap or merge!
+    this.stopLaugh();
     if (this.sfxMuted || this.sfxVolume <= 0) return;
     try {
       this.init();
-      if (!this.ctx || this.ctx.state !== "running") return;
-      // 5 vocal bursts with human baritone fundamental frequencies & pitch drops
+      if (!this.ctx) return;
+      if (this.ctx.state === "suspended") {
+        this.ctx.resume().catch(() => {});
+      }
+      if (this.ctx.state !== "running") return;
+      this.ensureMasterGains();
+      const parentDest = this.sfxGain || this.ctx.destination;
+      const vScale = this.sfxGain ? 1.0 : this.sfxVolume;
+
+      // Dedicated bus for this laugh instance so stopLaugh() can silence it mid-syllable on restart!
+      const sessionLaughBus = this.ctx.createGain();
+      sessionLaughBus.gain.setValueAtTime(1.0, this.ctx.currentTime);
+      sessionLaughBus.connect(parentDest);
+      this.laughGain = sessionLaughBus;
+      const dest = sessionLaughBus;
+
+      // 6 natural deep human baritone/bass laugh syllables ("MWA... HA! HA! HA! HA! HAAAA!")
       const syllables = [
-        { startFreq: 165, endFreq: 130, delayMs: 0, dur: 0.19, vol: 0.22 },
-        { startFreq: 195, endFreq: 140, delayMs: 210, dur: 0.16, vol: 0.24 },
-        { startFreq: 180, endFreq: 128, delayMs: 390, dur: 0.16, vol: 0.22 },
-        { startFreq: 162, endFreq: 115, delayMs: 570, dur: 0.17, vol: 0.20 },
-        { startFreq: 145, endFreq: 92,  delayMs: 760, dur: 0.26, vol: 0.24 }
+        { fStart: 132, fEnd: 96,  f1: 680, f2: 1080, delayMs: 0,   dur: 0.22, vol: 0.34 },
+        { fStart: 158, fEnd: 112, f1: 790, f2: 1240, delayMs: 215, dur: 0.18, vol: 0.38 },
+        { fStart: 148, fEnd: 104, f1: 760, f2: 1190, delayMs: 395, dur: 0.18, vol: 0.36 },
+        { fStart: 136, fEnd: 92,  f1: 730, f2: 1140, delayMs: 575, dur: 0.19, vol: 0.34 },
+        { fStart: 124, fEnd: 84,  f1: 690, f2: 1080, delayMs: 765, dur: 0.21, vol: 0.32 },
+        { fStart: 114, fEnd: 68,  f1: 640, f2: 990,  delayMs: 970, dur: 0.34, vol: 0.38 }
       ];
-      syllables.forEach(s => {
-        setTimeout(() => {
-          if (this.sfxMuted || !this.ctx || this.ctx.state !== "running") return;
-          const now = this.ctx.currentTime;
-          const osc1 = this.ctx.createOscillator();
-          const osc2 = this.ctx.createOscillator();
-          osc1.type = "sawtooth";
-          osc2.type = "triangle";
-          osc1.frequency.setValueAtTime(s.startFreq, now);
-          osc1.frequency.exponentialRampToValueAtTime(s.endFreq, now + s.dur);
-          osc2.frequency.setValueAtTime(s.startFreq * 2.02, now);
-          osc2.frequency.exponentialRampToValueAtTime(s.endFreq * 1.98, now + s.dur);
 
-          // Vocal tract "AH / HA" formant filter around 820 Hz
-          const formant = this.ctx.createBiquadFilter();
-          formant.type = "bandpass";
-          formant.frequency.setValueAtTime(860, now);
-          formant.frequency.linearRampToValueAtTime(680, now + s.dur);
-          formant.Q.setValueAtTime(3.2, now);
+      syllables.forEach((s, idx) => {
+        const tid = setTimeout(() => {
+          if (this.sfxMuted || !this.ctx || this.ctx.state !== "running" || this.laughGain !== sessionLaughBus) return;
+          try {
+            const now = this.ctx.currentTime;
 
-          const gain = this.ctx.createGain();
-          gain.gain.setValueAtTime(0.001, now);
-          gain.gain.linearRampToValueAtTime(s.vol * this.sfxVolume, now + 0.025);
-          gain.gain.exponentialRampToValueAtTime(0.001, now + s.dur);
+            // Master syllable envelope + Dark Cathedral Slapback Echo
+            const voxGain = this.ctx.createGain();
+            voxGain.gain.setValueAtTime(0.001, now);
+            voxGain.gain.linearRampToValueAtTime(s.vol * vScale, now + 0.028);
+            voxGain.gain.setValueAtTime(s.vol * vScale * 0.88, now + s.dur * 0.45);
+            voxGain.gain.exponentialRampToValueAtTime(0.0008, now + s.dur);
+            voxGain.connect(dest);
 
-          osc1.connect(formant);
-          osc2.connect(formant);
-          formant.connect(gain);
-          gain.connect(this.ctx.destination);
+            // Cathedral Echo on final syllables for chilling atmosphere
+            if (this.ctx.createDelay && (idx === 1 || idx === 5)) {
+              const dly = this.ctx.createDelay();
+              const dlyGain = this.ctx.createGain();
+              dly.delayTime.setValueAtTime(0.14, now);
+              dlyGain.gain.setValueAtTime(s.vol * vScale * 0.28, now);
+              dlyGain.gain.exponentialRampToValueAtTime(0.0008, now + s.dur + 0.16);
+              voxGain.connect(dly);
+              dly.connect(dlyGain);
+              dlyGain.connect(dest);
+            }
 
-          osc1.start(now);
-          osc2.start(now);
-          osc1.stop(now + s.dur);
-          osc2.stop(now + s.dur);
+            // 1. Glottal Vocal Cord Oscillators (Fundamental F0 + Sub-Octave Throat Growl F0/2 + Detuned Harmonic)
+            const glottal1 = this.ctx.createOscillator();
+            const glottal2 = this.ctx.createOscillator();
+            const subGrowl = this.ctx.createOscillator();
+            glottal1.type = "sawtooth";
+            glottal2.type = "sawtooth";
+            subGrowl.type = "triangle";
+
+            glottal1.frequency.setValueAtTime(s.fStart, now);
+            glottal1.frequency.exponentialRampToValueAtTime(s.fEnd, now + s.dur);
+            glottal2.frequency.setValueAtTime(s.fStart * 1.008, now);
+            glottal2.frequency.exponentialRampToValueAtTime(s.fEnd * 0.994, now + s.dur);
+            subGrowl.frequency.setValueAtTime(s.fStart * 0.5, now);
+            subGrowl.frequency.exponentialRampToValueAtTime(s.fEnd * 0.5, now + s.dur);
+
+            // Natural Human Vocal Vibrato (5.8 Hz LFO)
+            const vib = this.ctx.createOscillator();
+            const vibGain = this.ctx.createGain();
+            vib.frequency.setValueAtTime(5.8, now);
+            vibGain.gain.setValueAtTime(4.5, now);
+            vib.connect(vibGain);
+            vibGain.connect(glottal1.frequency);
+            vibGain.connect(glottal2.frequency);
+
+            // 2. Three Parallel Human Vocal Tract Formant Filters ("AAH / HAA" vowel shaping)
+            // Formant 1 (Pharyngeal throat cavity ~730Hz -> 520Hz as mouth closes)
+            const f1 = this.ctx.createBiquadFilter();
+            f1.type = "bandpass";
+            f1.frequency.setValueAtTime(s.f1, now);
+            f1.frequency.linearRampToValueAtTime(s.f1 * 0.74, now + s.dur);
+            f1.Q.setValueAtTime(4.5, now);
+
+            // Formant 2 (Oral tongue cavity ~1150Hz -> 900Hz)
+            const f2 = this.ctx.createBiquadFilter();
+            f2.type = "bandpass";
+            f2.frequency.setValueAtTime(s.f2, now);
+            f2.frequency.linearRampToValueAtTime(s.f2 * 0.78, now + s.dur);
+            f2.Q.setValueAtTime(5.5, now);
+
+            // Formant 3 (Human vocal presence & demonic rasp ~2350Hz)
+            const f3 = this.ctx.createBiquadFilter();
+            f3.type = "bandpass";
+            f3.frequency.setValueAtTime(2350, now);
+            f3.Q.setValueAtTime(6.5, now);
+            const f3Gain = this.ctx.createGain();
+            f3Gain.gain.setValueAtTime(0.35, now);
+
+            // Chest Sub-Resonance Lowpass (~175Hz)
+            const chestLp = this.ctx.createBiquadFilter();
+            chestLp.type = "lowpass";
+            chestLp.frequency.setValueAtTime(175, now);
+            const chestGain = this.ctx.createGain();
+            chestGain.gain.setValueAtTime(0.55, now);
+
+            glottal1.connect(f1);
+            glottal1.connect(f2);
+            glottal1.connect(f3);
+            glottal2.connect(f1);
+            glottal2.connect(f2);
+            subGrowl.connect(chestLp);
+
+            f1.connect(voxGain);
+            f2.connect(voxGain);
+            f3.connect(f3Gain);
+            f3Gain.connect(voxGain);
+            chestLp.connect(chestGain);
+            chestGain.connect(voxGain);
+
+            // 3. Aspiration "H-" Breath Burst at the start of each laugh syllable!
+            const nBuf = this.getBreathNoiseBuffer();
+            if (nBuf && this.ctx.createBufferSource) {
+              const breathSrc = this.ctx.createBufferSource();
+              breathSrc.buffer = nBuf;
+              const breathGain = this.ctx.createGain();
+              breathGain.gain.setValueAtTime(s.vol * vScale * 0.42, now);
+              breathGain.gain.exponentialRampToValueAtTime(0.001, now + 0.065);
+              breathSrc.connect(f1);
+              breathSrc.connect(f2);
+              breathSrc.start(now);
+              breathSrc.stop(now + 0.07);
+            }
+
+            glottal1.start(now);
+            glottal2.start(now);
+            subGrowl.start(now);
+            vib.start(now);
+
+            glottal1.stop(now + s.dur);
+            glottal2.stop(now + s.dur);
+            subGrowl.stop(now + s.dur);
+            vib.stop(now + s.dur);
+          } catch (e) {}
         }, s.delayMs);
+        this.laughTimeouts.push(tid);
       });
     } catch (e) {}
+  }
+
+  mysteryBoxSound() {
+    // Exciting Golden Mystery Box power-up fanfare!
+    const notes = [523.25, 659.25, 783.99, 1046.5, 1318.5];
+    notes.forEach((n, idx) => {
+      setTimeout(() => {
+        this.playTone(n, "triangle", 0.16, 0.16, n * 1.06);
+        this.playTone(n * 0.5, "sine", 0.18, 0.11);
+      }, idx * 55);
+    });
+  }
+
+  superSwitchSound() {
+    // Hidden Super-Jump Switch activation chime
+    this.playTone(330, "square", 0.12, 0.14, 660);
+    setTimeout(() => this.playTone(660, "triangle", 0.22, 0.16, 1175), 85);
   }
 
   batAttackSound() {
@@ -602,7 +877,7 @@ const sfx = new VoxelAudio();
 const unlockAudioOnFirstGesture = () => {
   sfx.unlockAndStart(sfx.currentTrack);
 };
-["pointerdown", "touchstart", "mousedown", "keydown"].forEach(evt => {
+["pointerdown", "touchstart", "mousedown", "click", "keydown"].forEach(evt => {
   window.addEventListener(evt, unlockAudioOnFirstGesture, { passive: true });
 });
 
@@ -1564,33 +1839,42 @@ const SUBLEVELS = {
         ]
       };
     } else {
-      // Type 3: Multi-Branch Canopy Ring (Staggered left ascent with >= 100px vertical clearance, top canopy switch, mid-right exit)
+      // Type 3 (Includes Stage 2-32: Forest Brother's Throne!):
+      // Multi-Branch Canopy Ring with:
+      // 1) Shortened top bridge (ends at X: 640) so player can cleanly drop onto the mid-right exit ledge (Y: 240),
+      // 2) Right-side stepping supports (Y: 330 & Y: 284) so you can ALWAYS jump up from the bottom-right platform (Y: 376 -> 330 -> 284 -> 240),
+      // 3) A Hidden Super-Jump Switch in the bottom-right corner (X: 742, Y: 366) AND a far Bonus Mystery Box ('?')!
       SUBLEVELS[key] = {
         title,
         falseHint: "Grab the Spirit Gem on the bottom crumbling bridge!",
-        trueGuide: "Skip the bottom trap Gem! Climb the staggered left boughs (Y: 376 -> 324 -> 272 -> 220 -> 168 -> 114), run across the top crown bridge to press the green switch at X: 695, and drop onto the mid-right exit ledge (Y: 240)!",
+        trueGuide: "Skip the bottom trap Gem! Climb the left boughs (Y: 376 -> 324 -> 272 -> 220 -> 168 -> 114) to hit the green switch at X: 590, OR trigger the Hidden Super-Jump Switch in the bottom-right corner (X: 742) / Bonus Mystery Box (?) to launch up the right support boughs (Y: 376 -> 330 -> 284 -> 240) into the Exit Door!",
         spawn: { x: 38, y: 336 },
         portal: { x: 715, y: 184, behavior: "locked", startsLocked: true },
         lavaY: 424,
         platforms: [
           { x: 15, y: 376, w: 210, h: 44, type: "solid" },
-          { x: 255, y: 362, w: 235, h: 24, type: "crumble", delay: 8, triggerDist: 45, id: "gem_plat" },
-          { x: 525, y: 376, w: 255, h: 44, type: "solid" },
+          { x: 255, y: 362, w: 205, h: 24, type: "crumble", delay: 8, triggerDist: 45, id: "gem_plat" },
+          { x: 495, y: 376, w: 285, h: 44, type: "solid" },
+          // Right-hand stepping boughs so player on bottom-right (Y: 376) can ALWAYS jump up to Exit Door (Y: 240)!
+          { x: 455, y: 330, w: 92, h: 18, type: "solid" },
+          { x: 470, y: 284, w: 92, h: 18, type: "solid" },
           { x: 155, y: 324, w: 145, h: 20, type: "solid" },
           { x: 20, y: 272, w: 145, h: 20, type: "solid" },
           { x: 165, y: 220, w: 145, h: 20, type: "solid" },
           { x: 30, y: 168, w: 150, h: 20, type: "solid" },
-          { x: 195 + shiftX, y: 114, w: 580, h: 22, type: "solid" },
+          { x: 195 + shiftX, y: 114, w: 440, h: 22, type: "solid" },
           { x: 565, y: 240, w: 215, h: 26, type: "solid" }
         ],
         spikes: [
           { x: 225, y: 220, w: 26, h: 15, dir: "up", hidden: true, triggerDist: 80 },
-          { x: 485, y: 114, w: 26, h: 15, dir: "up", hidden: true, triggerDist: 80 },
+          { x: 445, y: 114, w: 26, h: 15, dir: "up", hidden: true, triggerDist: 80 },
           { x: 640, y: 240, w: 26, h: 15, dir: "up", hidden: true, triggerDist: 80 }
         ],
         objects: [
-          { type: "gem", x: 365, y: 320, isTrap: true, label: "SPIRIT KEY?" },
-          { type: "switch", x: 695, y: 104, isFake: false, color: "#10b981" },
+          { type: "gem", x: 355, y: 320, isTrap: true, label: "SPIRIT KEY?" },
+          { type: "switch", x: 590, y: 104, isFake: false, color: "#10b981" },
+          { type: "superSwitch", x: 742, y: 366, spawnPadX: 605, spawnPadY: 364, unlockPortal: true },
+          { type: "mysteryBox", x: 52, y: 118, w: 28, h: 28, label: "? BONUS JUMP" },
           { type: "sawSpawner", triggerX: 430, spawnX: 775, spawnY: 90, vx: -8.2 },
           { type: "sign", x: 75, y: 344, text: "CLIMB LEFT BOUGHS UP!" }
         ]
@@ -1896,6 +2180,155 @@ const SUBLEVELS = {
       };
     }
   }
+
+  // ==========================================================================
+  // GLOBAL 96-STAGE ENHANCEMENT PASS:
+  // 1) EXTREME NIGHTMARE OVERLORD ESCALATION FOR WORLD 3 STAGES 3-16 TO 3-32!
+  // 2) FAR BONUS MYSTERY BOX ('?') IN EVERY LEVEL (1-1 TO 3-32) TO HELP JUMP HIGH!
+  // 3) HIDDEN LOWER SUPER-JUMP SWITCH & STEP SUPPORTS WHEREVER EXIT IS HIGH!
+  // ==========================================================================
+  for (let w = 1; w <= 3; w++) {
+    for (let s = 1; s <= 32; s++) {
+      const key = `${w}-${s}`;
+      const st = SUBLEVELS[key];
+      if (!st) continue;
+      st.objects = st.objects || [];
+      st.platforms = st.platforms || [];
+      st.spikes = st.spikes || [];
+
+      // A0. Make Stages 26-32 (after 25th level) in EVERY World harder!
+      if (s > 25) {
+        st.platforms.forEach(p => {
+          if (p.type === "crumble") p.delay = Math.min(p.delay || 6, 4);
+        });
+        st.spikes.forEach(sp => {
+          sp.triggerDist = Math.max(sp.triggerDist || 82, 102);
+        });
+        st.objects.forEach(o => {
+          if (o.type === "sawSpawner") {
+            o.vx = o.vx < 0 ? Math.min(-9.5, o.vx - 1.2) : Math.max(9.5, o.vx + 1.2);
+          }
+        });
+      }
+
+      // A. Make World 3 After Stage 15 (3-16 to 3-32) REALLY HARD!
+      if (w === 3 && s > 15) {
+        const nightmareTier = s - 15; // 1..17
+        // 1. Overclock all sawblades & add crossfire rear/upper ambush saws!
+        st.objects.forEach(o => {
+          if (o.type === "sawSpawner") {
+            o.vx = o.vx < 0 ? Math.min(-10.8, o.vx - 1.6) : Math.max(10.5, o.vx + 1.6);
+          }
+        });
+        st.objects.push({
+          type: "sawSpawner",
+          triggerX: 175 + ((s * 29) % 160),
+          spawnX: 780,
+          spawnY: 162 + ((s % 3) * 52),
+          vx: -(10.8 + (nightmareTier % 4) * 0.55)
+        });
+        // Rear crossfire sawblade from the left on stages 16-32!
+        st.objects.push({
+          type: "sawSpawner",
+          triggerX: 390 + ((s * 19) % 120),
+          spawnX: 18,
+          spawnY: 112 + ((s % 4) * 48),
+          vx: 9.6 + (nightmareTier % 3) * 0.5
+        });
+
+        // 2. Hair-trigger crumbling ledges (3 ticks) & extra lunging spikes
+        st.platforms.forEach(p => {
+          if (p.type === "crumble") {
+            p.delay = Math.min(p.delay || 5, 3);
+          }
+        });
+        st.spikes.forEach((sp, idx) => {
+          sp.triggerDist = Math.max(sp.triggerDist || 85, 108);
+          if (sp.dir === "up" && sp.slideX === undefined && idx % 2 === 0) {
+            sp.slideX = Math.max(40, sp.x - 28);
+          }
+        });
+
+        // 3. Add a fast Nightmare Piston Crusher or Reverse Curse trap in 3-16..3-32
+        if (s % 2 === 0) {
+          st.objects.push({
+            type: "orb",
+            orbType: "reverse",
+            x: 345 + ((s % 3) * 35),
+            y: 195 - ((s % 2) * 35),
+            radius: 34
+          });
+        }
+        // Make portal a fast runaway portal in 3-16..3-32
+        if (st.portal) {
+          st.portal.behavior = "runaway";
+          st.portal.triggerDist = Math.max(st.portal.triggerDist || 95, 122);
+          if (!st.portal.targetX || st.portal.targetX === st.portal.x) {
+            st.portal.targetX = st.portal.x > 640 ? st.portal.x - 68 : st.portal.x + 68;
+          }
+        }
+      }
+
+      // B. Ensure EVERY stage has a Hidden Lower Super-Jump Switch & Support Step if the Exit Door is elevated (portal.y < 265)
+      const hasSuperSwitch = st.objects.some(o => o.type === "superSwitch");
+      if (!hasSuperSwitch && st.portal && st.portal.y < 265) {
+        // Place a Hidden Super-Jump Switch in a tucked-away lower corner (far right or far left of the lowest floor)
+        const hx = (st.spawn && st.spawn.x < 400) ? 735 : 48;
+        const hy = 364;
+        // Ensure there is a small secret stone ledge under the hidden switch if none exists there
+        const covered = st.platforms.some(p => p.type !== "fake" && hx >= p.x - 10 && hx <= p.x + p.w + 10 && Math.abs(p.y - 374) < 38);
+        if (!covered) {
+          st.platforms.push({ x: Math.max(12, hx - 24), y: 374, w: 68, h: 22, type: "invisible", revealDist: 135 });
+        }
+        st.objects.push({
+          type: "superSwitch",
+          x: hx,
+          y: hy - 10,
+          spawnPadX: Math.max(60, Math.min(720, st.portal.x - 55)),
+          spawnPadY: 362,
+          unlockPortal: false
+        });
+      }
+
+      // C. Ensure EVERY stage (all 96 levels!) has 1 Bonus Mystery Box ('?') in a FAR, hard-to-reach spot!
+      const hasMystery = st.objects.some(o => o.type === "mysteryBox");
+      if (!hasMystery) {
+        // Pick a far, challenging location away from player spawn & away from the direct main path:
+        // Alternate between a high far-left secret perch and a far-right secret alcove!
+        let mx, my, perchX, perchY;
+        if (s % 2 === 0) {
+          // High Far-Left Secret Canopy/Sanctum Perch (player must climb/backtrack left to reach it!)
+          mx = 36 + ((s * 7) % 28);
+          my = (st.spawn && st.spawn.y < 180) ? 318 : 132;
+          perchX = Math.max(12, mx - 14);
+          perchY = my + 42;
+        } else {
+          // Far-Right Secret High/Low Alcove away from the portal height
+          mx = 728 - ((s * 9) % 34);
+          my = (st.portal && st.portal.y < 200) ? 312 : 124;
+          perchX = Math.max(620, mx - 18);
+          perchY = my + 42;
+        }
+        // Add a subtle secret stepping stone under the far Mystery Box so a determined player can jump to it
+        st.platforms.push({
+          x: perchX,
+          y: perchY,
+          w: 62,
+          h: 16,
+          type: "invisible",
+          revealDist: 145
+        });
+        st.objects.push({
+          type: "mysteryBox",
+          x: mx,
+          y: my,
+          w: 28,
+          h: 28,
+          label: "? MYSTERY JUMP"
+        });
+      }
+    }
+  }
 })();
 
 // --- 3. TROLL TOAST MESSAGES & DYNAMIC CHAOS ARCHETYPES ---
@@ -1977,8 +2410,10 @@ const GameApp = {
     this.canvas = document.getElementById("gameCanvas");
     this.ctx = this.canvas.getContext("2d");
 
+    this.currentScreen = "intro";
     this.loadLastSessionFromStorage();
     this.loadConsoleConfig();
+    this.ensureSettingsAudioControlsInDOM();
     this.initScreenMode();
     this.bindEvents();
     this.updateSessionUI();
@@ -1989,7 +2424,7 @@ const GameApp = {
     this.renderHelpDirectory(1);
     this.applyConsoleConfigToDOM();
 
-    // Start on the 3-second Cinematic Intro screen
+    // Start on the 3-second Cinematic Intro screen with Menu Music active!
     this.runIntroSplashSequence();
 
     const loop = () => {
@@ -2040,7 +2475,10 @@ const GameApp = {
       this.isPaused = false;
       document.getElementById("pauseOverlay")?.classList.add("hidden");
       const worldTrack = WORLD_META[this.currentWorld - 1]?.musicTrack || "world1";
-      sfx.setMusicTrack(worldTrack);
+      const desiredTrack = (this.stateMode === "story_prologue")
+        ? (sfx.gameplayTrackOverride !== "auto" ? sfx.gameplayTrackOverride : "story_prologue")
+        : sfx.resolveGameplayTrack(worldTrack);
+      sfx.unlockAndStart(desiredTrack);
       this.applyConsoleConfigToDOM();
       setTimeout(() => {
         if (this.currentScreen === "gameplay" && this.stateMode !== "hostage_250") {
@@ -2049,8 +2487,13 @@ const GameApp = {
       }, 60);
     } else {
       this.isPaused = true;
-      if (screenName === "home" || screenName === "levels" || screenName === "help" || screenName === "settings") {
-        sfx.setMusicTrack("menu");
+      if (screenName === "intro" || screenName === "home" || screenName === "levels" || screenName === "help") {
+        sfx.unlockAndStart("menu");
+      } else if (screenName === "settings") {
+        // In Settings, preview the active gameplay music track so volume & track adjustments are heard live!
+        const worldTrack = WORLD_META[this.currentWorld - 1]?.musicTrack || "world1";
+        sfx.unlockAndStart(sfx.resolveGameplayTrack(worldTrack));
+        sfx.syncAudioUI();
       }
     }
 
@@ -2062,8 +2505,9 @@ const GameApp = {
   // --- 3-SECOND CINEMATIC INTRO SEQUENCE ---
   runIntroSplashSequence() {
     this.appExited = false;
+    sfx.musicMuted = false;
     this.showScreen("intro");
-    sfx.setMusicTrack("menu");
+    sfx.unlockAndStart("menu");
 
     const bar = document.getElementById("introProgressBar");
     const status = document.getElementById("introStatusText");
@@ -2162,8 +2606,8 @@ const GameApp = {
     try {
       lockedInStorage = localStorage.getItem("mokuttan_voxel_hostage_lock") === "1";
     } catch (e) {}
-    if (this.totalDeaths >= 250 || lockedInStorage) {
-      this.startHostage250Scene("Reached 250+ Total Deaths — Dragged to the Devil's Palace!");
+    if (this.totalDeaths >= 50 || lockedInStorage) {
+      this.startHostage250Scene("Reached 50+ Total Deaths — Dragged to the Devil's Palace!");
     }
   },
 
@@ -2235,6 +2679,51 @@ const GameApp = {
     this.saveConsoleConfig();
     this.applyConsoleConfigToDOM();
     this.showToast("Console layout reset to default Mobile/Tablet comfort settings!", "emerald");
+  },
+
+  ensureSettingsAudioControlsInDOM() {
+    const settingsScreen = document.getElementById("screenSettings");
+    if (!settingsScreen || document.getElementById("settingsAudioMusicStudioCard")) return;
+    try {
+      const card = document.createElement("div");
+      card.id = "settingsAudioMusicStudioCard";
+      card.className = "bg-slate-900 border border-slate-800 rounded-xl p-4 space-y-3 text-xs";
+      card.innerHTML = `
+        <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-2">
+          <div class="font-black text-sm text-emerald-400">🎵 Gameplay Music &amp; Audio Control Studio</div>
+          <div class="flex gap-2">
+            <button id="btnSettingsMusicToggle" type="button" class="voxel-btn bg-slate-800 text-slate-200 px-3 py-1.5 rounded-lg text-xs font-bold">🎵 Music: ON</button>
+            <button id="btnSettingsSfxToggle" type="button" class="voxel-btn bg-slate-800 text-slate-200 px-3 py-1.5 rounded-lg text-xs font-bold">🔊 SFX On</button>
+          </div>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div class="space-y-1">
+            <label class="flex justify-between font-semibold text-slate-300"><span>🎵 Gameplay Music Volume</span><span id="labelMusicVolume" class="font-mono text-emerald-300">85%</span></label>
+            <input id="sliderMusicVolume" type="range" min="0" max="100" value="85" class="w-full accent-emerald-500" />
+          </div>
+          <div class="space-y-1">
+            <label class="flex justify-between font-semibold text-slate-300"><span>🔊 Sound Effects (SFX) Volume</span><span id="labelSfxVolume" class="font-mono text-amber-300">90%</span></label>
+            <input id="sliderSfxVolume" type="range" min="0" max="100" value="90" class="w-full accent-amber-500" />
+          </div>
+        </div>
+        <div class="space-y-1.5 pt-1">
+          <div class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Select Active Gameplay Music Track (Changes Live In-Game):</div>
+          <div class="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
+            <button id="btnMusicTrack_auto" type="button" class="voxel-btn px-2.5 py-1.5 rounded-lg text-[11px] font-extrabold">🎲 Auto Per World</button>
+            <button id="btnMusicTrack_world1" type="button" class="voxel-btn px-2.5 py-1.5 rounded-lg text-[11px] font-semibold">🌿 World 1 Meadow</button>
+            <button id="btnMusicTrack_world2" type="button" class="voxel-btn px-2.5 py-1.5 rounded-lg text-[11px] font-semibold">🌳 World 2 Tree</button>
+            <button id="btnMusicTrack_world3" type="button" class="voxel-btn px-2.5 py-1.5 rounded-lg text-[11px] font-semibold">⚡ World 3 Ziggurat</button>
+            <button id="btnMusicTrack_victory_palace" type="button" class="voxel-btn px-2.5 py-1.5 rounded-lg text-[11px] font-semibold">👑 Monarch Arise</button>
+            <button id="btnMusicTrack_story_prologue" type="button" class="voxel-btn px-2.5 py-1.5 rounded-lg text-[11px] font-semibold">🏰 Kingdom Theme</button>
+          </div>
+        </div>
+      `;
+      if (settingsScreen.children && settingsScreen.children.length > 1) {
+        settingsScreen.insertBefore(card, settingsScreen.children[1]);
+      } else {
+        settingsScreen.appendChild(card);
+      }
+    } catch (e) {}
   },
 
   applyConsoleConfigToDOM() {
@@ -2618,6 +3107,12 @@ const GameApp = {
   },
 
   loadStage(world, sub, isRetry = false) {
+    // Always stop any ongoing Devil laugh when loading or restarting a stage so laughs NEVER overlap!
+    sfx.stopLaugh();
+    this.isRetryAttempt = !!isRetry;
+    const retryBtnReset = document.getElementById("btnOverlayRetry");
+    if (retryBtnReset) retryBtnReset.textContent = "🔄 Retry Stage (R)";
+
     this.currentWorld = world;
     this.currentSub = sub;
     this.subGridPage = sub <= 16 ? 0 : 1;
@@ -2626,7 +3121,7 @@ const GameApp = {
     const meta = WORLD_META[world - 1];
 
     if (this.currentScreen === "gameplay") {
-      sfx.setMusicTrack(meta.musicTrack);
+      sfx.setMusicTrack(sfx.resolveGameplayTrack(meta.musicTrack));
     }
 
     this.stageAttempts[key] = (this.stageAttempts[key] || 0) + 1;
@@ -2780,7 +3275,8 @@ const GameApp = {
       coyoteTimer: 0,
       facing: 1,
       animTick: 0,
-      orbCooldown: 0
+      orbCooldown: 0,
+      superJumpBoost: 1.0
     };
 
     this.stateMode = "playing";
@@ -2800,12 +3296,24 @@ const GameApp = {
     this.floatingTexts = [];
 
     // Trigger Interactive Playable Story Prologue whenever the user starts Sub-Level 1 of ANY World (1-1, 2-1, 3-1) on a fresh start!
-    if (sub === 1 && !isRetry && !this.skipPrologueOnce) {
+    const wasSkipPrologue = !!this.skipPrologueOnce;
+    this.stageIntroSmsOpen = false;
+    this.stageIntroCloseRect = { x: 604, y: 15, w: 142, h: 26 };
+    this.stageIntroBotCloseRect = { x: 245, y: 202, w: 310, h: 24 };
+
+    if (sub === 1 && !isRetry && !wasSkipPrologue) {
       this.initStoryPrologue(world);
     } else {
       this.skipPrologueOnce = false;
       this.storyPrologue = null;
-      this.initDevilHunterForStage();
+      // Show the Stage Obstacle Details Popup ONLY in the FIRST 2 LEVELS (sub <= 2 in World 1)!
+      // Remaining levels (sub > 2) do NOT show the obstacle popup so the user is never irritated.
+      this.stageIntroShown = this.stageIntroShown || {};
+      const isFirstTwoLevels = (world === 1 && sub <= 2);
+      const showPreDevilObstaclePopup = (isFirstTwoLevels && !isRetry && !wasSkipPrologue && this.currentScreen !== "intro" && !this.stageIntroShown[key]);
+      if (showPreDevilObstaclePopup) this.stageIntroShown[key] = true;
+      this.stageIntroSmsOpen = showPreDevilObstaclePopup;
+      this.initDevilHunterForStage(showPreDevilObstaclePopup, isRetry);
       if (this.chaosMutator && attempt > 1) {
         this.addFloatingText(400, 95, `🎲 CHAOS REMIX: ${mutation.name.toUpperCase()}!`, "#c084fc");
       }
@@ -2925,6 +3433,11 @@ const GameApp = {
       return;
     }
 
+    if (this.stageIntroSmsOpen) {
+      this.keys.jumpJustPressed = false;
+      return;
+    }
+
     this.updateDevilHunter();
     if (this.stateMode !== "playing") return;
     const p = this.player;
@@ -2964,12 +3477,18 @@ const GameApp = {
     }
 
     if ((this.keys.jumpJustPressed || this.keys.jump) && p.coyoteTimer > 0) {
-      p.vy = -10.4 * p.gravityDir;
+      const jumpBoost = p.superJumpBoost || 1.0;
+      p.vy = -10.4 * jumpBoost * p.gravityDir;
       p.onGround = false;
       p.coyoteTimer = 0;
       this.keys.jumpJustPressed = false;
       sfx.jump();
-      this.spawnParticles(p.x + p.w / 2, p.gravityDir > 0 ? p.y + p.h : p.y, "#cbd5e1", 6);
+      this.spawnParticles(
+        p.x + p.w / 2,
+        p.gravityDir > 0 ? p.y + p.h : p.y,
+        jumpBoost > 1.05 ? "#facc15" : "#cbd5e1",
+        jumpBoost > 1.05 ? 14 : 6
+      );
     }
     this.keys.jumpJustPressed = false;
 
@@ -3227,6 +3746,45 @@ const GameApp = {
           this.shakeTimer = 10;
           this.addFloatingText(p.x, p.y - 16, "DECOY PORTAL BAIT!", "#ef4444");
         }
+      } else if (obj.type === "superSwitch" && !obj.pressed) {
+        const box = { x: obj.x - 10, y: obj.y - 16, w: 44, h: 28 };
+        if (this.aabb(p, box)) {
+          obj.pressed = true;
+          p.superJumpBoost = Math.max(p.superJumpBoost || 1.0, 1.38);
+          sfx.superSwitchSound();
+          if (obj.unlockPortal) st.portal.locked = false;
+          // Spawn a high-powered Super-Bounce Launch Pad & stepping support below the exit door!
+          const padX = obj.spawnPadX || Math.max(80, Math.min(710, st.portal.x - 55));
+          const padY = obj.spawnPadY || 362;
+          st.platforms.push({ x: padX - 16, y: padY + 12, w: 74, h: 18, type: "solid", origX: padX - 16, origY: padY + 12, state: "idle", alpha: 1 });
+          st.objects.push({ type: "slime", x: padX, y: padY, w: 42, h: 12, vy: -17.4, isSuperPad: true });
+          if (st.portal.y < 260) {
+            const midY = Math.round((padY + st.portal.y + st.portal.h) * 0.5);
+            st.platforms.push({ x: Math.max(50, st.portal.x - 75), y: midY, w: 110, h: 18, type: "solid", origX: Math.max(50, st.portal.x - 75), origY: midY, state: "idle", alpha: 1 });
+          }
+          this.spawnParticles(obj.x + 14, obj.y, "#38bdf8", 22);
+          this.addFloatingText(obj.x, obj.y - 20, "⚡ SUPER-JUMP SWITCH ACTIVATED! HIGH JUMP + LAUNCH PAD!", "#38bdf8");
+        }
+      } else if (obj.type === "mysteryBox" && !obj.collected) {
+        const box = { x: obj.x - 4, y: obj.y - 4, w: (obj.w || 28) + 8, h: (obj.h || 28) + 8 };
+        if (this.aabb(p, box)) {
+          obj.collected = true;
+          p.superJumpBoost = 1.45;
+          p.vy = -12.8 * p.gravityDir;
+          st.portal.locked = false;
+          sfx.mysteryBoxSound();
+          // Spawn a Golden Emergency Super-Bounce Pad & Support Ledge below the Exit Door so the player can always reach it!
+          const exitPadX = Math.max(70, Math.min(710, st.portal.x - 50));
+          const exitPadY = 358;
+          st.platforms.push({ x: exitPadX - 18, y: exitPadY + 12, w: 78, h: 18, type: "solid", origX: exitPadX - 18, origY: exitPadY + 12, state: "idle", alpha: 1 });
+          st.objects.push({ type: "slime", x: exitPadX, y: exitPadY, w: 42, h: 12, vy: -17.8, isSuperPad: true });
+          if (st.portal.y < 250) {
+            st.platforms.push({ x: Math.max(50, st.portal.x - 70), y: st.portal.y + st.portal.h + 42, w: 115, h: 18, type: "solid", origX: Math.max(50, st.portal.x - 70), origY: st.portal.y + st.portal.h + 42, state: "idle", alpha: 1 });
+          }
+          this.spawnParticles(obj.x + 14, obj.y + 14, "#facc15", 28);
+          this.spawnParticles(obj.x + 14, obj.y + 14, "#38bdf8", 16);
+          this.addFloatingText(obj.x, Math.max(48, obj.y - 18), "🎁 BONUS MYSTERY BOX! +45% SUPER JUMP & EXIT UNLOCKED!", "#facc15");
+        }
       }
     }
 
@@ -3299,20 +3857,26 @@ const GameApp = {
     this.spawnParticles(this.player.x + 12, this.player.y + 15, "#ef4444", 24);
     this.spawnParticles(this.player.x + 12, this.player.y + 15, "#f59e0b", 12);
 
-    // SPECIAL 250th DEATH MILESTONE: Whenever totalDeaths reaches >= 250, the player is tied up by Bats,
+    // SPECIAL 50th DEATH MILESTONE: Whenever totalDeaths reaches >= 50, the player is tied up by Bats,
     // taken hostage to the Devil's Palace for a full unskippable 8-second execution, and totalDeaths resets to 0!
-    if (this.totalDeaths >= 250) {
+    if (this.totalDeaths >= 50) {
       this.startHostage250Scene(reason);
       return;
     }
 
     this.stateMode = "dead";
-    if ((this.stageDeaths[this.stage.key] || 0) >= 2 || this.currentSub > 28 || this.totalDeaths % 2 === 0) {
-      setTimeout(() => sfx.devilLaugh(), 200);
+    sfx.stopLaugh();
+    if ((this.stageDeaths[this.stage.key] || 0) >= 2 || this.currentSub > 25 || this.totalDeaths % 2 === 0) {
+      sfx.pendingDeathLaughTimer = setTimeout(() => {
+        sfx.pendingDeathLaughTimer = null;
+        if (this.stateMode === "dead") {
+          sfx.devilLaugh();
+        }
+      }, 200);
     }
 
     const bestPct = this.stageBestPct[this.stage.key] || 15;
-    const remTo250 = 250 - (this.totalDeaths % 250);
+    const remTo50 = 50 - (this.totalDeaths % 50);
     const taunt = TROLL_TAUNTS[this.totalDeaths % TROLL_TAUNTS.length];
     document.getElementById("overlayBadge").textContent = `STAGE FAILED • ${bestPct}% TO EXIT PORTAL`;
     document.getElementById("overlayBadge").className = "inline-block px-3 py-1 rounded text-xs font-bold uppercase tracking-wider bg-red-500/20 text-red-300 border border-red-500/40 mb-2";
@@ -3321,9 +3885,11 @@ const GameApp = {
       <span class="text-white font-semibold">${reason}</span><br/>
       <span class="text-amber-300 italic">"${taunt}"</span><br/>
       <span class="inline-block mt-2 px-2.5 py-1 rounded bg-purple-950/90 border border-purple-500/40 text-purple-200 text-[11px] font-mono">
-        💀 Total Fails: ${this.totalDeaths}/250 (${remTo250} left until Devil's Palace Hostage Execution!) • Best: ${bestPct}%
+        💀 Total Fails: ${this.totalDeaths}/50 (${remTo50} left until 50th-Death Devil's Palace Hostage Execution!) • Best: ${bestPct}%
       </span>
     `;
+    const retryBtn = document.getElementById("btnOverlayRetry");
+    if (retryBtn) retryBtn.textContent = "🔄 Retry Stage (R)";
     document.getElementById("btnOverlayNext").classList.add("hidden");
     document.getElementById("stageOverlay").classList.remove("hidden");
 
@@ -3383,6 +3949,8 @@ const GameApp = {
       ? `<span class="text-amber-300 font-bold text-xs">"The defeated Devil of World ${this.currentWorld} has bowed his head and surrendered his crown to you! Choose whether to advance to the next World or replay this finale."</span>`
       : `You outsmarted every trap in ${this.stage.title}. Click <strong>Open Door &amp; Walk In ▶</strong> to open the sanctuary door and walk inside!`;
 
+    const retryBtn = document.getElementById("btnOverlayRetry");
+    if (retryBtn) retryBtn.textContent = "🔄 Retry Stage (R)";
     const nextBtn = document.getElementById("btnOverlayNext");
     nextBtn.classList.remove("hidden");
     nextBtn.textContent = isFinalStage
@@ -3458,6 +4026,10 @@ const GameApp = {
   restartStage() {
     if (this.isHostageExecutionLocked()) return;
     if (this.stateMode === "won" && this.ceremonyType && !this.ceremonyOverlayShown) return;
+    // Immediately silence any ongoing Devil laugh when user restarts!
+    sfx.stopLaugh();
+    const retryBtn = document.getElementById("btnOverlayRetry");
+    if (retryBtn) retryBtn.textContent = "🔄 Retry Stage (R)";
     document.getElementById("stageOverlay").classList.add("hidden");
     this.loadStage(this.currentWorld, this.currentSub, true);
   },
@@ -3494,17 +4066,31 @@ const GameApp = {
     return "w3_hell_citadel";
   },
 
-  initDevilHunterForStage() {
-    const isBossSublevel = (this.currentSub > 28); // Stages 29, 30, 31, 32 in each world
-    const batCount = this.currentWorld === 1 ? 2 : 3;
+  initDevilHunterForStage(deferVoiceUntilPopupCloses = false, isRetry = false) {
+    // After 25th level (Stages 26-32 in each world), the Devil HIMSELF plays & hunts the player!
+    // Before 26th level (Stages 1-25 in each world), the Devil opens the Exit Door, releases the Bats, and goes back inside that same Exit Door & closes it!
+    const isHardAfter25 = (this.currentSub > 25);  // Stages 26, 27, 28, 29, 30, 31, 32 in each world!
+    const isBossSublevel = isHardAfter25;          // Devil himself plays after 25th level!
+    const batCount = isHardAfter25 ? 3 : 2;
+
+    const port = (this.stage && this.stage.portal) ? this.stage.portal : { x: 715, y: 260, w: 38, h: 56 };
+    const doorCx = Math.max(95, Math.min(735, port.x + (port.w || 38) / 2));
+    const doorCy = Math.max(85, port.y + (port.h || 56) * 0.45);
+    if (this.stage && this.stage.portal && !deferVoiceUntilPopupCloses) {
+      this.stage.portal.doorOpen = 0.95;
+    }
+
     const bats = [];
     for (let i = 0; i < batCount; i++) {
+      // Top-only random horizontal spawn positions for ambush waves!
+      const randTopX = 110 + Math.floor(Math.random() * 580);
       bats.push({
         id: i,
-        x: 370 + (i - 1) * 34,
-        y: 88 + (i % 2) * 14,
-        vx: (i % 2 === 0 ? 1 : -1) * 1.6,
-        vy: 0.8,
+        x: doorCx + (i - 1) * 18,
+        y: doorCy,
+        topSpawnX: randTopX,
+        vx: (i % 2 === 0 ? -1 : 1) * 1.8,
+        vy: -2.8,
         targetX: 400,
         targetY: 200,
         wingTick: i * 1.7,
@@ -3517,15 +4103,25 @@ const GameApp = {
       active: true,
       mode: isBossSublevel ? "boss_devil" : "bats",
       // Phases:
-      // 'intro_appear' -> 'intro_leave' -> 'idle_hidden' -> 'red_warning' -> 'attacking' -> 'green_clear'
+      // In mode === 'bats' (Levels 1-25):
+      //   'intro_appear' (Devil opens Exit Door, steps out & releases bats upward) ->
+      //   'intro_leave' (Devil walks BACK into the same Exit Door & closes the door while bats fly up to the top sky!) ->
+      //   'idle_hidden' -> 'red_warning' (Bats appear randomly from TOP SIDE ONLY) -> 'attacking' (+2s extra duration = 192 ticks) -> 'green_clear'
+      // In mode === 'boss_devil' (Levels 26-32, after 25th level):
+      //   'intro_appear' (Devil emerges from Exit Door & rises) -> 'intro_leave' -> 'idle_hidden' -> 'red_warning' -> 'attacking' -> 'green_clear'
       phase: "intro_appear",
-      timer: 52,
-      nextAmbushDelay: 75 + Math.floor(Math.random() * 55),
-      x: 400,
-      y: -60,
-      vx: 0,
-      vy: 0,
-      scale: 1.85,        // Big when appearing, shrinks to 0.82 medium when attacking in 29-32
+      timer: 54,
+      nextAmbushDelay: isHardAfter25
+        ? (48 + Math.floor(Math.random() * 35))
+        : (210 + Math.floor(Math.random() * 95)),
+      x: doorCx,
+      y: doorCy,
+      doorSpawnX: doorCx,
+      doorSpawnY: doorCy,
+      facing: -1,
+      vx: -0.9,
+      vy: -2.4,
+      scale: 1.32,
       laughTick: 0,
       redFlashAlpha: 0,
       greenFlashAlpha: 0,
@@ -3534,58 +4130,139 @@ const GameApp = {
       bats
     };
 
-    // Main Devil appears at start of every level and laughs with human-devil laugh
-    sfx.devilLaugh();
-    if (isBossSublevel) {
-      this.addFloatingText(400, 118, `👹 STAGE ${this.currentWorld}-${this.currentSub}: THE MAIN DEVIL HUNTS YOU HIMSELF!`, "#ef4444");
+    if (!deferVoiceUntilPopupCloses) {
+      this.triggerDevilExitDoorGreeting(isRetry);
+    }
+  },
+
+  triggerDevilExitDoorGreeting(isRetry = false) {
+    if (!this.devilHunter) return;
+    const port = (this.stage && this.stage.portal) ? this.stage.portal : { x: 715, y: 260, w: 38, h: 56 };
+    const doorCx = Math.max(95, Math.min(735, port.x + (port.w || 38) / 2));
+    const doorCy = Math.max(85, port.y + (port.h || 56) * 0.45);
+    if (this.stage && this.stage.portal) {
+      this.stage.portal.doorOpen = 0.98;
+    }
+    // Only play the Devil laugh on a non-retry start so restarting after failing NEVER overlaps or repeats the laugh!
+    if (this.currentScreen === "gameplay" && !isRetry && !this.isRetryAttempt) {
+      sfx.devilLaugh();
+    }
+    this.spawnParticles(doorCx, doorCy, "#ef4444", 16);
+    this.spawnParticles(doorCx, doorCy, "#facc15", 10);
+    if (this.currentSub > 25) {
+      this.addFloatingText(Math.min(610, doorCx), Math.max(58, doorCy - 36), `👹 STAGE ${this.stage.key}: DEVIL HIMSELF HUNTS YOU!`, "#ef4444");
     } else {
-      this.addFloatingText(400, 118, "😈 DEVIL SUMMONS HIS SHADOW BATS & VANISHES!", "#f59e0b");
+      this.addFloatingText(Math.min(610, doorCx), Math.max(58, doorCy - 36), "🚪😈 DEVIL OPENS DOOR & RELEASES HIS BATS!", "#f59e0b");
     }
   },
 
   updateDevilHunter() {
     if (!this.devilHunter || !this.devilHunter.active || !this.player || this.stateMode !== "playing") return;
+    // Wait until the Obstacle & 50-Death Instruction Popup (in first 2 levels) is closed before introducing the Devil!
+    if (this.stageIntroSmsOpen) return;
+
     const dh = this.devilHunter;
     const p = this.player;
+    const port = (this.stage && this.stage.portal) ? this.stage.portal : { x: 715, y: 260, w: 38, h: 56 };
+    const doorCx = Math.max(95, Math.min(735, port.x + (port.w || 38) / 2));
+    const doorCy = Math.max(85, port.y + (port.h || 56) * 0.45);
     const pCx = p.x + p.w / 2;
     const pCy = p.y + p.h / 2;
+    const isHardAfter25 = (this.currentSub > 25); // After 25th level (Stages 26-32), Devil himself hunts!
     dh.laughTick += 0.22;
 
     // Smoothly track player with spotlight coordinates
     dh.spotlightX += (pCx - dh.spotlightX) * 0.18;
     dh.spotlightY += (pCy - dh.spotlightY) * 0.18;
 
-    // 1. OPENING INTRO: Main Devil appears big at start of level, releases bats, then leaves screen!
+    // 1. OPENING INTRO:
+    // - In Stages 1-25 (dh.mode === "bats"): Devil opens the Exit Door, steps out in front of the door, releases the bats upward,
+    //   and then in 'intro_leave' he walks BACK into that same Exit Door and closes the door!
+    // - In Stages 26-32 (dh.mode === "boss_devil"): Devil emerges from the Exit Door and flies upward to hunt you himself!
     if (dh.phase === "intro_appear") {
-      dh.y += (82 - dh.y) * 0.18;
-      dh.scale = 1.85;
-      dh.timer--;
-      if (dh.timer === 24 && dh.mode === "bats") {
-        // Release small bats from Devil's cloak
-        dh.bats.forEach((b, i) => {
-          b.visible = true;
-          b.alpha = 1;
-          b.x = dh.x + (i - 1) * 24;
-          b.y = dh.y + 10;
-          b.vx = (i - 1) * 2.4 + (i === 1 ? 1.8 : 0);
-          b.vy = -1.8 - i * 0.5;
-        });
-        sfx.batAttackSound();
+      if (dh.mode === "bats") {
+        // Keep Exit Door wide open while Devil steps out in front of the doorway to release the bats!
+        if (this.stage && this.stage.portal) {
+          this.stage.portal.doorOpen = Math.min(1, (this.stage.portal.doorOpen || 0.8) + 0.04);
+        }
+        dh.facing = -1;
+        dh.x += ((doorCx - 38) - dh.x) * 0.14;
+        dh.y = doorCy + Math.sin(dh.laughTick * 1.6) * 2.5;
+        dh.scale = Math.min(1.42, dh.scale + 0.006);
+
+        if (dh.timer === 32) {
+          // Devil releases the bats from the open Exit Door upward toward the top sky!
+          dh.bats.forEach((b, i) => {
+            b.visible = true;
+            b.alpha = 1;
+            b.x = dh.x - 10 + (i - 0.5) * 22;
+            b.y = dh.y - 12;
+            b.vx = (i === 0 ? -1.8 : 1.4);
+            b.vy = -3.4 - i * 0.5;
+          });
+          sfx.batAttackSound();
+          this.addFloatingText(Math.min(600, dh.x), Math.max(54, dh.y - 44), "🦇 'FLY UP, MY BATS! I'M GOING BACK INSIDE!'", "#fde047");
+        }
+        // Released bats fly upward toward the top of the screen during intro_appear
+        if (dh.timer < 32) {
+          dh.bats.forEach(b => {
+            b.x += b.vx;
+            b.y += b.vy;
+            b.wingTick += 0.5;
+          });
+        }
+      } else {
+        // Stages 26-32 (boss_devil): Devil emerges from Exit Door and rises UPWARD!
+        dh.facing = -1;
+        dh.y -= 2.35;
+        dh.x += ((doorCx - 45) - dh.x) * 0.05;
+        dh.scale = Math.min(1.82, dh.scale + 0.012);
+        if (this.stage && this.stage.portal && this.stage.portal.doorOpen > 0) {
+          this.stage.portal.doorOpen = Math.max(0, this.stage.portal.doorOpen - 0.022);
+        }
       }
+
+      dh.timer--;
       if (dh.timer <= 0) {
         dh.phase = "intro_leave";
-        dh.timer = 34;
+        dh.timer = 38;
+        if (dh.mode === "bats") {
+          dh.facing = 1; // Turns around to face the Exit Door and walk back inside!
+        }
       }
       return;
     }
 
     if (dh.phase === "intro_leave") {
-      // Main Devil flies up and leaves the screen!
-      dh.y -= 4.8;
-      dh.scale = Math.max(0.9, dh.scale - 0.025);
+      if (dh.mode === "bats") {
+        // Funny choreography: Devil walks BACK into the same Exit Door, shrinks into the doorway, and CLOSES the door!
+        dh.facing = 1;
+        dh.x += (doorCx - dh.x) * 0.18;
+        dh.y += (doorCy - dh.y) * 0.18;
+        dh.scale = Math.max(0.45, dh.scale - 0.024);
+
+        // Close the Exit Door as the Devil steps back inside!
+        if (this.stage && this.stage.portal) {
+          if (dh.timer > 14) {
+            this.stage.portal.doorOpen = Math.max(0.35, this.stage.portal.doorOpen - 0.03);
+          } else {
+            this.stage.portal.doorOpen = Math.max(0, this.stage.portal.doorOpen - 0.08);
+          }
+        }
+        if (dh.timer === 12) {
+          sfx.doorOpenSound();
+          this.addFloatingText(Math.min(620, doorCx), Math.max(58, doorCy - 32), "🚪 *SLAM!* DEVIL WENT BACK IN & CLOSED THE DOOR!", "#a7f3d0");
+        }
+      } else {
+        // Stages 26-32 (boss_devil): Main Devil continues ascending UPWARD off the top of the screen!
+        dh.y -= 5.2;
+        dh.scale = Math.max(0.95, dh.scale - 0.02);
+        if (this.stage && this.stage.portal) this.stage.portal.doorOpen = 0;
+      }
+
       dh.bats.forEach(b => {
         b.x += b.vx;
-        b.y += b.vy;
+        b.y += b.vy; // Bats ascend off the top edge
         b.wingTick += 0.45;
         b.alpha = Math.max(0, b.alpha - 0.032);
         if (b.alpha <= 0.05) b.visible = false;
@@ -3593,9 +4270,13 @@ const GameApp = {
       dh.timer--;
       if (dh.timer <= 0) {
         dh.phase = "idle_hidden";
-        dh.y = -90;
+        dh.y = -95;
+        if (this.stage && this.stage.portal) this.stage.portal.doorOpen = 0;
         dh.bats.forEach(b => { b.visible = false; b.alpha = 0; });
-        dh.nextAmbushDelay = 70 + Math.floor(Math.random() * 60);
+        // Levels 1-25: Long relaxed interval (210-305 ticks). Levels 26-32: Fast intense interval (48-84 ticks)!
+        dh.nextAmbushDelay = isHardAfter25
+          ? (48 + Math.floor(Math.random() * 36))
+          : (210 + Math.floor(Math.random() * 95));
       }
       return;
     }
@@ -3605,16 +4286,19 @@ const GameApp = {
       dh.redFlashAlpha = Math.max(0, dh.redFlashAlpha - 0.05);
       dh.greenFlashAlpha = Math.max(0, dh.greenFlashAlpha - 0.04);
 
-      // In bat mode (stages 1-28), bats visibly patrol in and out of the upper sky before locking on
-      if (dh.mode === "bats" && dh.nextAmbushDelay < 95 && dh.nextAmbushDelay > 15) {
+      // In bat mode (stages 1-25), bats peek down from random positions along the TOP SIDE ONLY right before warning!
+      if (dh.mode === "bats" && dh.nextAmbushDelay === 55) {
         dh.bats.forEach((b, idx) => {
-          if (idx <= 1) {
-            b.visible = true;
-            b.alpha = 0.92;
-            b.x = (b.x + (idx === 0 ? 2.8 : -2.6) + 800) % 780;
-            b.y = 56 + idx * 18 + Math.sin(dh.laughTick + idx) * 10;
-            b.wingTick += 0.48;
-          }
+          b.topSpawnX = 95 + Math.floor(Math.random() * 610);
+        });
+      }
+      if (dh.mode === "bats" && dh.nextAmbushDelay < 55 && dh.nextAmbushDelay > 10) {
+        dh.bats.forEach((b, idx) => {
+          b.visible = true;
+          b.alpha = 0.88;
+          b.x = (b.topSpawnX || (220 + idx * 260)) + Math.sin(dh.laughTick + idx) * 10;
+          b.y = 16 + ((55 - dh.nextAmbushDelay) * 0.45); // Descending from the TOP SIDE ONLY!
+          b.wingTick += 0.48;
         });
       } else {
         dh.bats.forEach(b => { b.visible = false; b.alpha = 0; });
@@ -3622,62 +4306,81 @@ const GameApp = {
 
       dh.nextAmbushDelay--;
       if (dh.nextAmbushDelay <= 0) {
-        // Trigger RED SPOTLIGHT WARNING before attack!
         dh.phase = "red_warning";
-        dh.timer = 48; // ~0.8s warning flash so player sees red spotlight and can react
+        dh.timer = isHardAfter25 ? 40 : 48;
         dh.redFlashAlpha = 0.85;
 
         if (dh.mode === "bats") {
+          // Bats appear randomly from the TOP SIDE ONLY (never from the sides or bottom)!
           sfx.batAttackSound();
-          this.addFloatingText(pCx, Math.max(55, pCy - 42), "🚨 RED ALERT! DEVIL BATS LOCKING ON!", "#ef4444");
+          this.addFloatingText(pCx, Math.max(55, pCy - 42), "🚨 RED ALERT! BATS SWOOPING FROM THE TOP SKY!", "#ef4444");
           dh.bats.forEach((b, idx) => {
+            const topX = b.topSpawnX || (110 + Math.floor(Math.random() * 580));
+            b.topSpawnX = topX;
             b.visible = true;
             b.alpha = 1;
-            // Enter from top/sides of screen
-            b.x = idx === 0 ? Math.max(40, pCx - 160) : idx === 1 ? Math.min(760, pCx + 160) : pCx;
-            b.y = 36 + idx * 14;
+            b.x = topX;
+            b.y = 18 + idx * 8; // Top side of the screen!
             b.wingTick = idx * 1.3;
           });
         } else {
-          // Sublevels 29-32: Real Scary Devil appears BIG first during red warning!
+          // Sublevels 26-32 (after 25th level): Real Scary Devil emerges from the Exit Door and rises UPWARD!
+          if (this.stage && this.stage.portal) {
+            this.stage.portal.doorOpen = 0.85;
+          }
           sfx.devilLaugh();
           sfx.huntingSound();
-          dh.x = pCx > 400 ? Math.max(90, pCx - 190) : Math.min(710, pCx + 190);
-          dh.y = 68;
-          dh.scale = 1.85; // Appears BIG to scare the player!
+          dh.x = doorCx;
+          dh.y = doorCy;
+          dh.facing = -1;
+          dh.scale = 1.65;
           this.shakeTimer = 10;
-          this.addFloatingText(dh.x, dh.y - 34, "👹 MWAHAHA! THE DEVIL LOCKS ON!", "#ef4444");
+          this.addFloatingText(Math.min(620, dh.x), Math.max(55, dh.y - 34), "👹 MWAHAHA! THE DEVIL RISES FROM THE EXIT DOOR!", "#ef4444");
         }
       }
       return;
     }
 
-    // 3. RED SPOTLIGHT WARNING PHASE: Red spotlight flashes on player, bats/devil focus for attack
+    // 3. RED SPOTLIGHT WARNING PHASE:
+    // - In bat mode (1-25): Bats hover along the TOP SIDE of the screen locking onto the player!
+    // - In boss_devil mode (26-32): Devil rises upward from the Exit Door before diving!
     if (dh.phase === "red_warning") {
       dh.redFlashAlpha = 0.45 + 0.4 * Math.abs(Math.sin(dh.laughTick * 2.5));
+      if (this.stage && this.stage.portal && this.stage.portal.doorOpen > 0) {
+        this.stage.portal.doorOpen = Math.max(0, this.stage.portal.doorOpen - 0.03);
+      }
       if (dh.mode === "bats") {
         dh.bats.forEach((b, idx) => {
           b.wingTick += 0.55;
-          b.y += Math.sin(dh.laughTick * 2 + idx) * 1.2;
-          b.targetX = pCx + (idx - 1) * 18;
+          // Hover along the TOP SIDE ONLY (Y: 22..38) at their random top X position before swooping down!
+          const targetTopY = 26 + idx * 8;
+          b.y += (targetTopY - b.y) * 0.18;
+          b.x += ((b.topSpawnX || (200 + idx * 240)) - b.x) * 0.12 + Math.sin(dh.laughTick * 2 + idx) * 1.8;
+          b.targetX = pCx + (idx - 0.5) * 20;
           b.targetY = pCy;
         });
       } else {
-        // Devil hovers menacingly at BIG scale while locking on, then begins shrinking toward medium
-        dh.y = 68 + Math.sin(dh.laughTick * 2) * 5;
+        // Devil rises UPWARD from the Exit Door toward the upper sky!
+        dh.y = Math.max(48, dh.y - 2.8);
+        dh.x += ((doorCx - 55) - dh.x) * 0.06;
+        dh.scale = Math.min(1.85, dh.scale + 0.008);
       }
 
       dh.timer--;
       if (dh.timer <= 0) {
         dh.phase = "attacking";
-        dh.timer = dh.mode === "bats" ? 115 : 145; // Attack window before green clear
+        // Keep bat attack mode for an EXTRA 2 MORE SECONDS (+120 ticks -> 72 + 120 = 192 ticks)!
+        // Boss Devil attack in stages 26-32 runs for 210 ticks!
+        dh.timer = dh.mode === "bats" ? 192 : 210;
         if (dh.mode === "bats") {
           sfx.batAttackSound();
           dh.bats.forEach((b, idx) => {
-            const dx = (pCx + (idx - 1) * 22) - b.x;
-            const dy = pCy - b.y;
+            // Ensure bats start their dive from the TOP SIDE ONLY (y <= 42)!
+            b.y = Math.min(42, Math.max(14, b.y));
+            const dx = (pCx + (idx - 0.5) * 22) - b.x;
+            const dy = Math.max(25, pCy - b.y);
             const d = Math.hypot(dx, dy) || 1;
-            const spd = 3.1 + idx * 0.25;
+            const spd = 2.15 + idx * 0.2;
             b.vx = (dx / d) * spd;
             b.vy = (dy / d) * spd;
           });
@@ -3691,7 +4394,7 @@ const GameApp = {
       return;
     }
 
-    // 4. ACTIVE ATTACK PHASE (Small Bats in 1-28, Medium-Sized Scary Devil in 29-32)
+    // 4. ACTIVE ATTACK PHASE (Small Bats in 1-25 for 192 ticks, Medium-Sized Scary Devil in 26-32)
     if (dh.phase === "attacking") {
       dh.redFlashAlpha = 0.22 + 0.18 * Math.sin(dh.laughTick * 2);
 
@@ -3699,14 +4402,14 @@ const GameApp = {
         for (const b of dh.bats) {
           if (!b.visible) continue;
           b.wingTick += 0.6;
-          // Gentle homing adjustment + swoop velocity
           const dx = pCx - b.x;
           const dy = pCy - b.y;
           const dist = Math.hypot(dx, dy) || 1;
-          b.vx += (dx / dist) * 0.11;
-          b.vy += (dy / dist) * 0.11;
+          const turnRate = 0.075;
+          b.vx += (dx / dist) * turnRate;
+          b.vy += (dy / dist) * turnRate;
           const curSpd = Math.hypot(b.vx, b.vy) || 1;
-          const maxBatSpd = 3.35;
+          const maxBatSpd = 2.45;
           if (curSpd > maxBatSpd) {
             b.vx = (b.vx / curSpd) * maxBatSpd;
             b.vy = (b.vy / curSpd) * maxBatSpd;
@@ -3722,12 +4425,12 @@ const GameApp = {
           }
         }
       } else {
-        // Sublevels 29-32: Medium-sized Scary Devil (scale 0.82) hunts player at escapable speed
+        // Sublevels 26-32: Medium-sized Scary Devil (scale 0.82) hunts player at escapable speed
         dh.scale += (0.82 - dh.scale) * 0.2;
         const dx = pCx - dh.x;
         const dy = pCy - dh.y;
         const dist = Math.hypot(dx, dy) || 1;
-        const huntSpeed = (this.currentWorld === 3 && this.currentSub > 15) ? 2.45 : 1.95; // Fast enough to be scary, slow enough for player (maxSpeed 4.5) to outrun & jump over!
+        const huntSpeed = (this.currentWorld === 3) ? 2.68 : 2.45;
         dh.vx = (dx / dist) * huntSpeed;
         dh.vy = (dy / dist) * huntSpeed + Math.sin(dh.laughTick * 1.5) * 0.45;
         dh.x += dh.vx;
@@ -3752,26 +4455,26 @@ const GameApp = {
         this.addFloatingText(
           pCx,
           Math.max(55, pCy - 36),
-          dh.mode === "bats" ? "🟢 BATS RETREATING — SAFE!" : "🟢 DEVIL VANISHED — SAFE WINDOW!",
+          dh.mode === "bats" ? "🟢 BATS FLYING UP & AWAY — SAFE!" : "🟢 DEVIL ASCENDING — SAFE WINDOW!",
           "#4ade80"
         );
       }
       return;
     }
 
-    // 5. GREEN FLASH ALL-CLEAR PHASE: Screen flashes green, bats/devil fly off-screen & vanish
+    // 5. GREEN FLASH ALL-CLEAR PHASE: Screen flashes green, bats/devil fly UPWARD off the top side & vanish
     if (dh.phase === "green_clear") {
       dh.greenFlashAlpha = Math.max(0, dh.greenFlashAlpha - 0.022);
       if (dh.mode === "bats") {
         dh.bats.forEach((b, i) => {
           b.wingTick += 0.45;
-          b.y -= 3.8;
-          b.x += (i - 1) * 2.2;
+          b.y -= 4.2; // Always flying UPWARD to the top side!
+          b.x += (i - 0.5) * 1.8;
           b.alpha = Math.max(0, b.alpha - 0.035);
           if (b.alpha <= 0.05) b.visible = false;
         });
       } else {
-        dh.y -= 4.5;
+        dh.y -= 4.8; // Always flying UPWARD!
         dh.scale = Math.max(0.4, dh.scale - 0.02);
       }
 
@@ -3779,11 +4482,17 @@ const GameApp = {
       if (dh.timer <= 0) {
         dh.phase = "idle_hidden";
         dh.greenFlashAlpha = 0;
-        dh.y = -90;
-        dh.bats.forEach(b => { b.visible = false; b.alpha = 0; });
-        // Random unexpected interval before next attack wave
-        const isW3Nightmare = (this.currentWorld === 3 && this.currentSub > 15);
-        dh.nextAmbushDelay = isW3Nightmare ? (85 + Math.floor(Math.random() * 65)) : (155 + Math.floor(Math.random() * 130));
+        dh.y = -95;
+        dh.bats.forEach(b => {
+          b.visible = false;
+          b.alpha = 0;
+          b.topSpawnX = 95 + Math.floor(Math.random() * 610);
+          b.y = -18;
+        });
+        // Levels 1-25: Long relaxed cooldown (260-400 ticks). Levels 26-32: Fast intense cooldown (52-90 ticks)!
+        dh.nextAmbushDelay = isHardAfter25
+          ? (52 + Math.floor(Math.random() * 38))
+          : (260 + Math.floor(Math.random() * 140));
       }
     }
   },
@@ -4217,7 +4926,7 @@ const GameApp = {
   },
 
   drawDevilHunter(ctx, time) {
-    if (!this.devilHunter || !this.devilHunter.active) return;
+    if (!this.devilHunter || !this.devilHunter.active || this.stageIntroSmsOpen) return;
     const dh = this.devilHunter;
 
     // 1. RED SPOTLIGHT FLASH & TARGETING BEAM WHEN ATTACK IS STARTING OR ACTIVE
@@ -4275,14 +4984,19 @@ const GameApp = {
       (dh.mode === "boss_devil" && (dh.phase === "red_warning" || dh.phase === "attacking" || dh.phase === "green_clear"));
 
     if (showMainDevil) {
+      const isReturningToDoor = (dh.phase === "intro_leave" && dh.mode === "bats");
       const label = dh.phase === "intro_appear"
-        ? (dh.mode === "bats" ? "GO, MY BATS! MWAHAHA!" : "I HUNT YOU MYSELF! MWAHAHA!")
+        ? (dh.mode === "bats" ? "GO, MY BATS! MWAHAHA!" : "STAGE 26+: I HUNT YOU MYSELF!")
+        : isReturningToDoor
+        ? "🚪 GOING BACK IN MY DOOR! HEHE!"
         : dh.phase === "red_warning"
         ? "LOCKING ON... MWAHAHA!"
         : dh.phase === "attacking"
         ? "DEVIL ATTACK!"
         : "";
       const worldSizeBonus = 1 + ((this.currentWorld || 1) - 1) * 0.14;
+      const dPose = isReturningToDoor ? "walking" : "hunting";
+      const dFacing = isReturningToDoor ? 1 : (dh.phase === "intro_appear" ? -1 : ((this.player && this.player.x > dh.x) ? 1 : -1));
       this.drawScaryDevilSprite(
         ctx,
         dh.x,
@@ -4291,7 +5005,7 @@ const GameApp = {
         dh.laughTick,
         time,
         label,
-        { pose: "hunting", worldVariant: this.currentWorld || 1, facing: (this.player && this.player.x > dh.x) ? 1 : -1 }
+        { pose: dPose, worldVariant: this.currentWorld || 1, facing: dFacing }
       );
     }
   },
@@ -4791,7 +5505,7 @@ const GameApp = {
     this.hostageStartTime = performance.now();
     this.hostageOverlayShown = false;
     this.hostageSfxFlags = { b1: false, b2: false, d1: false, d2: false, exec: false };
-    this.hostageDeathReason = reason || "Captured after 250 total failures!";
+    this.hostageDeathReason = reason || "Captured after 50 total failures!";
 
     // IMMEDIATELY reset totalDeaths to 0 and persist to localStorage so it can NEVER exceed 250 (e.g. 505/250),
     // and set a persistent lock flag so even refreshing the page replays the 8-second execution!
@@ -4876,16 +5590,16 @@ const GameApp = {
 
       this.updateHUD();
       const stOverlay = document.getElementById("stageOverlay");
-      document.getElementById("overlayBadge").textContent = "⛓️💀 250TH DEATH EXECUTION COMPLETE • DEATH COUNT RESET TO 0/250!";
+      document.getElementById("overlayBadge").textContent = "⛓️💀 50TH DEATH EXECUTION COMPLETE • DEATH COUNT RESET TO 0/50!";
       document.getElementById("overlayBadge").className = "inline-block px-3 py-1 rounded text-xs font-bold uppercase tracking-wider bg-red-500/30 text-red-200 border border-red-400/60 mb-2";
       document.getElementById("overlayTitle").textContent = "EXECUTED IN THE DEVIL'S PALACE!";
       document.getElementById("overlayReason").innerHTML = `
         <span class="text-rose-300 font-bold">"I AM THE KING VOXEL DEVIL! YOU CANNOT ESCAPE FROM MY TERRITORY!"</span><br/>
-        <span class="text-slate-200 text-xs mt-1 inline-block">The Devil's Bats dragged you to the palace in chains after <strong>250 Total Deaths</strong> and the Devil executed you! Your Total Death Counter has been reset to <strong>0 / 250</strong>—rise again and conquer Stage ${this.stage.key}!</span>
+        <span class="text-slate-200 text-xs mt-1 inline-block">The Devil's Bats dragged you to the palace in chains after <strong>50 Total Deaths</strong> and the Devil executed you! Your Total Death Counter has been reset to <strong>0 / 50</strong>—rise again and conquer Stage ${this.stage.key}!</span>
       `;
       document.getElementById("btnOverlayNext")?.classList.add("hidden");
       const retryBtn = document.getElementById("btnOverlayRetry");
-      if (retryBtn) retryBtn.textContent = `⚔️ Rise Again & Resume Stage ${this.stage.key} (Deaths: 0/250)`;
+      if (retryBtn) retryBtn.textContent = `⚔️ Rise Again & Resume Stage ${this.stage.key} (Deaths: 0/50)`;
       stOverlay?.classList.remove("hidden");
     }
   },
@@ -5128,7 +5842,7 @@ const GameApp = {
     let devilX = throneX - 20;
     let devilY = seatY - 30;
     let devilPose = "hunting";
-    let subtitle = "🦇⛓️ [250 TOTAL FAILS!] The Devil's Bats have tied you up and dragged you as a hostage to the Palace!";
+    let subtitle = "🦇⛓️ [50 TOTAL FAILS!] The Devil's Bats have tied you up and dragged you as a hostage to the Palace!";
 
     if (t < 150) {
       devilX = throneX - 20;
@@ -5144,7 +5858,7 @@ const GameApp = {
       devilX = 465;
       devilY = throneFloorY - 30;
       devilPose = "hunting";
-      subtitle = "👹 \"250 TIMES YOU FAILED! BACK OUT NOW, MORTAL — FACE MY ROYAL EXECUTION!\"";
+      subtitle = "👹 \"50 TIMES YOU FAILED! BACK OUT NOW, MORTAL — FACE MY ROYAL EXECUTION!\"";
     } else {
       devilX = 450;
       devilY = throneFloorY - 30;
@@ -5202,7 +5916,7 @@ const GameApp = {
 
     ctx.textAlign = "right";
     ctx.fillStyle = "#facc15";
-    ctx.fillText("💀 250-DEATH HOSTAGE PUNISHMENT", 782, 22);
+    ctx.fillText("💀 50-DEATH HOSTAGE PUNISHMENT", 782, 22);
 
     ctx.font = "bold 13px 'Inter', sans-serif";
     ctx.textAlign = "center";
@@ -5220,8 +5934,8 @@ const GameApp = {
     ctx.fillStyle = "#fecaca";
     ctx.fillText(
       t < totalTicks
-        ? `🔒 CONTROLS & REFRESH LOCKED • 8s DEVIL EXECUTION CINEMA (${remSec}s left — Death Counter Reset to 0/250)`
-        : "💀 DEATH COUNTER RESET TO 0/250! CLICK RESUME TO CONTINUE YOUR STAGE",
+        ? `🔒 CONTROLS & REFRESH LOCKED • 8s DEVIL EXECUTION CINEMA (${remSec}s left — Death Counter Reset to 0/50)`
+        : "💀 DEATH COUNTER RESET TO 0/50! CLICK RESUME TO CONTINUE YOUR STAGE",
       400,
       434
     );
@@ -5241,7 +5955,9 @@ const GameApp = {
   // ===========================================================================
   initStoryPrologue(world) {
     this.stateMode = "story_prologue";
-    sfx.startMusic("story_prologue");
+    if (this.currentScreen === "gameplay") {
+      sfx.startMusic(sfx.gameplayTrackOverride !== "auto" ? sfx.gameplayTrackOverride : "story_prologue");
+    }
 
     this.storyPrologue = {
       world,
@@ -5281,13 +5997,34 @@ const GameApp = {
     this.player.reverseControls = false;
   },
 
+  closeStageIntroSms() {
+    if (!this.stageIntroSmsOpen) return false;
+    this.stageIntroSmsOpen = false;
+    sfx.smsCloseSound();
+    this.triggerDevilExitDoorGreeting();
+    return true;
+  },
+
   closeStorySms() {
+    if (this.stageIntroSmsOpen) {
+      return this.closeStageIntroSms();
+    }
     if (this.stateMode !== "story_prologue" || !this.storyPrologue) return false;
     const sp = this.storyPrologue;
     if (!sp.smsOpen) return false;
 
     sfx.smsCloseSound();
     const closedId = sp.smsId;
+
+    // Immediately after closing the first Instruction SMS in Room 1 of World 1 (Level 1-1), pop up the Visual Obstacle & 50-Death Storytelling Guide!
+    if (sp.room === 1 && sp.world === 1 && closedId === "room1_intro" && !sp.obstaclesSmsShown) {
+      sp.obstaclesSmsShown = true;
+      sp.smsOpen = true;
+      sp.smsId = "room1_obstacles";
+      setTimeout(() => sfx.smsPopupSound(), 60);
+      return true;
+    }
+
     sp.smsOpen = false;
 
     // If the player just closed the Demon's Welcome SMS in Room 2, the Demon turns and walks back to the door!
@@ -5305,6 +6042,17 @@ const GameApp = {
     if (!rect.width || !rect.height) return;
     const cx = ((clientX - rect.left) / rect.width) * 800;
     const cy = ((clientY - rect.top) / rect.height) * 450;
+
+    if (this.stageIntroSmsOpen) {
+      const r1 = this.stageIntroCloseRect || { x: 604, y: 15, w: 142, h: 26 };
+      const r2 = this.stageIntroBotCloseRect || { x: 245, y: 202, w: 310, h: 24 };
+      const hitTop = cx >= r1.x - 12 && cx <= r1.x + r1.w + 12 && cy >= r1.y - 10 && cy <= r1.y + r1.h + 10;
+      const hitBot = cx >= r2.x - 15 && cx <= r2.x + r2.w + 15 && cy >= r2.y - 10 && cy <= r2.y + r2.h + 10;
+      if (hitTop || hitBot) {
+        this.closeStageIntroSms();
+      }
+      return;
+    }
 
     if (this.stateMode === "story_prologue" && this.storyPrologue && this.storyPrologue.smsOpen) {
       const sp = this.storyPrologue;
@@ -5770,14 +6518,239 @@ const GameApp = {
     );
   },
 
+  drawObstacleIconGrid(ctx, gx, gy, gw, time) {
+    // Draws 6 Voxel Obstacle Image Cards (2 rows x 3 cols) + the 50th-Death Storytelling Banner!
+    const cards = [
+      { id: "spike",   title: "1. POP-UP SPIKES",     desc: "Hidden until you approach—jump early!", border: "#ef4444" },
+      { id: "crumble", title: "2. CRUMBLE & FAKE",    desc: "Shakes & falls, or fake hologram floor!", border: "#f59e0b" },
+      { id: "saw",     title: "3. REDSTONE SAWS",     desc: "Spinning blades & ceiling crushers!", border: "#38bdf8" },
+      { id: "bait",    title: "4. BAIT GEM & SWITCH", desc: "Skip gold traps! Press Green Switch!", border: "#10b981" },
+      { id: "mystery", title: "5. MYSTERY BOX (?)",   desc: "Far secret box -> +45% Super Jump!", border: "#facc15" },
+      { id: "curse50", title: "6. 50-DEATH CURSE",    desc: "50 Fails = Bats tie & Devil executes!", border: "#c084fc" }
+    ];
+
+    const colW = Math.floor((gw - 16) / 3);
+    const rowH = 44;
+
+    cards.forEach((c, idx) => {
+      const col = idx % 3;
+      const row = Math.floor(idx / 3);
+      const cx = gx + col * (colW + 8);
+      const cy = gy + row * (rowH + 6);
+
+      // Card background
+      ctx.fillStyle = "rgba(15, 23, 42, 0.95)";
+      ctx.fillRect(cx, cy, colW, rowH);
+      ctx.strokeStyle = c.border;
+      ctx.lineWidth = 1.4;
+      ctx.strokeRect(cx, cy, colW, rowH);
+
+      // Left Voxel Icon Box (36x34)
+      const ix = cx + 5;
+      const iy = cy + 5;
+      ctx.fillStyle = "#090d16";
+      ctx.fillRect(ix, iy, 36, 34);
+      ctx.strokeStyle = "rgba(255,255,255,0.15)";
+      ctx.lineWidth = 1;
+      ctx.strokeRect(ix, iy, 36, 34);
+
+      // Draw custom Voxel Obstacle Image inside the 36x34 icon frame!
+      ctx.save();
+      if (c.id === "spike") {
+        // 3 Red Voxel Spikes on stone base
+        ctx.fillStyle = "#475569";
+        ctx.fillRect(ix + 3, iy + 25, 30, 6);
+        ctx.fillStyle = "#ef4444";
+        for (let s = 0; s < 3; s++) {
+          const sx = ix + 5 + s * 9;
+          ctx.beginPath();
+          ctx.moveTo(sx, iy + 25);
+          ctx.lineTo(sx + 4.5, iy + 9);
+          ctx.lineTo(sx + 9, iy + 25);
+          ctx.closePath();
+          ctx.fill();
+        }
+      } else if (c.id === "crumble") {
+        // Cracking Voxel Bridge Block
+        ctx.fillStyle = "#854d0e";
+        ctx.fillRect(ix + 4, iy + 11, 28, 16);
+        ctx.fillStyle = "#f59e0b";
+        ctx.fillRect(ix + 4, iy + 11, 28, 5);
+        ctx.strokeStyle = "#090d16";
+        ctx.lineWidth = 1.6;
+        ctx.beginPath();
+        ctx.moveTo(ix + 16, iy + 11);
+        ctx.lineTo(ix + 13, iy + 19);
+        ctx.lineTo(ix + 20, iy + 27);
+        ctx.stroke();
+      } else if (c.id === "saw") {
+        // Spinning Redstone Sawblade Image
+        ctx.translate(ix + 18, iy + 17);
+        ctx.rotate(time * 3);
+        ctx.fillStyle = "#e2e8f0";
+        ctx.strokeStyle = "#ef4444";
+        ctx.lineWidth = 2;
+        ctx.fillRect(-9, -9, 18, 18);
+        ctx.strokeRect(-9, -9, 18, 18);
+        ctx.rotate(Math.PI / 4);
+        ctx.fillRect(-9, -9, 18, 18);
+        ctx.fillStyle = "#ef4444";
+        ctx.fillRect(-3, -3, 6, 6);
+      } else if (c.id === "bait") {
+        // Golden Bait Gem + Green Switch Image
+        ctx.fillStyle = "#facc15";
+        ctx.beginPath();
+        ctx.moveTo(ix + 13, iy + 7);
+        ctx.lineTo(ix + 21, iy + 15);
+        ctx.lineTo(ix + 13, iy + 23);
+        ctx.lineTo(ix + 5, iy + 15);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = "#10b981";
+        ctx.fillRect(ix + 19, iy + 23, 13, 6);
+      } else if (c.id === "mystery") {
+        // Golden [?] Mystery Box Image
+        ctx.fillStyle = "#eab308";
+        ctx.fillRect(ix + 6, iy + 5, 24, 24);
+        ctx.strokeStyle = "#fef08a";
+        ctx.lineWidth = 1.5;
+        ctx.strokeRect(ix + 6, iy + 5, 24, 24);
+        ctx.fillStyle = "#ffffff";
+        ctx.font = "900 14px 'Inter', monospace";
+        ctx.textAlign = "center";
+        ctx.fillText("?", ix + 18, iy + 22);
+      } else if (c.id === "curse50") {
+        // Winged Bat + "50" Skull Emblem
+        ctx.fillStyle = "#dc2626";
+        ctx.beginPath();
+        ctx.moveTo(ix + 18, iy + 14);
+        ctx.lineTo(ix + 5, iy + 7);
+        ctx.lineTo(ix + 9, iy + 20);
+        ctx.lineTo(ix + 27, iy + 20);
+        ctx.lineTo(ix + 31, iy + 7);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = "#fef08a";
+        ctx.font = "900 10px 'Inter', monospace";
+        ctx.textAlign = "center";
+        ctx.fillText("💀50", ix + 18, iy + 30);
+      }
+      ctx.restore();
+
+      // Right Text Description
+      ctx.textAlign = "left";
+      ctx.font = "bold 10px 'Inter', monospace";
+      ctx.fillStyle = "#fef08a";
+      ctx.fillText(c.title, ix + 42, cy + 16);
+
+      ctx.font = "9.5px 'Inter', sans-serif";
+      ctx.fillStyle = "#e2e8f0";
+      ctx.fillText(c.desc, ix + 42, cy + 31);
+    });
+
+    // Prominent 50-Death Storytelling Callout Bar below the 6 obstacle image cards!
+    const storyY = gy + 2 * (rowH + 6) + 2;
+    ctx.fillStyle = "rgba(127, 29, 29, 0.92)";
+    ctx.fillRect(gx, storyY, gw, 32);
+    ctx.strokeStyle = "#facc15";
+    ctx.lineWidth = 1.8;
+    ctx.strokeRect(gx, storyY, gw, 32);
+
+    ctx.textAlign = "center";
+    ctx.font = "bold 10.5px 'Inter', sans-serif";
+    ctx.fillStyle = "#fef08a";
+    ctx.fillText(
+      "📜 THE CURSE OF 50 DEATHS (STORY WARNING): Every fall is counted by the King Voxel Devil (0/50)!",
+      gx + gw / 2,
+      storyY + 13
+    );
+    ctx.font = "bold 10px 'Inter', sans-serif";
+    ctx.fillStyle = "#fecaca";
+    ctx.fillText(
+      "⛓️ If you die 50 times, his Shadow Bats tie you up & drag you to the Devil's Palace for Execution (resets to 0/50)!",
+      gx + gw / 2,
+      storyY + 26
+    );
+  },
+
+  drawStageIntroObstaclePopup(ctx, time) {
+    if (!this.stageIntroSmsOpen || !this.stage) return;
+    const bx = 42;
+    const by = 10;
+    const bw = 716;
+    const bh = 222;
+
+    ctx.save();
+    ctx.fillStyle = "rgba(2, 6, 23, 0.96)";
+    ctx.fillRect(bx + 4, by + 4, bw, bh);
+
+    ctx.fillStyle = "#0f172a";
+    ctx.fillRect(bx, by, bw, bh);
+    ctx.strokeStyle = "#f59e0b";
+    ctx.lineWidth = 3;
+    ctx.strokeRect(bx, by, bw, bh);
+
+    // Header bar
+    ctx.fillStyle = "#1e293b";
+    ctx.fillRect(bx + 3, by + 3, bw - 6, 30);
+
+    ctx.fillStyle = "#ef4444";
+    ctx.beginPath();
+    ctx.arc(bx + 18, by + 18, 5, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.font = "bold 11px 'Inter', monospace";
+    ctx.textAlign = "left";
+    ctx.fillStyle = "#fde047";
+    const paceNote = this.currentSub <= 25 ? "BATS: RELAXED (STAGES 1-25)" : "🔥 HARD MODE (STAGES 26-32)";
+    ctx.fillText(`⚠️ STAGE ${this.stage.key} OBSTACLE GUIDE & 50-DEATH CURSE • ${paceNote}`, bx + 30, by + 22);
+
+    // Top-right Close button
+    const cr = this.stageIntroCloseRect;
+    cr.x = bx + bw - 146;
+    cr.y = by + 4;
+    cr.w = 140;
+    cr.h = 24;
+    ctx.fillStyle = "#dc2626";
+    ctx.fillRect(cr.x, cr.y, cr.w, cr.h);
+    ctx.strokeStyle = "#fca5a5";
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(cr.x, cr.y, cr.w, cr.h);
+    ctx.font = "bold 10px 'Inter', monospace";
+    ctx.textAlign = "center";
+    ctx.fillStyle = "#ffffff";
+    ctx.fillText("✕ CLOSE & START [C]", cr.x + cr.w / 2, cr.y + 16);
+
+    // Draw the 6 Voxel Obstacle Image Cards + 50-Death Storytelling Banner
+    this.drawObstacleIconGrid(ctx, bx + 14, by + 39, bw - 28, time);
+
+    // Bottom close button
+    const br = this.stageIntroBotCloseRect;
+    br.x = bx + bw / 2 - 175;
+    br.y = by + bh - 29;
+    br.w = 350;
+    br.h = 23;
+    ctx.fillStyle = "rgba(16, 185, 129, 0.28)";
+    ctx.fillRect(br.x, br.y, br.w, br.h);
+    ctx.strokeStyle = "#34d399";
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(br.x, br.y, br.w, br.h);
+    ctx.font = "bold 10px 'Inter', monospace";
+    ctx.textAlign = "center";
+    ctx.fillStyle = "#a7f3d0";
+    ctx.fillText("✓ TAP [✕ CLOSE] OR PRESS C / ENTER TO RELEASE THE DEVIL!", br.x + br.w / 2, br.y + 15);
+
+    ctx.restore();
+  },
+
   drawVoxelSmsDialog(ctx, sp, lore, w, time) {
     if (!sp.smsOpen) return;
 
-    // Centered Voxel SMS Messenger Window (X: 70..730, Y: 16..178) — zero text overflow!
-    const bx = 70;
-    const by = 16;
-    const bw = 660;
-    const bh = 162;
+    const isObstacleGuide = (sp.smsId === "room1_obstacles");
+    const bx = isObstacleGuide ? 42 : 56;
+    const by = isObstacleGuide ? 10 : 12;
+    const bw = isObstacleGuide ? 716 : 688;
+    const bh = isObstacleGuide ? 222 : 184;
 
     ctx.save();
 
@@ -5793,12 +6766,12 @@ const GameApp = {
 
     // Top Messenger Header Bar
     ctx.fillStyle = "#1e293b";
-    ctx.fillRect(bx + 3, by + 3, bw - 6, 32);
+    ctx.fillRect(bx + 3, by + 3, bw - 6, 30);
 
     // Status LED + Sender Title
     ctx.fillStyle = "#22c55e";
     ctx.beginPath();
-    ctx.arc(bx + 18, by + 19, 5, 0, Math.PI * 2);
+    ctx.arc(bx + 18, by + 18, 5, 0, Math.PI * 2);
     ctx.fill();
 
     ctx.font = "bold 11px 'Inter', monospace";
@@ -5806,17 +6779,19 @@ const GameApp = {
     ctx.fillStyle = "#facc15";
     const headerTitle = sp.smsId === "room2_demon_welcome"
       ? `📱 VOXEL SMS • FROM: ${lore.devilName}`
+      : sp.smsId === "room1_obstacles"
+      ? `⚠️ VOXEL SMS • OBSTACLES TO WATCH OUT FOR & THE 50-DEATH CURSE`
       : sp.smsId === "room1_lore"
       ? `📜 VOXEL SMS • ANCIENT KINGDOM ARCHIVE NOTE`
       : `📱 VOXEL SMS • KINGDOM GUIDE (${lore.kingdomTitle})`;
-    ctx.fillText(headerTitle, bx + 30, by + 23);
+    ctx.fillText(headerTitle, bx + 30, by + 22);
 
     // Interactive Top-Right [ ✕ CLOSE SMS ] Button
     const cr = sp.smsCloseRect;
-    cr.x = bx + bw - 138;
-    cr.y = by + 5;
-    cr.w = 132;
-    cr.h = 26;
+    cr.x = bx + bw - 142;
+    cr.y = by + 4;
+    cr.w = 136;
+    cr.h = 24;
     ctx.fillStyle = "#dc2626";
     ctx.fillRect(cr.x, cr.y, cr.w, cr.h);
     ctx.strokeStyle = "#fca5a5";
@@ -5825,82 +6800,110 @@ const GameApp = {
     ctx.font = "bold 10px 'Inter', monospace";
     ctx.textAlign = "center";
     ctx.fillStyle = "#ffffff";
-    ctx.fillText("✕ CLOSE SMS [C]", cr.x + cr.w / 2, cr.y + 17);
+    ctx.fillText(sp.smsId === "room1_intro" ? "NEXT: TRAPS ▶ [C]" : "✕ CLOSE SMS [C]", cr.x + cr.w / 2, cr.y + 16);
 
     // SMS Message Body Content based on smsId
-    if (sp.smsId === "room1_intro") {
+    if (sp.smsId === "room1_obstacles") {
+      this.drawObstacleIconGrid(ctx, bx + 14, by + 39, bw - 28, time);
+    } else if (sp.smsId === "room1_intro") {
       ctx.textAlign = "left";
       ctx.font = "bold 12px 'Inter', sans-serif";
       ctx.fillStyle = "#f8fafc";
-      ctx.fillText(lore.smsIntroLine1, bx + 18, by + 56);
-      ctx.font = "11.5px 'Inter', sans-serif";
+      ctx.fillText(lore.smsIntroLine1, bx + 18, by + 52);
+      ctx.font = "11px 'Inter', sans-serif";
       ctx.fillStyle = "#cbd5e1";
-      ctx.fillText(lore.smsIntroLine2, bx + 18, by + 75);
+      ctx.fillText(lore.smsIntroLine2, bx + 18, by + 70);
 
       if (w === 1) {
         // World 1: Show interactive Move & Jump Control Badges inside the SMS message!
         const drawKeyBadge = (kx, ky, kw, label, active) => {
           ctx.fillStyle = active ? "#059669" : "#1e293b";
-          ctx.fillRect(kx, ky, kw, 26);
+          ctx.fillRect(kx, ky, kw, 24);
           ctx.strokeStyle = active ? "#6ee7b7" : "#38bdf8";
           ctx.lineWidth = 1.6;
-          ctx.strokeRect(kx, ky, kw, 26);
+          ctx.strokeRect(kx, ky, kw, 24);
           ctx.fillStyle = "#ffffff";
           ctx.font = "bold 10px 'Inter', monospace";
           ctx.textAlign = "center";
-          ctx.fillText(label, kx + kw / 2, ky + 17);
+          ctx.fillText(label, kx + kw / 2, ky + 16);
         };
-        drawKeyBadge(bx + 18,  by + 86, 132, "◀ MOVE LEFT (A)", this.keys.left);
-        drawKeyBadge(bx + 160, by + 86, 142, "MOVE RIGHT (D) ▶", this.keys.right);
-        drawKeyBadge(bx + 312, by + 86, 142, "▲ JUMP (SPACE)", this.keys.jump);
+        drawKeyBadge(bx + 18,  by + 78, 132, "◀ MOVE LEFT (A)", this.keys.left);
+        drawKeyBadge(bx + 158, by + 78, 142, "MOVE RIGHT (D) ▶", this.keys.right);
+        drawKeyBadge(bx + 308, by + 78, 142, "▲ JUMP (SPACE)", this.keys.jump);
 
         ctx.textAlign = "left";
-        ctx.font = "bold 11px 'Inter', sans-serif";
+        ctx.font = "bold 10.5px 'Inter', sans-serif";
         ctx.fillStyle = "#6ee7b7";
-        ctx.fillText("👉 Close SMS & walk to the Gate!", bx + 466, by + 103);
+        ctx.fillText("👉 Tap NEXT to see Traps & Obstacles!", bx + 460, by + 94);
       } else {
         // Worlds 2 & 3: Territory preview badge inside Room 1 SMS
         ctx.fillStyle = "rgba(245, 158, 11, 0.14)";
-        ctx.fillRect(bx + 18, by + 86, bw - 36, 26);
+        ctx.fillRect(bx + 18, by + 78, bw - 36, 24);
         ctx.strokeStyle = lore.trim;
-        ctx.strokeRect(bx + 18, by + 86, bw - 36, 26);
+        ctx.strokeRect(bx + 18, by + 78, bw - 36, 24);
         ctx.textAlign = "left";
         ctx.font = "bold 11px 'Inter', monospace";
         ctx.fillStyle = "#fde047";
-        ctx.fillText(`👹 RULER AHEAD: ${lore.devilName}`, bx + 28, by + 103);
+        ctx.fillText(`👹 RULER AHEAD: ${lore.devilName}`, bx + 28, by + 94);
       }
+
+      // High-Visibility 50th-Death Storytelling Box inside the main Instruction SMS!
+      ctx.fillStyle = "rgba(127, 29, 29, 0.9)";
+      ctx.fillRect(bx + 18, by + 108, bw - 36, 38);
+      ctx.strokeStyle = "#facc15";
+      ctx.lineWidth = 1.6;
+      ctx.strokeRect(bx + 18, by + 108, bw - 36, 38);
+      ctx.textAlign = "left";
+      ctx.font = "bold 10.5px 'Inter', sans-serif";
+      ctx.fillStyle = "#fef08a";
+      ctx.fillText("💀 STORY WARNING — THE CURSE OF 50 DEATHS (0/50):", bx + 28, by + 123);
+      ctx.font = "10.5px 'Inter', sans-serif";
+      ctx.fillStyle = "#fecaca";
+      ctx.fillText("If you die 50 times in total, the Devil's Bats tie you in chains & drag you to his Palace for Execution!", bx + 28, by + 139);
     } else if (sp.smsId === "room1_lore") {
       ctx.textAlign = "left";
       ctx.font = "bold 12px 'Inter', sans-serif";
       ctx.fillStyle = "#fde047";
-      ctx.fillText("📜 ANCIENT WALL INSCRIPTION DISCOVERED:", bx + 18, by + 58);
-      ctx.font = "12px 'Inter', sans-serif";
+      ctx.fillText("📜 ANCIENT WALL INSCRIPTION DISCOVERED:", bx + 18, by + 56);
+      ctx.font = "11.5px 'Inter', sans-serif";
       ctx.fillStyle = "#f8fafc";
-      ctx.fillText(lore.note2, bx + 18, by + 80);
+      ctx.fillText(lore.note2, bx + 18, by + 76);
+      ctx.fillStyle = "#fda4af";
+      ctx.font = "bold 11px 'Inter', sans-serif";
+      ctx.fillText("⛓️ Remember the 50-Death Curse: 50 total deaths triggers the Devil's Palace Hostage Execution!", bx + 18, by + 98);
       ctx.fillStyle = "#6ee7b7";
-      ctx.fillText("🏰 Continue down the cobblestone walkway and step into the Old Kingdom Gate!", bx + 18, by + 102);
+      ctx.fillText("🏰 Continue down the cobblestone walkway and step into the Old Kingdom Gate!", bx + 18, by + 120);
     } else if (sp.smsId === "room2_demon_welcome") {
       // Room 2 Demon Bio & Welcome SMS!
       ctx.textAlign = "left";
       ctx.font = "bold 12px 'Inter', monospace";
       ctx.fillStyle = "#fda4af";
-      ctx.fillText(`👹 WHO AM I? ${lore.devilName}`, bx + 18, by + 56);
+      ctx.fillText(`👹 WHO AM I? ${lore.devilName}`, bx + 18, by + 54);
 
       ctx.font = "11.5px 'Inter', sans-serif";
       ctx.fillStyle = "#f8fafc";
-      ctx.fillText(lore.devilDesc, bx + 18, by + 76);
+      ctx.fillText(lore.devilDesc, bx + 18, by + 74);
 
-      ctx.font = "bold 11.5px 'Inter', sans-serif";
+      ctx.font = "bold 11px 'Inter', sans-serif";
       ctx.fillStyle = "#fde047";
-      ctx.fillText(lore.emptyRoomQuote, bx + 18, by + 98);
+      ctx.fillText(lore.emptyRoomQuote, bx + 18, by + 95);
+
+      ctx.fillStyle = "rgba(127, 29, 29, 0.85)";
+      ctx.fillRect(bx + 18, by + 106, bw - 36, 36);
+      ctx.strokeStyle = "#f87171";
+      ctx.strokeRect(bx + 18, by + 106, bw - 36, 36);
+      ctx.fillStyle = "#fecaca";
+      ctx.font = "bold 10.5px 'Inter', sans-serif";
+      ctx.fillText("👹 DEVIL'S VOW: 'My Bats go easy on you in Stages 1–25, unleash Hell in Stages 26–32,", bx + 28, by + 121);
+      ctx.fillText("and if you reach 50 Total Deaths (50/50), my Bats will drag you to my Palace in chains!'", bx + 28, by + 136);
     }
 
     // Bottom Interactive Close Action Pill inside SMS Box
     const br = sp.smsBotCloseRect;
-    br.x = bx + bw / 2 - 155;
-    br.y = by + bh - 32;
-    br.w = 310;
-    br.h = 24;
+    br.x = bx + bw / 2 - 165;
+    br.y = by + bh - 29;
+    br.w = 330;
+    br.h = 23;
     const pulse = 0.75 + 0.25 * Math.sin(time * 6);
     ctx.fillStyle = `rgba(16, 185, 129, ${(0.25 * pulse).toFixed(2)})`;
     ctx.fillRect(br.x, br.y, br.w, br.h);
@@ -5910,7 +6913,13 @@ const GameApp = {
     ctx.font = "bold 10px 'Inter', monospace";
     ctx.textAlign = "center";
     ctx.fillStyle = "#a7f3d0";
-    ctx.fillText("✓ TAP [✕ CLOSE] OR PRESS C / ENTER TO CONTINUE", br.x + br.w / 2, br.y + 16);
+    ctx.fillText(
+      sp.smsId === "room1_intro"
+        ? "✓ TAP HERE OR PRESS C / ENTER TO VIEW OBSTACLE IMAGES ▶"
+        : "✓ TAP [✕ CLOSE] OR PRESS C / ENTER TO CONTINUE",
+      br.x + br.w / 2,
+      br.y + 15
+    );
 
     ctx.restore();
   },
@@ -6733,6 +7742,70 @@ const GameApp = {
         ctx.strokeRect(obj.x, obj.y + yOff, 28, h);
       } else if (obj.type === "fakePortal" && !obj.triggered) {
         this.drawPortalGraphic(ctx, obj.x, obj.y, 36, 54, "#10b981", false, time);
+      } else if (obj.type === "superSwitch") {
+        ctx.save();
+        const h = obj.pressed ? 4 : 11;
+        const yOff = obj.pressed ? 7 : 0;
+        const glow = 0.6 + 0.4 * Math.sin(time * 5);
+        ctx.fillStyle = obj.pressed ? "#0284c7" : "#38bdf8";
+        ctx.fillRect(obj.x, obj.y + yOff, 30, h);
+        ctx.strokeStyle = "#e0f2fe";
+        ctx.lineWidth = 2;
+        ctx.strokeRect(obj.x, obj.y + yOff, 30, h);
+        if (!obj.pressed) {
+          ctx.font = "bold 9px 'Inter', monospace";
+          ctx.textAlign = "center";
+          ctx.fillStyle = `rgba(125, 211, 252, ${glow.toFixed(2)})`;
+          ctx.fillText("⚡JUMP", obj.x + 15, obj.y - 5);
+        }
+        ctx.restore();
+      } else if (obj.type === "mysteryBox" && !obj.collected) {
+        ctx.save();
+        const bob = Math.sin(time * 3.8) * 4.5;
+        const bx = obj.x;
+        const by = obj.y + bob;
+        const bw = obj.w || 28;
+        const bh = obj.h || 28;
+
+        // Glowing golden mystery aura
+        const mGrad = ctx.createRadialGradient(bx + bw / 2, by + bh / 2, 3, bx + bw / 2, by + bh / 2, 26);
+        mGrad.addColorStop(0, "rgba(250, 204, 21, 0.55)");
+        mGrad.addColorStop(1, "rgba(250, 204, 21, 0)");
+        ctx.fillStyle = mGrad;
+        ctx.beginPath();
+        ctx.arc(bx + bw / 2, by + bh / 2, 26, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Voxel Golden Mystery Box [?]
+        ctx.fillStyle = "#eab308";
+        ctx.fillRect(bx, by, bw, bh);
+        ctx.fillStyle = "#fef08a";
+        ctx.fillRect(bx + 2, by + 2, bw - 4, 5);
+        ctx.strokeStyle = "#78350f";
+        ctx.lineWidth = 2.2;
+        ctx.strokeRect(bx, by, bw, bh);
+
+        // Corner rivets
+        ctx.fillStyle = "#78350f";
+        ctx.fillRect(bx + 3, by + 3, 3, 3);
+        ctx.fillRect(bx + bw - 6, by + 3, 3, 3);
+        ctx.fillRect(bx + 3, by + bh - 6, 3, 3);
+        ctx.fillRect(bx + bw - 6, by + bh - 6, 3, 3);
+
+        // Bold '?' Question Mark
+        ctx.font = "900 16px 'Inter', monospace";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillStyle = "#451a03";
+        ctx.fillText("?", bx + bw / 2 + 1, by + bh / 2 + 2);
+        ctx.fillStyle = "#ffffff";
+        ctx.fillText("?", bx + bw / 2, by + bh / 2 + 1);
+
+        // Mini floating label above Mystery Box
+        ctx.font = "bold 8.5px 'Inter', monospace";
+        ctx.fillStyle = "#fde047";
+        ctx.fillText(obj.label || "? BONUS JUMP", bx + bw / 2, by - 7);
+        ctx.restore();
       }
     }
 
@@ -6906,6 +7979,7 @@ const GameApp = {
     this.drawCeremonyScene(ctx, time);
     this.drawHostage250Scene(ctx, time);
     this.drawStoryPrologue(ctx, time);
+    this.drawStageIntroObstaclePopup(ctx, time);
 
     // Hide top pill HUD during full-screen 3D Royal Palace Cinema, 250-Death Hostage Scene, or Story Prologue
     if ((this.stateMode === 'won' && this.ceremonyType) || this.stateMode === 'hostage_250' || this.stateMode === 'story_prologue') {
@@ -6950,7 +8024,7 @@ const GameApp = {
         ? (dh.mode === "boss_devil" ? "🚨 RED ALERT: DEVIL ATTACK!" : "🚨 RED ALERT: BATS ATTACKING!")
         : isSafe
         ? "🟢 SAFE WINDOW: CLEAR!"
-        : (dh.mode === "boss_devil" ? "👹 STAGE 29-32: DEVIL STALKING" : "🦇 DEVIL BATS LURKING...");
+        : (dh.mode === "boss_devil" ? "👹 STAGE 26-32: DEVIL STALKING" : "🦇 TOP-SKY BATS LURKING...");
       ctx.fillText(statusLabel, 550, 20);
     }
     ctx.restore();
@@ -7028,8 +8102,8 @@ const GameApp = {
     const gpDeaths = document.getElementById("gameplayDeathsBadge");
     if (gpDeaths) {
       const shownTotal = (this.stateMode === "hostage_250" && (this.hostageTick || 0) < 325)
-        ? "250/250 • EXECUTING!"
-        : `${this.totalDeaths}/250`;
+        ? "50/50 • EXECUTING!"
+        : `${this.totalDeaths}/50`;
       gpDeaths.textContent = `💀 ${this.stageDeaths[this.stage.key] || 0} (Total: ${shownTotal})`;
     }
 
@@ -7227,6 +8301,8 @@ const GameApp = {
     if ((st.objects || []).some(o => o.type === "switch")) tags.push({ label: "Gate Pressure Switch", color: "emerald" });
     if ((st.objects || []).some(o => o.type === "sawSpawner")) tags.push({ label: "Redstone Sawblade", color: "rose" });
     if ((st.objects || []).some(o => o.type === "fakePortal")) tags.push({ label: "Decoy Teleport Portal", color: "pink" });
+    if ((st.objects || []).some(o => o.type === "mysteryBox")) tags.push({ label: "🎁 Far Bonus Mystery Box (?)", color: "yellow" });
+    if ((st.objects || []).some(o => o.type === "superSwitch")) tags.push({ label: "⚡ Hidden Super-Jump Switch", color: "cyan" });
     if (st.portal && st.portal.behavior === "runaway") tags.push({ label: "Runaway Exit Portal", color: "teal" });
     return tags;
   },
@@ -7370,6 +8446,11 @@ const GameApp = {
       }
       if (e.code === "KeyR") {
         this.restartStage();
+      }
+      if (this.stageIntroSmsOpen && (e.code === "KeyC" || e.code === "Enter" || e.code === "Space")) {
+        e.preventDefault();
+        this.closeStageIntroSms();
+        return;
       }
       if (this.stateMode === "story_prologue" && this.storyPrologue) {
         if ((e.code === "KeyC" || e.code === "Enter" || e.code === "Space") && this.storyPrologue.smsOpen) {
@@ -7558,11 +8639,21 @@ const GameApp = {
       });
     });
 
-    document.getElementById("sliderMusicVolume")?.addEventListener("input", (e) => {
-      sfx.setMusicVolume((parseInt(e.target.value, 10) || 0) / 100);
+    ["input", "change"].forEach(evtName => {
+      document.getElementById("sliderMusicVolume")?.addEventListener(evtName, (e) => {
+        sfx.setMusicVolume(parseFloat(e.target.value));
+      });
+      document.getElementById("sliderSfxVolume")?.addEventListener(evtName, (e) => {
+        sfx.setSfxVolume(parseFloat(e.target.value));
+      });
     });
-    document.getElementById("sliderSfxVolume")?.addEventListener("input", (e) => {
-      sfx.setSfxVolume((parseInt(e.target.value, 10) || 0) / 100);
+
+    ["auto", "world1", "world2", "world3", "victory_palace", "story_prologue"].forEach(tr => {
+      document.getElementById(`btnMusicTrack_${tr}`)?.addEventListener("click", () => {
+        sfx.buttonClick();
+        sfx.setGameplayTrackOverride(tr);
+        this.showToast(`🎵 Gameplay Music set to: ${tr === "auto" ? "Auto Per World" : tr.toUpperCase()}!`, "emerald");
+      });
     });
 
     document.getElementById("btnBackFromSettings")?.addEventListener("click", () => {
