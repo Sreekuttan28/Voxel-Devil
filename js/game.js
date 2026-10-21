@@ -1,5 +1,5 @@
 // ============================================================================
-// VOXEL DEVIL: CRAFT OF TRAPS (v4.2 — NO-OVERLAP DEVIL LAUGH, DOOR BAT-RELEASE & RETURN, FIRST-2-LEVELS POPUP & TOP-ONLY +2s BATS)
+// VOXEL DEVIL: CRAFT OF TRAPS (v4.3 — STOP-AND-READ OBSTACLE BRIEFING GUARD, HIGH-CLARITY OBSTACLE VIEW & v4.2 FIXES)
 // Built by Mokuttan Labs (https://sreekuttan28.github.io/Mokuttan-Lab/)
 // Creator: Sreehari N P (@sreekuttan28)
 // ============================================================================
@@ -6016,8 +6016,12 @@ const GameApp = {
     sfx.smsCloseSound();
     const closedId = sp.smsId;
 
-    // Immediately after closing the first Instruction SMS in Room 1 of World 1 (Level 1-1), pop up the Visual Obstacle & 50-Death Storytelling Guide!
+    // Immediately after closing the first Instruction SMS in Room 1 of World 1 (Level 1-1), stop the player and pop up the High-Clarity Visual Obstacle & 50-Death Storytelling Guide!
     if (sp.room === 1 && sp.world === 1 && closedId === "room1_intro" && !sp.obstaclesSmsShown) {
+      if (this.player) this.player.vx = 0;
+      this.keys.left = false;
+      this.keys.right = false;
+      this.keys.jump = false;
       sp.obstaclesSmsShown = true;
       sp.smsOpen = true;
       sp.smsId = "room1_obstacles";
@@ -6185,9 +6189,11 @@ const GameApp = {
       }
     }
 
-    // 4. Player Movement & Physics (Paused while Room 2 Demon is still delivering his welcome SMS so choreography is clear)
+    // 4. Player Movement & Physics:
+    // Pause player movement during Room 2 Demon intro OR whenever the Room 1 Obstacle Guide ('room1_obstacles') is open so the player stops and reads the obstacles!
     const freezePlayerForDemonIntro = (sp.room === 2 && (sp.demonState === "greet_walk" || sp.demonState === "sms_wait"));
-    if (sp.hasLanded && !freezePlayerForDemonIntro) {
+    const freezePlayerForObstacles = (sp.room === 1 && sp.smsOpen && sp.smsId === "room1_obstacles");
+    if (sp.hasLanded && !freezePlayerForDemonIntro && !freezePlayerForObstacles) {
       let moveDir = 0;
       if (this.keys.left) moveDir -= 1;
       if (this.keys.right) moveDir += 1;
@@ -6208,7 +6214,7 @@ const GameApp = {
         sfx.jump();
         this.spawnParticles(p.x + p.w / 2, p.y + p.h, "#4ade80", 6);
       }
-    } else if (freezePlayerForDemonIntro) {
+    } else if (freezePlayerForDemonIntro || freezePlayerForObstacles) {
       p.vx = 0;
     }
     this.keys.jumpJustPressed = false;
@@ -6240,8 +6246,25 @@ const GameApp = {
       }
     }
 
-    // Room 1 Optional Lore SMS trigger when walking past the Ancient Kingdom Milestone (X >= 320)
-    if (sp.room === 1 && sp.hasLanded && !sp.loreSmsShown && p.x >= 320 && !sp.smsOpen) {
+    // STOP-AND-READ OBSTACLE GUARD IN ROOM 1 (World 1):
+    // If the player walks forward (X >= 205) without closing room1_intro first, STOP the player automatically
+    // and open the High-Clarity Obstacle & 50-Death Guide so they never walk past to the Gate without reading it!
+    if (sp.room === 1 && sp.world === 1 && sp.hasLanded && !sp.obstaclesSmsShown && p.x >= 205) {
+      p.x = 205;
+      p.vx = 0;
+      this.keys.left = false;
+      this.keys.right = false;
+      this.keys.jump = false;
+      sp.obstaclesSmsShown = true;
+      sp.smsOpen = true;
+      sp.smsId = "room1_obstacles";
+      sfx.smsPopupSound();
+      this.addFloatingText(p.x + 12, p.y - 28, "🛑 HOLD ON! READ THE OBSTACLE & 50-DEATH GUIDE FIRST!", "#facc15");
+      return;
+    }
+
+    // Room 1 Optional Lore SMS trigger when walking past the Ancient Kingdom Milestone (X >= 360) after reading obstacles
+    if (sp.room === 1 && sp.hasLanded && (sp.world !== 1 || sp.obstaclesSmsShown) && !sp.loreSmsShown && p.x >= 360 && !sp.smsOpen) {
       sp.loreSmsShown = true;
       sp.smsOpen = true;
       sp.smsId = "room1_lore";
@@ -6249,7 +6272,22 @@ const GameApp = {
     }
 
     // Room 1 Gate Trigger: Reaching the Old Kingdom Gate on the right (X >= 640)
+    // Only allow entering the Gate after the Obstacle Guide has been shown and closed!
     if (sp.room === 1 && sp.hasLanded && p.x + p.w >= 640) {
+      if (sp.world === 1 && !sp.obstaclesSmsShown) {
+        p.x = 600;
+        p.vx = 0;
+        sp.obstaclesSmsShown = true;
+        sp.smsOpen = true;
+        sp.smsId = "room1_obstacles";
+        sfx.smsPopupSound();
+        return;
+      }
+      if (sp.smsOpen && sp.smsId === "room1_obstacles") {
+        p.x = 600;
+        p.vx = 0;
+        return;
+      }
       sp.smsOpen = false;
       sp.enteringGate = true;
       sp.gateWalkTick = 0;
@@ -6519,226 +6557,339 @@ const GameApp = {
   },
 
   drawObstacleIconGrid(ctx, gx, gy, gw, time) {
-    // Draws 6 Voxel Obstacle Image Cards (2 rows x 3 cols) + the 50th-Death Storytelling Banner!
+    // Draws 6 Large, High-Clarity Voxel Obstacle Cards (2 rows x 3 cols) + Bold 50th-Death Storytelling Banner!
     const cards = [
-      { id: "spike",   title: "1. POP-UP SPIKES",     desc: "Hidden until you approach—jump early!", border: "#ef4444" },
-      { id: "crumble", title: "2. CRUMBLE & FAKE",    desc: "Shakes & falls, or fake hologram floor!", border: "#f59e0b" },
-      { id: "saw",     title: "3. REDSTONE SAWS",     desc: "Spinning blades & ceiling crushers!", border: "#38bdf8" },
-      { id: "bait",    title: "4. BAIT GEM & SWITCH", desc: "Skip gold traps! Press Green Switch!", border: "#10b981" },
-      { id: "mystery", title: "5. MYSTERY BOX (?)",   desc: "Far secret box -> +45% Super Jump!", border: "#facc15" },
-      { id: "curse50", title: "6. 50-DEATH CURSE",    desc: "50 Fails = Bats tie & Devil executes!", border: "#c084fc" }
+      {
+        id: "spike",
+        badge: "TRAP #1",
+        title: "POP-UP REDSTONE SPIKES",
+        line1: "Hidden inside floor blocks until",
+        line2: "you get close — jump early!",
+        border: "#ef4444",
+        accent: "#fca5a5"
+      },
+      {
+        id: "crumble",
+        badge: "TRAP #2",
+        title: "CRUMBLE & FAKE FLOORS",
+        line1: "Cracked bridges shake & fall;",
+        line2: "hologram floors have no solid ground!",
+        border: "#f59e0b",
+        accent: "#fde047"
+      },
+      {
+        id: "saw",
+        badge: "TRAP #3",
+        title: "SAWS & PISTON CRUSHERS",
+        line1: "Crossing trigger lines fires fast",
+        line2: "sawblades & slams ceiling crushers!",
+        border: "#38bdf8",
+        accent: "#bae6fd"
+      },
+      {
+        id: "bait",
+        badge: "TRAP #4",
+        title: "BAIT GEM vs GREEN SWITCH",
+        line1: "Skip floating Gold Trap Gems!",
+        line2: "Step on Green Switches to unlock Exit!",
+        border: "#10b981",
+        accent: "#6ee7b7"
+      },
+      {
+        id: "mystery",
+        badge: "HELP #5",
+        title: "FAR MYSTERY BOX (?)",
+        line1: "Hidden far away in every level —",
+        line2: "touch it for +45% Super Jump!",
+        border: "#facc15",
+        accent: "#fef08a"
+      },
+      {
+        id: "curse50",
+        badge: "CURSE #6",
+        title: "TOP-SKY BATS & 50 DEATHS",
+        line1: "Bats swoop randomly from TOP sky!",
+        line2: "50 Total Deaths = Palace Execution!",
+        border: "#c084fc",
+        accent: "#e9d5ff"
+      }
     ];
 
-    const colW = Math.floor((gw - 16) / 3);
-    const rowH = 44;
+    const colW = Math.floor((gw - 20) / 3);
+    const rowH = 82;
 
     cards.forEach((c, idx) => {
       const col = idx % 3;
       const row = Math.floor(idx / 3);
-      const cx = gx + col * (colW + 8);
-      const cy = gy + row * (rowH + 6);
+      const cx = gx + col * (colW + 10);
+      const cy = gy + row * (rowH + 8);
 
-      // Card background
-      ctx.fillStyle = "rgba(15, 23, 42, 0.95)";
+      // High-contrast card background & glowing border
+      ctx.fillStyle = "#0b1324";
       ctx.fillRect(cx, cy, colW, rowH);
       ctx.strokeStyle = c.border;
-      ctx.lineWidth = 1.4;
+      ctx.lineWidth = 2;
       ctx.strokeRect(cx, cy, colW, rowH);
 
-      // Left Voxel Icon Box (36x34)
-      const ix = cx + 5;
-      const iy = cy + 5;
-      ctx.fillStyle = "#090d16";
-      ctx.fillRect(ix, iy, 36, 34);
-      ctx.strokeStyle = "rgba(255,255,255,0.15)";
-      ctx.lineWidth = 1;
-      ctx.strokeRect(ix, iy, 36, 34);
+      // Top accent strip inside card
+      ctx.fillStyle = "rgba(255, 255, 255, 0.04)";
+      ctx.fillRect(cx + 2, cy + 2, colW - 4, 20);
 
-      // Draw custom Voxel Obstacle Image inside the 36x34 icon frame!
+      // Left Large Voxel Illustration Canvas (56x68)
+      const ix = cx + 6;
+      const iy = cy + 7;
+      const iw = 56;
+      const ih = 68;
+      ctx.fillStyle = "#050811";
+      ctx.fillRect(ix, iy, iw, ih);
+      ctx.strokeStyle = c.border;
+      ctx.lineWidth = 1.2;
+      ctx.strokeRect(ix, iy, iw, ih);
+
+      // Draw large, animated Voxel Obstacle Image inside the 56x68 frame!
       ctx.save();
       if (c.id === "spike") {
-        // 3 Red Voxel Spikes on stone base
-        ctx.fillStyle = "#475569";
-        ctx.fillRect(ix + 3, iy + 25, 30, 6);
+        // Stone floor block + 3 popping crimson spikes with warning glow
+        ctx.fillStyle = "#334155";
+        ctx.fillRect(ix + 4, iy + 46, 48, 16);
+        ctx.fillStyle = "#64748b";
+        ctx.fillRect(ix + 4, iy + 46, 48, 4);
+        const pop = 0.78 + 0.22 * Math.abs(Math.sin(time * 4));
         ctx.fillStyle = "#ef4444";
+        ctx.strokeStyle = "#fca5a5";
+        ctx.lineWidth = 1.2;
         for (let s = 0; s < 3; s++) {
-          const sx = ix + 5 + s * 9;
+          const sx = ix + 7 + s * 14;
+          const sh = 28 * pop;
           ctx.beginPath();
-          ctx.moveTo(sx, iy + 25);
-          ctx.lineTo(sx + 4.5, iy + 9);
-          ctx.lineTo(sx + 9, iy + 25);
+          ctx.moveTo(sx, iy + 46);
+          ctx.lineTo(sx + 7, iy + 46 - sh);
+          ctx.lineTo(sx + 14, iy + 46);
           ctx.closePath();
           ctx.fill();
+          ctx.stroke();
         }
       } else if (c.id === "crumble") {
-        // Cracking Voxel Bridge Block
+        // Shaking cracked bridge block + falling debris
+        const shakeX = Math.sin(time * 18) * 1.8;
         ctx.fillStyle = "#854d0e";
-        ctx.fillRect(ix + 4, iy + 11, 28, 16);
+        ctx.fillRect(ix + 6 + shakeX, iy + 18, 44, 24);
         ctx.fillStyle = "#f59e0b";
-        ctx.fillRect(ix + 4, iy + 11, 28, 5);
+        ctx.fillRect(ix + 6 + shakeX, iy + 18, 44, 7);
         ctx.strokeStyle = "#090d16";
-        ctx.lineWidth = 1.6;
+        ctx.lineWidth = 2.2;
         ctx.beginPath();
-        ctx.moveTo(ix + 16, iy + 11);
-        ctx.lineTo(ix + 13, iy + 19);
-        ctx.lineTo(ix + 20, iy + 27);
+        ctx.moveTo(ix + 26 + shakeX, iy + 18);
+        ctx.lineTo(ix + 20 + shakeX, iy + 30);
+        ctx.lineTo(ix + 31 + shakeX, iy + 42);
         ctx.stroke();
+        // Falling pebbles below bridge
+        ctx.fillStyle = "#ca8a04";
+        ctx.fillRect(ix + 14, iy + 48 + ((time * 16) % 12), 6, 6);
+        ctx.fillRect(ix + 34, iy + 52 + ((time * 16 + 6) % 10), 5, 5);
       } else if (c.id === "saw") {
-        // Spinning Redstone Sawblade Image
-        ctx.translate(ix + 18, iy + 17);
-        ctx.rotate(time * 3);
+        // Large spinning Redstone Sawblade + top crusher teeth
+        ctx.fillStyle = "#475569";
+        ctx.fillRect(ix + 6, iy + 4, 44, 12);
+        ctx.fillStyle = "#cbd5e1";
+        for (let tx = ix + 9; tx < ix + 46; tx += 10) {
+          ctx.fillRect(tx, iy + 16, 6, 4);
+        }
+        ctx.save();
+        ctx.translate(ix + 28, iy + 44);
+        ctx.rotate(time * 4.5);
         ctx.fillStyle = "#e2e8f0";
         ctx.strokeStyle = "#ef4444";
-        ctx.lineWidth = 2;
-        ctx.fillRect(-9, -9, 18, 18);
-        ctx.strokeRect(-9, -9, 18, 18);
+        ctx.lineWidth = 2.2;
+        ctx.fillRect(-14, -14, 28, 28);
+        ctx.strokeRect(-14, -14, 28, 28);
         ctx.rotate(Math.PI / 4);
-        ctx.fillRect(-9, -9, 18, 18);
+        ctx.fillRect(-14, -14, 28, 28);
+        ctx.strokeRect(-14, -14, 28, 28);
         ctx.fillStyle = "#ef4444";
-        ctx.fillRect(-3, -3, 6, 6);
+        ctx.fillRect(-5, -5, 10, 10);
+        ctx.restore();
       } else if (c.id === "bait") {
-        // Golden Bait Gem + Green Switch Image
+        // Crossed-out Gold Bait Gem on top-left + Glowing Green Switch on bottom-right
         ctx.fillStyle = "#facc15";
         ctx.beginPath();
-        ctx.moveTo(ix + 13, iy + 7);
-        ctx.lineTo(ix + 21, iy + 15);
-        ctx.lineTo(ix + 13, iy + 23);
-        ctx.lineTo(ix + 5, iy + 15);
+        ctx.moveTo(ix + 18, iy + 8);
+        ctx.lineTo(ix + 29, iy + 20);
+        ctx.lineTo(ix + 18, iy + 32);
+        ctx.lineTo(ix + 7, iy + 20);
         ctx.closePath();
         ctx.fill();
+        // Red 'X' over trap gem
+        ctx.strokeStyle = "#ef4444";
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.moveTo(ix + 8, iy + 10); ctx.lineTo(ix + 28, iy + 30);
+        ctx.moveTo(ix + 28, iy + 10); ctx.lineTo(ix + 8, iy + 30);
+        ctx.stroke();
+        // Safe Green Switch below with checkmark
+        ctx.fillStyle = "#334155";
+        ctx.fillRect(ix + 6, iy + 54, 44, 8);
         ctx.fillStyle = "#10b981";
-        ctx.fillRect(ix + 19, iy + 23, 13, 6);
+        ctx.fillRect(ix + 14, iy + 46, 28, 8);
+        ctx.strokeStyle = "#6ee7b7";
+        ctx.lineWidth = 1.5;
+        ctx.strokeRect(ix + 14, iy + 46, 28, 8);
       } else if (c.id === "mystery") {
-        // Golden [?] Mystery Box Image
+        // Glowing Golden [?] Mystery Box with upward Super-Jump arrows
+        const bob = Math.sin(time * 4) * 2.5;
         ctx.fillStyle = "#eab308";
-        ctx.fillRect(ix + 6, iy + 5, 24, 24);
+        ctx.fillRect(ix + 10, iy + 16 + bob, 36, 36);
+        ctx.strokeStyle = "#fef08a";
+        ctx.lineWidth = 2.2;
+        ctx.strokeRect(ix + 10, iy + 16 + bob, 36, 36);
+        ctx.fillStyle = "#ffffff";
+        ctx.font = "900 22px 'Inter', monospace";
+        ctx.textAlign = "center";
+        ctx.fillText("?", ix + 28, iy + 42 + bob);
+      } else if (c.id === "curse50") {
+        // Swooping Top-Sky Bat + Glowing '50' Chains Badge
+        const flap = Math.sin(time * 10) * 5;
+        ctx.fillStyle = "#dc2626";
         ctx.strokeStyle = "#fef08a";
         ctx.lineWidth = 1.5;
-        ctx.strokeRect(ix + 6, iy + 5, 24, 24);
-        ctx.fillStyle = "#ffffff";
-        ctx.font = "900 14px 'Inter', monospace";
-        ctx.textAlign = "center";
-        ctx.fillText("?", ix + 18, iy + 22);
-      } else if (c.id === "curse50") {
-        // Winged Bat + "50" Skull Emblem
-        ctx.fillStyle = "#dc2626";
         ctx.beginPath();
-        ctx.moveTo(ix + 18, iy + 14);
-        ctx.lineTo(ix + 5, iy + 7);
-        ctx.lineTo(ix + 9, iy + 20);
-        ctx.lineTo(ix + 27, iy + 20);
-        ctx.lineTo(ix + 31, iy + 7);
+        ctx.moveTo(ix + 28, iy + 20);
+        ctx.lineTo(ix + 7, iy + 10 + flap);
+        ctx.lineTo(ix + 13, iy + 28);
+        ctx.lineTo(ix + 43, iy + 28);
+        ctx.lineTo(ix + 49, iy + 10 + flap);
         ctx.closePath();
         ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = "#7f1d1d";
+        ctx.fillRect(ix + 6, iy + 38, 44, 22);
+        ctx.strokeStyle = "#c084fc";
+        ctx.strokeRect(ix + 6, iy + 38, 44, 22);
         ctx.fillStyle = "#fef08a";
-        ctx.font = "900 10px 'Inter', monospace";
+        ctx.font = "900 12px 'Inter', monospace";
         ctx.textAlign = "center";
-        ctx.fillText("💀50", ix + 18, iy + 30);
+        ctx.fillText("💀 50", ix + 28, iy + 54);
       }
       ctx.restore();
 
-      // Right Text Description
+      // Right Text Column: Badge + Bold Title + 2 Clear Description Lines
+      const tx = ix + iw + 8;
       ctx.textAlign = "left";
-      ctx.font = "bold 10px 'Inter', monospace";
-      ctx.fillStyle = "#fef08a";
-      ctx.fillText(c.title, ix + 42, cy + 16);
 
-      ctx.font = "9.5px 'Inter', sans-serif";
-      ctx.fillStyle = "#e2e8f0";
-      ctx.fillText(c.desc, ix + 42, cy + 31);
+      // Small pill badge
+      ctx.fillStyle = c.border;
+      ctx.fillRect(tx, cy + 7, 54, 14);
+      ctx.font = "900 9px 'Inter', monospace";
+      ctx.fillStyle = "#090d16";
+      ctx.fillText(c.badge, tx + 5, cy + 17);
+
+      // Obstacle Title
+      ctx.font = "bold 11px 'Inter', monospace";
+      ctx.fillStyle = c.accent;
+      ctx.fillText(c.title, tx, cy + 36);
+
+      // 2-Line High-Clarity Explanation
+      ctx.font = "600 10.5px 'Inter', sans-serif";
+      ctx.fillStyle = "#f8fafc";
+      ctx.fillText(c.line1, tx, cy + 54);
+      ctx.fillStyle = "#cbd5e1";
+      ctx.fillText(c.line2, tx, cy + 70);
     });
 
-    // Prominent 50-Death Storytelling Callout Bar below the 6 obstacle image cards!
-    const storyY = gy + 2 * (rowH + 6) + 2;
-    ctx.fillStyle = "rgba(127, 29, 29, 0.92)";
-    ctx.fillRect(gx, storyY, gw, 32);
+    // Prominent 50-Death Storytelling Callout Panel below the 6 obstacle image cards!
+    const storyY = gy + 2 * (rowH + 8) + 2;
+    ctx.fillStyle = "rgba(127, 29, 29, 0.96)";
+    ctx.fillRect(gx, storyY, gw, 50);
     ctx.strokeStyle = "#facc15";
-    ctx.lineWidth = 1.8;
-    ctx.strokeRect(gx, storyY, gw, 32);
+    ctx.lineWidth = 2.2;
+    ctx.strokeRect(gx, storyY, gw, 50);
 
     ctx.textAlign = "center";
-    ctx.font = "bold 10.5px 'Inter', sans-serif";
+    ctx.font = "bold 12px 'Inter', sans-serif";
     ctx.fillStyle = "#fef08a";
     ctx.fillText(
-      "📜 THE CURSE OF 50 DEATHS (STORY WARNING): Every fall is counted by the King Voxel Devil (0/50)!",
+      "📜 THE CURSE OF 50 DEATHS (STORY WARNING): Every failure is counted by the King Voxel Devil (0 / 50)!",
       gx + gw / 2,
-      storyY + 13
+      storyY + 20
     );
-    ctx.font = "bold 10px 'Inter', sans-serif";
+    ctx.font = "bold 11px 'Inter', sans-serif";
     ctx.fillStyle = "#fecaca";
     ctx.fillText(
-      "⛓️ If you die 50 times, his Shadow Bats tie you up & drag you to the Devil's Palace for Execution (resets to 0/50)!",
+      "⛓️ If you die 50 times in total, his Shadow Bats tie you in chains & drag you to the Devil's Palace for Execution (resets to 0/50)!",
       gx + gw / 2,
-      storyY + 26
+      storyY + 39
     );
   },
 
   drawStageIntroObstaclePopup(ctx, time) {
     if (!this.stageIntroSmsOpen || !this.stage) return;
-    const bx = 42;
-    const by = 10;
-    const bw = 716;
-    const bh = 222;
+    const bx = 24;
+    const by = 8;
+    const bw = 752;
+    const bh = 338;
 
     ctx.save();
-    ctx.fillStyle = "rgba(2, 6, 23, 0.96)";
-    ctx.fillRect(bx + 4, by + 4, bw, bh);
+    // Dim the background stage so the Obstacle Guide stands out with 100% clarity!
+    ctx.fillStyle = "rgba(2, 6, 23, 0.80)";
+    ctx.fillRect(0, 0, 800, 450);
+
+    ctx.fillStyle = "rgba(2, 6, 23, 0.98)";
+    ctx.fillRect(bx + 5, by + 5, bw, bh);
 
     ctx.fillStyle = "#0f172a";
     ctx.fillRect(bx, by, bw, bh);
     ctx.strokeStyle = "#f59e0b";
-    ctx.lineWidth = 3;
+    ctx.lineWidth = 3.5;
     ctx.strokeRect(bx, by, bw, bh);
 
     // Header bar
     ctx.fillStyle = "#1e293b";
-    ctx.fillRect(bx + 3, by + 3, bw - 6, 30);
+    ctx.fillRect(bx + 3, by + 3, bw - 6, 34);
 
     ctx.fillStyle = "#ef4444";
     ctx.beginPath();
-    ctx.arc(bx + 18, by + 18, 5, 0, Math.PI * 2);
+    ctx.arc(bx + 18, by + 20, 6, 0, Math.PI * 2);
     ctx.fill();
 
-    ctx.font = "bold 11px 'Inter', monospace";
+    ctx.font = "bold 12px 'Inter', monospace";
     ctx.textAlign = "left";
     ctx.fillStyle = "#fde047";
-    const paceNote = this.currentSub <= 25 ? "BATS: RELAXED (STAGES 1-25)" : "🔥 HARD MODE (STAGES 26-32)";
-    ctx.fillText(`⚠️ STAGE ${this.stage.key} OBSTACLE GUIDE & 50-DEATH CURSE • ${paceNote}`, bx + 30, by + 22);
+    ctx.fillText(`⚠️ STAGE ${this.stage.key} — WATCH OUT FOR THESE OBSTACLES & THE 50-DEATH CURSE!`, bx + 32, by + 24);
 
     // Top-right Close button
     const cr = this.stageIntroCloseRect;
-    cr.x = bx + bw - 146;
-    cr.y = by + 4;
-    cr.w = 140;
-    cr.h = 24;
+    cr.x = bx + bw - 154;
+    cr.y = by + 5;
+    cr.w = 148;
+    cr.h = 26;
     ctx.fillStyle = "#dc2626";
     ctx.fillRect(cr.x, cr.y, cr.w, cr.h);
     ctx.strokeStyle = "#fca5a5";
-    ctx.lineWidth = 1.5;
+    ctx.lineWidth = 1.8;
     ctx.strokeRect(cr.x, cr.y, cr.w, cr.h);
-    ctx.font = "bold 10px 'Inter', monospace";
+    ctx.font = "bold 10.5px 'Inter', monospace";
     ctx.textAlign = "center";
     ctx.fillStyle = "#ffffff";
-    ctx.fillText("✕ CLOSE & START [C]", cr.x + cr.w / 2, cr.y + 16);
+    ctx.fillText("✕ CLOSE & PLAY [C]", cr.x + cr.w / 2, cr.y + 17);
 
-    // Draw the 6 Voxel Obstacle Image Cards + 50-Death Storytelling Banner
-    this.drawObstacleIconGrid(ctx, bx + 14, by + 39, bw - 28, time);
+    // Draw the 6 Large Voxel Obstacle Cards + 50-Death Storytelling Banner
+    this.drawObstacleIconGrid(ctx, bx + 14, by + 45, bw - 28, time);
 
-    // Bottom close button
+    // Large Bottom Close & Start Button
     const br = this.stageIntroBotCloseRect;
-    br.x = bx + bw / 2 - 175;
-    br.y = by + bh - 29;
-    br.w = 350;
-    br.h = 23;
-    ctx.fillStyle = "rgba(16, 185, 129, 0.28)";
+    br.x = bx + bw / 2 - 220;
+    br.y = by + bh - 37;
+    br.w = 440;
+    br.h = 29;
+    ctx.fillStyle = "rgba(16, 185, 129, 0.32)";
     ctx.fillRect(br.x, br.y, br.w, br.h);
     ctx.strokeStyle = "#34d399";
-    ctx.lineWidth = 1.5;
+    ctx.lineWidth = 2;
     ctx.strokeRect(br.x, br.y, br.w, br.h);
-    ctx.font = "bold 10px 'Inter', monospace";
+    ctx.font = "bold 11px 'Inter', monospace";
     ctx.textAlign = "center";
-    ctx.fillStyle = "#a7f3d0";
-    ctx.fillText("✓ TAP [✕ CLOSE] OR PRESS C / ENTER TO RELEASE THE DEVIL!", br.x + br.w / 2, br.y + 15);
+    ctx.fillStyle = "#ecfdf5";
+    ctx.fillText("✓ I'VE READ THE OBSTACLES — TAP HERE OR PRESS [C / ENTER] TO START!", br.x + br.w / 2, br.y + 19);
 
     ctx.restore();
   },
@@ -6747,15 +6898,21 @@ const GameApp = {
     if (!sp.smsOpen) return;
 
     const isObstacleGuide = (sp.smsId === "room1_obstacles");
-    const bx = isObstacleGuide ? 42 : 56;
-    const by = isObstacleGuide ? 10 : 12;
-    const bw = isObstacleGuide ? 716 : 688;
-    const bh = isObstacleGuide ? 222 : 184;
+    const bx = isObstacleGuide ? 24 : 56;
+    const by = isObstacleGuide ? 8 : 12;
+    const bw = isObstacleGuide ? 752 : 688;
+    const bh = isObstacleGuide ? 338 : 184;
 
     ctx.save();
 
+    if (isObstacleGuide) {
+      // Dim background courtyard while the player is stopped to read the Obstacle Guide for maximum clarity!
+      ctx.fillStyle = "rgba(2, 6, 23, 0.80)";
+      ctx.fillRect(0, 0, 800, 450);
+    }
+
     // Outer Pixel Drop Shadow & Voxel Phone/Messenger Frame
-    ctx.fillStyle = "rgba(2, 6, 23, 0.96)";
+    ctx.fillStyle = "rgba(2, 6, 23, 0.98)";
     ctx.fillRect(bx + 4, by + 4, bw, bh);
 
     ctx.fillStyle = "#0f172a";
@@ -6804,7 +6961,7 @@ const GameApp = {
 
     // SMS Message Body Content based on smsId
     if (sp.smsId === "room1_obstacles") {
-      this.drawObstacleIconGrid(ctx, bx + 14, by + 39, bw - 28, time);
+      this.drawObstacleIconGrid(ctx, bx + 14, by + 45, bw - 28, time);
     } else if (sp.smsId === "room1_intro") {
       ctx.textAlign = "left";
       ctx.font = "bold 12px 'Inter', sans-serif";
@@ -6900,25 +7057,27 @@ const GameApp = {
 
     // Bottom Interactive Close Action Pill inside SMS Box
     const br = sp.smsBotCloseRect;
-    br.x = bx + bw / 2 - 165;
-    br.y = by + bh - 29;
-    br.w = 330;
-    br.h = 23;
+    br.x = bx + bw / 2 - (isObstacleGuide ? 220 : 165);
+    br.y = by + bh - (isObstacleGuide ? 37 : 29);
+    br.w = isObstacleGuide ? 440 : 330;
+    br.h = isObstacleGuide ? 29 : 23;
     const pulse = 0.75 + 0.25 * Math.sin(time * 6);
-    ctx.fillStyle = `rgba(16, 185, 129, ${(0.25 * pulse).toFixed(2)})`;
+    ctx.fillStyle = `rgba(16, 185, 129, ${(0.32 * pulse).toFixed(2)})`;
     ctx.fillRect(br.x, br.y, br.w, br.h);
     ctx.strokeStyle = "#34d399";
-    ctx.lineWidth = 1.5;
+    ctx.lineWidth = isObstacleGuide ? 2 : 1.5;
     ctx.strokeRect(br.x, br.y, br.w, br.h);
-    ctx.font = "bold 10px 'Inter', monospace";
+    ctx.font = isObstacleGuide ? "bold 11px 'Inter', monospace" : "bold 10px 'Inter', monospace";
     ctx.textAlign = "center";
-    ctx.fillStyle = "#a7f3d0";
+    ctx.fillStyle = "#ecfdf5";
     ctx.fillText(
       sp.smsId === "room1_intro"
         ? "✓ TAP HERE OR PRESS C / ENTER TO VIEW OBSTACLE IMAGES ▶"
+        : isObstacleGuide
+        ? "✓ I'VE READ THE OBSTACLES — TAP HERE OR PRESS [C / ENTER] TO WALK TO GATE ▶"
         : "✓ TAP [✕ CLOSE] OR PRESS C / ENTER TO CONTINUE",
       br.x + br.w / 2,
-      br.y + 15
+      br.y + (isObstacleGuide ? 19 : 15)
     );
 
     ctx.restore();
